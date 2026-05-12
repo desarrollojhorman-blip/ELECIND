@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ELECIND - Web</title>
+    @if (! app()->runningUnitTests())
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+    <main class="mx-auto max-w-7xl px-4 py-8">
+        <h1 class="text-2xl font-semibold">Panel web ELECIND</h1>
+        <p class="mt-2 text-sm text-slate-600">Base single-tenant lista para iniciar Fase 1.</p>
+    </main>
+</body>
+</html>

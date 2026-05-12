@@ -90,7 +90,7 @@
 [Campos opcionales: apellidos, email, dni, cif, telefono]
         ↓
 [Selecciona tipo_usuario]:
-   - "interno" → empleado de la empresa (NO empresa_cliente_id)
+   - "interno" → empleado de Elecind (NO empresa_cliente_id)
    - "externo" → responsable de cliente (selecciona empresa_cliente_id)
         ↓
 [Selecciona rol] (filtrado por nivel ≤ propio)
@@ -104,7 +104,31 @@
 [Admin confirma → usuario creado]
 ```
 
-## 4️⃣ Flujo: Firma por token email
+## 4️⃣ Flujo: Gestión de conceptos
+
+```
+[CASO A: desde Configuración → Conceptos]
+   - Listado del catálogo global
+   - Crear/editar/eliminar (soft delete)
+   - Ver en qué proyectos se usa cada uno
+
+[CASO B: desde dentro de un proyecto]
+   - Multi-select con autocompletado del catálogo global
+   - Selecciona conceptos a asignar al proyecto
+   - Botón "+ Crear nuevo concepto"
+        ↓
+   [Modal pequeño: Nombre + Descripción]
+        ↓
+   [Al guardar]:
+      - Se añade al catálogo global (conceptos)
+      - Se asigna automáticamente al proyecto actual (pivot)
+
+[CASO C: en el albarán (móvil/web)]
+   - Select filtrado: SOLO conceptos asignados al proyecto
+   - Opción "Otro" → texto libre (queda en datos_libres_json si es borrador)
+```
+
+## 5️⃣ Flujo: Firma por token email
 
 ```
 [Albarán creado, falta firma del responsable]
@@ -112,10 +136,11 @@
 [Sistema genera token UUID + hash]
    - Caducidad: 7 días (configurable)
    - Asociado a: albaran_id + firmante_asignado_id
+   - Se crea registro en `albaran_firmas` estado='pendiente'
         ↓
 [Email al responsable con enlace único]
    "Tienes un albarán pendiente de firma: 
-    https://elecind.getradi.es/firmar/{token}"
+    https://app.elecind.com/firmar/{token}"
         ↓
 [Responsable abre el enlace en su navegador]
         ↓
@@ -126,14 +151,14 @@
         ↓
 [Firma → PNG guardado vía medialibrary]
         ↓
-[Token marcado como usado → expira inmediatamente]
+[Token marcado como usado → registro pasa a estado='activa']
         ↓
-[Si era la última firma pendiente → estado "firmado"]
+[Si era la última firma pendiente → albarán pasa a estado "firmado"]
         ↓
 [Email a Elecind: "Albarán {ALB-2026-00032} firmado completo"]
 ```
 
-## 5️⃣ Flujo: Modificación tras "terminado"
+## 6️⃣ Flujo: Modificación tras "terminado"
 
 ```
 [Albarán en estado "terminado" → bloqueado]
@@ -143,19 +168,22 @@
 [Modal de advertencia: 
    "Este albarán está terminado. 
     Si lo modificas, se notificará al cliente.
+    Las firmas anteriores se invalidarán y habrá que volver a firmar.
     ¿Continuar?"]
         ↓
 [Confirma → albarán desbloqueado temporalmente]
+   - Firmas anteriores → estado='invalidada' (soft delete)
         ↓
 [Realiza cambios → Guardar]
         ↓
 [Sistema]:
-   - Vuelve a bloquear
+   - Genera nuevas peticiones de firma
+   - Vuelve a bloquear cuando todo firmado
    - Registra cambio en Activity Log
-   - Envía email a Elecind con resumen de cambios
+   - Envía email a la empresa con resumen de cambios
 ```
 
-## 6️⃣ Flujo: Stock y entrada de material
+## 7️⃣ Flujo: Stock y entrada de material
 
 ```
 [Compras → llega material nuevo]
@@ -171,7 +199,7 @@
 [Lote disponible para asignar a proyectos]
 ```
 
-## 7️⃣ Flujo: Stock bajo
+## 8️⃣ Flujo: Stock bajo
 
 ```
 [Trabajador firma albarán con 5 tornillos]
@@ -181,13 +209,13 @@
 [Sistema comprueba: stock_disponible <= stock_minimo?]
    SÍ Y notificar_stock_bajo=true:
         ↓
-   [Email SOLO al admin del tenant (no superadmin)]
+   [Email SOLO al admin (no superadmin)]
    [Incidencia automática tipo "stock_bajo"]
         ↓
    [Admin puede ver incidencia + gestionar entrada nueva]
 ```
 
-## 8️⃣ Flujo: Ausencias
+## 9️⃣ Flujo: Ausencias
 
 ```
 [Trabajador → móvil → Faltas de Asistencia]
@@ -206,7 +234,7 @@
 [Aparece en Control de Horas del trabajador]
 ```
 
-## 9️⃣ Flujo: Incidencias
+## 🔟 Flujo: Incidencias
 
 ```
 [Cualquiera puede crear incidencia desde menú "⋮" del móvil o desde web]
@@ -228,28 +256,4 @@
         ↓
 [Visible dentro del albarán/ausencia si está ligada]
 [Listado general en sección Incidencias]
-```
-
-## 🔟 Flujo: Alta de nuevo tenant (Fase 6)
-
-```
-[Cliente paga suscripción en getradi.es (web SaaS)]
-        ↓
-[Web envía webhook a admin.getradi.es]
-        ↓
-[Sistema central recibe webhook:
-   - Crea registro en `tenants`
-   - Llama a API LucusHost: crear BD + subdominio
-   - Aplica migraciones tenant
-   - Crea usuario superadmin + admin con CIF como password temporal
-     (username: cif del cliente)
-   - Asigna plan + funcionalidades]
-        ↓
-[Email al cliente con: URL + credenciales + URL del formulario de configuración]
-        ↓
-[Cliente entra en {tenant}.getradi.es]
-[Completa formulario de empresa + cambia contraseña]
-[Sube logo, configura colores]
-        ↓
-[App lista para usar]
 ```
