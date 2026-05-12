@@ -52,7 +52,7 @@ chore(deps): actualizar Livewire a 3.5
 ### PHP / Laravel
 - **Modelos**: `PascalCase`, singular → `Albaran`, `MaterialLote`.
 - **Controladores**: `PascalCase`, sufijo Controller → `AlbaranController`.
-- **Tablas**: `snake_case`, plural → `albaranes`, `material_lotes`.
+- **Tablas**: `snake_case`, plural → `albaranes`, `material_lotes`, `albaran_lineas_personal`.
 - **Columnas**: `snake_case` → `fecha_inicio`, `usuario_id`.
 - **Métodos**: `camelCase` → `crearAlbaran()`.
 - **Variables**: `camelCase` → `$albaranActual`.
@@ -124,7 +124,7 @@ Workflow `.github/workflows/ci.yml` ejecuta automáticamente:
 ```
 ┌─────────────────────────────────────────────────┐
 │ [Sidebar]   [Título sección]                    │
-│             ┌────────────────��────────────────┐ │
+│             ┌─────────────────────────────────┐ │
 │             │ [+ Añadir] [✎ Modificar] [🗑]   │ │
 │             │              [Excel] [Imprimir] │ │
 │             └─────────────────────────────────┘ │
@@ -154,7 +154,6 @@ v0.2.0 → Fase 1 (MVP base)
 v0.3.0 → Fase 2 (albaranes)
 ...
 v1.0.0 → MVP completo (Fase 5)
-v2.0.0 → SaaS (Fase 6)
 ```
 
 ## 🔐 Seguridad

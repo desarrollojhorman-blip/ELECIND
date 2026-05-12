@@ -106,7 +106,6 @@ roles.gestionar
 permisos.gestionar
 logs.ver
 api.gestionar
-licencia.ver
 backups.gestionar
 ```
 
@@ -150,7 +149,7 @@ public function handle($request, $next) {
 if (auth()->user()->can('albaranes.ver_todos')) {
     $q = Albaran::query();
 } else {
-    $q = Albaran::whereHas('participantes', 
+    $q = Albaran::whereHas('lineasPersonal', 
         fn($q) => $q->where('usuario_id', auth()->id())
     );
 }
@@ -172,7 +171,7 @@ Desde Fase 1 habrá pantalla en web:
 ## 🔒 Casos especiales
 
 ### Stock bajo
-- Notificación → solo a **admin** del tenant (no a superadmin), para no saturar.
+- Notificación → solo a **admin** (no a superadmin), para no saturar.
 - Configurable: el admin puede desactivar.
 
 ### Modificar tras "terminado" o "facturado"
@@ -180,6 +179,7 @@ Desde Fase 1 habrá pantalla en web:
 - Modal de confirmación.
 - Email automático a la empresa.
 - Quedará registrado en activity log.
+- Las firmas anteriores se marcan como `invalidadas`, se generan nuevas (queda historial).
 
 ### Token email de firma
 - No requiere autenticación.
@@ -190,7 +190,3 @@ Desde Fase 1 habrá pantalla en web:
 - Siempre **soft delete**.
 - Albaranes conservan snapshot del nombre/DNI/CIF.
 - Empresa cliente no se puede eliminar si tiene albaranes (debe archivar antes).
-
-### Límite de usuarios por plan (Fase 6)
-- Solo cuentan los `tipo_usuario = 'interno'`.
-- Los responsables externos NO consumen licencia.

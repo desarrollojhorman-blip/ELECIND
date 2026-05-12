@@ -2,6 +2,8 @@
 
 ## 🌐 Arquitectura general
 
+Aplicación Laravel 12 **single-tenant** (una sola base de datos para Elecind).
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                  USUARIOS FINALES                       │
@@ -13,38 +15,26 @@
           │                 │                 │
           ▼                 ▼                 ▼
    ┌─────────────────────────────────────────────┐
-   │   {tenant}.getradi.es — App Laravel 12      │
+   │      App Laravel 12 — elecind.com           │
    │   ┌──────────┐ ┌──────────┐ ┌──────────┐    │
    │   │  Móvil   │ │   Web    │ │   API    │    │
    │   │ Livewire │ │ Livewire │ │ Sanctum  │    │
    │   └──────────┘ └──────────┘ └──────────┘    │
-   │                                             │
-   │   Middleware: tenant resolver (stancl)      │
    └────────────────────┬────────────────────────┘
                         │
-              ┌─────────┴──────────┐
-              │                    │
-              ▼                    ▼
-       ┌──────────────┐    ┌──────────────────┐
-       │ BD CENTRAL   │    │ BD por tenant    │
-       │ getradi_     │    │ tenant_elecind   │
-       │ central      │    │ tenant_aluan     │
-       │              │    │ ...              │
-       │ - tenants    │    │ - users          │
-       │ - domains    │    │ - albaranes      │
-       │ - plans      │    │ - materiales     │
-       │ - subs       │    │ - ...            │
-       └──────────────┘    └──────────────────┘
+                        ▼
+              ┌──────────────────┐
+              │  BD MySQL única  │
+              │   `elecind`      │
+              │                  │
+              │  - users         │
+              │  - albaranes     │
+              │  - materiales    │
+              │  - ...           │
+              └──────────────────┘
 ```
 
-## 🔀 ¿Qué es un "tenant"?
-
-**Tenant = empresa cliente** que usa la app. Cada tenant tiene:
-- Su propio subdominio (ej: `elecind.getradi.es`).
-- Su propia base de datos aislada.
-- Sus usuarios, albaranes, configuración, logo, colores.
-
-`stancl/tenancy` detecta el subdominio y conecta automáticamente a la BD correcta. Imposible que un tenant vea datos de otro.
+> 💡 **Nota futura**: el código se organiza pensando en que mañana, si se quisiera, se pueda introducir multi-tenant. Pero NO es objetivo actual.
 
 ## 🗂️ Estructura de carpetas (Laravel 12)
 
@@ -54,10 +44,9 @@ ELECIND/
 │   ├── Console/
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Central/        # admin.getradi.es
-│   │   │   ├── Web/            # panel admin tenant
-│   │   │   ├── Mobile/         # panel móvil tenant
-│   │   │   └── Api/            # API tenant
+│   │   │   ├── Web/            # panel admin
+│   │   │   ├── Mobile/         # panel móvil
+│   │   │   └── Api/            # API
 │   │   ├── Middleware/
 │   │   └── Requests/
 │   ├── Livewire/
@@ -67,15 +56,10 @@ ELECIND/
 │   │   ├── Incidencias/
 │   │   └── ...
 │   ├── Models/
-│   │   ├── Central/
-│   │   │   ├── Tenant.php
-│   │   │   ├── Plan.php
-│   │   │   └── Subscription.php
-│   │   └── Tenant/
-│   │       ├── User.php
-│   │       ├── Albaran.php
-│   │       ├── MaterialLote.php
-│   │       └── ...
+│   │   ├── User.php
+│   │   ├── Albaran.php
+│   │   ├── MaterialLote.php
+│   │   └── ...
 │   ├── Services/
 │   ├── Policies/
 │   ├── Notifications/
@@ -83,26 +67,30 @@ ELECIND/
 ├── config/
 ├── database/
 │   ├── migrations/
-│   │   ├── central/
-│   │   └── tenant/
 │   └── seeders/
 ├── resources/
 │   ├── views/
+│   │   ├── layouts/
+│   │   │   ├── web.blade.php
+│   │   │   └── mobile.blade.php
+│   │   ├── livewire/
+│   │   ├── web/
+│   │   ├── mobile/
+│   │   ├── pdfs/
+│   │   └── emails/
 │   ├── js/
 │   ├── css/
 │   └── lang/{es,en}/
 ├── routes/
 │   ├── web.php
 │   ├── mobile.php
-│   ├── api.php
-│   ├── central.php
-│   └── tenant.php
+│   └── api.php
 └── storage/
 ```
 
-## 🗄️ Modelo de datos — BD por tenant
+## 🗄️ Modelo de datos
 
-### 👤 Tabla `users` (modelo final)
+### 👤 Tabla `users`
 
 ```
 users
@@ -144,7 +132,7 @@ users
 **Autosugerencia de username** al crear:
 - Si admin escribe nombre "Juan" → sistema sugiere `juan`.
 - Si ya existe → `juan.2`, `juan.3`, etc.
-- Editable. El admin puede aceptar o escribir otro.
+- Editable.
 
 **Diferenciación interno vs externo:**
 
@@ -184,11 +172,25 @@ proyectos
 
 proyecto_usuario    [pivot]  -- trabajadores y responsables asignados
 proyecto_material   [pivot]  -- materiales asignados
-proyecto_concepto   [pivot]  -- conceptos asignados
-
-conceptos
-├── id, nombre, descripcion
+proyecto_concepto   [pivot]  -- conceptos asignados (catálogo global filtrado)
 ```
+
+### 🏷️ Conceptos (catálogo global)
+
+```
+conceptos                        ← catálogo único de toda la app
+├── id
+├── nombre (único)
+├── descripcion
+└── deleted_at
+```
+
+**Funcionamiento:**
+- **Catálogo global** gestionado desde `Configuración → Conceptos`.
+- **Pivot N:M** con proyectos (`proyecto_concepto`): cada proyecto tiene su subconjunto de conceptos asignados.
+- **Creación rápida** desde el formulario de proyecto (botón "+ Crear concepto"): se añade al catálogo Y se asigna automáticamente al proyecto actual.
+- **En el albarán**: select filtrado solo con los conceptos del proyecto + opción "Otro" (texto libre).
+- **Soft delete**: si un concepto se elimina, los albaranes que lo usen mantienen snapshot del nombre.
 
 ### 📦 Materiales y stock
 
@@ -212,10 +214,12 @@ movimientos_stock
 └── created_at
 ```
 
-### 📄 Albaranes
+### 📄 Albaranes (cabecera + líneas + firmas)
+
+**Modelo basado en cabecera + tablas de líneas separadas por tipo + tabla aparte para firmas (evento legal auditable).**
 
 ```
-albaranes
+albaranes                         ← cabecera
 ├── id, numero_completo, numero_correlativo
 ├── tipo (normal/personalizado/web_adjunto)
 ├── estado (borrador/pendiente_firma/firmado_parcial/
@@ -228,22 +232,23 @@ albaranes
 ├── datos_libres_json   (campos "Otro" pendientes de normalizar)
 └── timestamps
 
-albaran_participantes
+albaran_lineas_personal           ← líneas de trabajadores
 ├── id, albaran_id, usuario_id
 ├── horas_normales, horas_extras
 ├── es_creador
 
-albaran_materiales
+albaran_lineas_material           ← líneas de materiales
 ├── id, albaran_id, material_lote_id, cantidad
 ├── descripcion_libre (si avanzado)
 
-albaran_firmas
+albaran_firmas                    ← evento legal auditable (aparte)
 ├── id, albaran_id, tipo (trabajador/responsable)
 ├── firmado_por_usuario_id, firmante_asignado_id
 ├── metodo_firma (cuenta_propia/cuenta_prestada/token_email)
 ├── media_id (PNG via medialibrary)
 ├── fecha, ip, geolocalizacion
 ├── token_hash, token_expira_at, token_usado_at
+├── estado (activa/caducada/invalidada)
 ```
 
 ### 🆘 Ausencias e incidencias
@@ -269,7 +274,7 @@ estados_configurables
 ### ⚙️ Configuración y logs
 
 ```
-configuracion_empresa  (1 sola fila por tenant)
+configuracion_empresa  (1 sola fila)
 ├── nombre, cif, direccion, telefono, email, web
 ├── color_primario, color_secundario
 ├── plantilla_numeracion_albaran
@@ -290,32 +295,6 @@ notificaciones_enviadas
 media [spatie/laravel-medialibrary]
 ├── id, model_type, model_id, collection_name
 ├── file_name, mime_type, size, ...
-```
-
-## 🗄️ Modelo de datos — BD central
-
-```
-tenants
-├── id, nombre, cif
-├── db_name, plan_id, estado_suscripcion
-├── fecha_alta, correo_admin_principal
-├── activo
-
-domains
-├── id, domain, tenant_id
-
-planes
-├── id, nombre, precio_mensual
-├── max_usuarios_activos
-├── funcionalidades_json
-│  (stock, incidencias, api, multi_idioma, ...)
-
-suscripciones
-├── id, tenant_id, plan_id
-├── fecha_inicio, fecha_fin, estado
-├── metodo_pago, ultimo_pago_at
-
-logs_centrales
 ```
 
 ## 🔢 Sistema de numeración configurable
@@ -340,10 +319,10 @@ Plantilla con variables sustituibles:
 
 ## 🛡️ Seguridad
 
-- **Aislamiento por tenant**: BD separada, imposible filtración entre tenants.
 - **Permisos server-side**: Livewire ejecuta todo con sesión autenticada (no expone JSON).
 - **Soft delete global**: nada se borra físicamente.
 - **Auditoría completa** vía Activity Log.
 - **Tokens de firma**: caducan a 7 días (configurable) O al usarse (lo que ocurra primero).
 - **Snapshots** en albaranes: si se borra un usuario, los datos visibles del albarán se conservan.
 - **Login por username** (no email): permite emails duplicados sin comprometer login.
+- **Firmas en tabla aparte**: trazabilidad legal completa (historial, reintentos, anulaciones).

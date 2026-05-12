@@ -1,6 +1,6 @@
 # 📦 STACK TÉCNICO — ELECIND
 
-Stack basado en la guía oficial **Entreredes 2026** (Laravel + Livewire + Alpine.js) con adaptaciones para multi-tenant y firmas digitales.
+Stack basado en la guía oficial **Entreredes 2026** (Laravel + Livewire + Alpine.js) adaptado a aplicación personalizada con firmas digitales.
 
 **Filosofía:** PHP hace casi todo. JS solo para UI. Menos complejidad. Más velocidad. **100% gratis (open source).**
 
@@ -34,15 +34,7 @@ Stack basado en la guía oficial **Entreredes 2026** (Laravel + Livewire + Alpin
 
 Integración con sistema de **niveles jerárquicos** propio (ver `PERMISOS.md`).
 
-## 4. Multi-tenant
-
-| Librería | Función |
-|---|---|
-| `stancl/tenancy` | Resolución de tenant por subdominio + BD separada por tenant |
-
-Configurado desde Fase 0 con 1 solo tenant (Elecind). En Fase 6 se conecta con la API de LucusHost para alta automática.
-
-## 5. Frontend
+## 4. Frontend
 
 | Librería | Función |
 |---|---|
@@ -72,7 +64,7 @@ Configurado desde Fase 0 con 1 solo tenant (Elecind). En Fase 6 se conecta con l
 - **Alpine.js** para estado
 - **Fetch nativo** para envío como PNG base64
 
-## 6. Archivos / Media
+## 5. Archivos / Media
 
 | Librería | Función |
 |---|---|
@@ -86,7 +78,7 @@ Configurado desde Fase 0 con 1 solo tenant (Elecind). En Fase 6 se conecta con l
 - `factura_documentos` (PDFs/JPGs adjuntos como factura — múltiples)
 - `incidencia_fotos` (fotos de incidencias)
 
-## 7. PDF
+## 6. PDF
 
 | Librería | Función |
 |---|---|
@@ -97,7 +89,7 @@ Elegido frente a DomPDF por:
 - Mejor renderizado de tablas
 - CSS más moderno
 
-## 8. Excel
+## 7. Excel
 
 | Librería | Función |
 |---|---|
@@ -105,7 +97,7 @@ Elegido frente a DomPDF por:
 
 Para: clientes, albaranes, horas, ausencias, materiales. Futuro: exportación en formato Factusol.
 
-## 9. Auditoría y logs
+## 8. Auditoría y logs
 
 | Librería | Función |
 |---|---|
@@ -113,13 +105,13 @@ Para: clientes, albaranes, horas, ausencias, materiales. Futuro: exportación en
 
 Registra: login, CRUD de entidades, cambios de estado, firmas, desbloqueos.
 
-## 10. Backups
+## 9. Backups
 
 | Librería | Función |
 |---|---|
 | `spatie/laravel-backup` | Backup BD + archivos + notificación de fallos |
 
-## 11. Data / API
+## 10. Data / API
 
 | Librería | Función |
 |---|---|
@@ -128,7 +120,7 @@ Registra: login, CRUD de entidades, cambios de estado, firmas, desbloqueos.
 
 Para integraciones futuras (Sage, Holded, Factusol).
 
-## 12. Debug y observabilidad
+## 11. Debug y observabilidad
 
 ### Local
 | Librería | Función |
@@ -143,25 +135,25 @@ Para integraciones futuras (Sage, Holded, Factusol).
 | `laravel/pulse` | Métricas tiempo real |
 | `spatie/laravel-health` | Health checks |
 
-## 13. Utilidades
+## 12. Utilidades
 
 | Librería | Función |
 |---|---|
 | `cviebrock/eloquent-sluggable` | URLs limpias |
 | `spatie/laravel-responsecache` | Cache de respuestas HTTP |
 
-## 14. Testing
+## 13. Testing
 
 | Librería | Función |
 |---|---|
 | `laravel/dusk` | Tests de navegador |
 | Pest / PHPUnit | Tests unitarios |
 
-## 15. Notificaciones
+## 14. Notificaciones
 
 - Laravel Mail + SMTP de LucusHost
 - Plantillas en `resources/views/emails`
-- Configurables por usuario y por tenant (toggles activar/desactivar)
+- Configurables por usuario (toggles activar/desactivar)
 
 ---
 
@@ -172,7 +164,8 @@ Para integraciones futuras (Sage, Holded, Factusol).
 | Tabulator.js | Rompe filosofía stack + expone JSON (menos seguro) → Livewire data-table |
 | DomPDF | Peor soporte UTF-8 → mPDF |
 | DataTables.js | Necesita jQuery → incompatible |
-| Stripe / pasarelas pago | Los pagos los gestiona la web SaaS principal, no esta app |
+| `stancl/tenancy` | App single-tenant, NO se necesita multi-tenant ahora |
+| Stripe / pasarelas pago | No aplica en versión actual |
 | Pusher / WebSockets | No hay notificaciones push (solo email) |
 
 ---
@@ -183,4 +176,4 @@ Para integraciones futuras (Sage, Holded, Factusol).
 
 Solo se paga:
 - Hosting LucusHost
-- Dominio `getradi.es`
+- Dominio

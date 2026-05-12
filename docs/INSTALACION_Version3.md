@@ -39,19 +39,16 @@ Editar `.env` con:
 ```env
 APP_NAME=Elecind
 APP_ENV=local
-APP_URL=http://getradi.test
+APP_URL=http://elecind.test
 APP_DEBUG=true
 
-# BD central
+# BD
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=getradi_central
+DB_DATABASE=elecind
 DB_USERNAME=root
 DB_PASSWORD=
-
-# Multi-tenancy
-TENANT_DB_PREFIX=tenant_
 
 # Mail (rellenar después con LucusHost SMTP)
 MAIL_MAILER=smtp
@@ -60,30 +57,27 @@ MAIL_PORT=587
 MAIL_USERNAME=
 MAIL_PASSWORD=
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=no-reply@getradi.es
+MAIL_FROM_ADDRESS=no-reply@elecind.com
 MAIL_FROM_NAME="${APP_NAME}"
 
 # Tokens de firma
 FIRMA_TOKEN_DEFAULT_DIAS=7
 ```
 
-## 4️⃣ Crear bases de datos
+## 4️⃣ Crear base de datos
 
 Entrar en phpMyAdmin (`http://localhost/phpmyadmin`) y crear:
 
-- `getradi_central`
-- `tenant_elecind`
+- `elecind`
 
-## 5️⃣ Configurar virtual hosts
+## 5️⃣ Configurar virtual host (opcional pero recomendado)
 
 ### A. Editar `hosts` (como Administrador)
 
 `C:\Windows\System32\drivers\etc\hosts`:
 
 ```
-127.0.0.1   getradi.test
-127.0.0.1   admin.getradi.test
-127.0.0.1   elecind.getradi.test
+127.0.0.1   elecind.test
 ```
 
 ### B. Editar Apache vhosts
@@ -92,15 +86,14 @@ Entrar en phpMyAdmin (`http://localhost/phpmyadmin`) y crear:
 
 ```apache
 <VirtualHost *:80>
-    ServerName getradi.test
-    ServerAlias *.getradi.test
+    ServerName elecind.test
     DocumentRoot "C:/xampp/htdocs/ELECIND/public"
     <Directory "C:/xampp/htdocs/ELECIND/public">
         AllowOverride All
         Require all granted
     </Directory>
-    ErrorLog "logs/getradi-error.log"
-    CustomLog "logs/getradi-access.log" common
+    ErrorLog "logs/elecind-error.log"
+    CustomLog "logs/elecind-access.log" common
 </VirtualHost>
 ```
 
@@ -114,13 +107,13 @@ Include conf/extra/httpd-vhosts.conf
 
 ### D. Reiniciar Apache desde el panel de XAMPP.
 
+> **Alternativa rápida sin vhost**: usar `php artisan serve` y acceder a `http://localhost:8000`.
+
 ## 6️⃣ Migraciones y seeders
 
 ```bash
-php artisan migrate                  # BD central
-php artisan tenants:create elecind   # Crea tenant + BD
-php artisan tenants:migrate          # Migra BDs de tenants
-php artisan db:seed                  # Datos iniciales
+php artisan migrate          # Crea tablas
+php artisan db:seed          # Datos iniciales (usuarios, roles, etc.)
 ```
 
 ## 7️⃣ Compilar assets
@@ -135,9 +128,7 @@ npm run build    # producción
 
 | URL | Para |
 |---|---|
-| `http://getradi.test` | Landing |
-| `http://admin.getradi.test` | Panel SaaS central |
-| `http://elecind.getradi.test` | App Elecind |
+| `http://elecind.test` | App Elecind (web + móvil) |
 
 ### Credenciales iniciales (seeder)
 
@@ -170,7 +161,7 @@ php artisan view:clear
 - Comprobar puerto 80 libre (Skype, IIS).
 - Mirar logs en `C:\xampp\apache\logs\error.log`.
 
-### Subdominios no resuelven
+### Subdominio no resuelve
 - Verificar archivo `hosts` guardado como Administrador.
 - Limpiar caché DNS: `ipconfig /flushdns`.
 
@@ -181,7 +172,7 @@ Actualizar `.env`:
 ```env
 MAIL_HOST=smtp.lucushost.com
 MAIL_PORT=587
-MAIL_USERNAME=tu-email@getradi.es
+MAIL_USERNAME=tu-email@elecind.com
 MAIL_PASSWORD=tu-password
 MAIL_ENCRYPTION=tls
 ```

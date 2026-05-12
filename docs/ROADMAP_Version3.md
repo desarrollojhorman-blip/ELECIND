@@ -10,26 +10,25 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 
 ### Objetivos
 - Proyecto **Laravel 12** funcionando en XAMPP local.
-- Subdominios `getradi.test` operativos.
-- Multi-tenant configurado con 1 tenant (Elecind).
 - Repositorio organizado.
+- Stack base instalado.
 
 ### Tareas
-- [ ] `composer create-project laravel/laravel:^12.0`
-- [ ] Configurar `.env.example` + `.env` con BD local
-- [ ] Instalar TailwindCSS + Livewire 3 + Alpine
-- [ ] Instalar `stancl/tenancy` + configurar BD central + BD tenant
-- [ ] Instalar `spatie/laravel-permission`
-- [ ] Instalar `spatie/laravel-activitylog`
-- [ ] Instalar `spatie/laravel-medialibrary`
-- [ ] Configurar virtualhost Apache + hosts file
-- [ ] Crear estructura de carpetas
-- [ ] Layouts base: `web`, `mobile`, `central`
-- [ ] CI/CD básico (workflows GitHub Actions: lint + tests)
-- [ ] Configurar Pint + Larastan
+- [x] `composer create-project laravel/laravel:^12.0`
+- [x] Configurar `.env.example` + `.env` con BD local
+- [x] Instalar TailwindCSS + Livewire 4 + Alpine
+- [x] Instalar `spatie/laravel-permission`
+- [x] Instalar `spatie/laravel-activitylog`
+- [x] Instalar `spatie/laravel-medialibrary`
+- [x] Instalar `carlos-meneses/laravel-mpdf`
+- [x] Instalar `maatwebsite/excel`
+- [] Crear estructura de carpetas
+- [] Layouts base: `web` y `mobile`
+- [] CI/CD básico (workflows GitHub Actions: lint + tests)
+- [] Configurar Pint + Larastan
 
 ### Entregable
-- App levantada en `http://admin.getradi.test` y `http://elecind.getradi.test` con login básico (por username).
+- App levantada con login básico (por username) y dos layouts (web y móvil).
 
 ---
 
@@ -45,20 +44,20 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 ### Tareas
 - [ ] Modelos + migraciones + factories + seeders
   - Users (con `username` único, autosugerencia, `tipo_usuario` interno/externo)
-  - Roles, Permissions
+  - Roles, Permissions (con nivel + acceso + es_sistema)
   - EmpresasClientes
   - TiposProyecto, Proyectos
   - Materiales, MaterialLotes, MovimientosStock
-  - Conceptos
+  - Conceptos (catálogo global + pivot N:M con proyectos)
 - [ ] Componente Livewire `<livewire:data-table />` reutilizable
 - [ ] CRUD: Usuarios (con roles y niveles, autosugerencia username, avisos duplicado email/dni/cif)
 - [ ] CRUD: Empresas clientes (con responsables = usuarios externos)
 - [ ] CRUD: Tipos proyecto + Proyectos (con usuarios/materiales/conceptos asignados)
 - [ ] CRUD: Materiales + entrada de stock (lotes)
-- [ ] CRUD: Conceptos
+- [ ] CRUD: Conceptos (catálogo global) + asignación N:M desde proyecto
 - [ ] Pantalla "Configuración empresa" (logo, colores, datos, plantilla numeración)
 - [ ] Política de soft delete
-- [ ] Login + middleware web/móvil/superadmin
+- [ ] Login + middleware web/móvil
 - [ ] CRUD roles personalizados con filtro por nivel
 
 ### Entregable
@@ -76,7 +75,11 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - Tokens de firma por email.
 
 ### Tareas
-- [ ] Modelo `Albaran` + relaciones (participantes, materiales, firmas, documentos)
+- [ ] Modelo `Albaran` + tablas:
+  - `albaranes` (cabecera)
+  - `albaran_lineas_personal` (trabajadores + horas)
+  - `albaran_lineas_material` (materiales)
+  - `albaran_firmas` (evento legal auditable)
 - [ ] **Móvil**: pantalla "Parte de Trabajo" (albarán normal)
   - Form Livewire con selects dependientes
   - Compañeros dinámicos (horas normales + extras opcionales)
@@ -144,7 +147,7 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - [ ] **Móvil**: subir fotos (medialibrary)
 - [ ] **Web**: gestión completa de ausencias + flujo de aprobación
 - [ ] **Web**: gestión completa de incidencias
-- [ ] Notificaciones email configurables (toggles por tenant y por usuario)
+- [ ] Notificaciones email configurables (toggles por usuario)
 - [ ] Alertas automáticas de stock bajo → email al admin + incidencia auto
 - [ ] Vista de incidencias asociadas dentro de albarán/ausencia
 
@@ -179,42 +182,13 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - [ ] Preparar (sin implementar) exportación formato Factusol
 
 ### Entregable
-- Reportes operativos para el cliente. **MVP listo para usar en Elecind.**
+- Reportes operativos. **App lista para usar en producción en Elecind.**
 
 ---
 
-## 🌐 Fase 6 — SaaS multi-tenant completo (3 semanas)
+## 🔌 Fase 6 — API e integraciones (futuro)
 
-**Rama:** `fase-6-saas`
-
-### Objetivos
-- Alta automática de tenants.
-- Panel central de gestión SaaS.
-
-### Tareas
-- [ ] BD central completa: tenants, planes, suscripciones
-- [ ] Panel `admin.getradi.es`:
-  - CRUD tenants
-  - CRUD planes (precio, max usuarios, features)
-  - Vista suscripciones + estado pagos
-  - Logs centrales
-- [ ] Integración API LucusHost (crear BD + subdominio)
-- [ ] Recepción de webhook desde web SaaS principal cuando se paga
-- [ ] Formulario alta empresa (datos + logo + admin inicial)
-- [ ] Email con credenciales + URL al admin del nuevo tenant
-- [ ] Feature flags por plan (esconder módulos según licencia)
-- [ ] Validación de límite de usuarios activos por plan (solo cuentan `tipo_usuario='interno'`)
-- [ ] Personalización por tenant: login con logo + colores
-- [ ] Soporte multi-idioma (ES/EN) preparado
-
-### Entregable
-- SaaS funcionando: pagos en web principal → tenant creado automáticamente → cliente logueado en su subdominio.
-
----
-
-## 🔌 Fase 7 — API e integraciones (futuro)
-
-**Rama:** `fase-7-api`
+**Rama:** `fase-6-api`
 
 ### Objetivos
 - API REST documentada.
@@ -234,6 +208,20 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 
 ---
 
+## 🌐 Fase 7 — Multi-tenant SaaS (opcional, futuro lejano)
+
+**Rama:** `fase-7-saas`
+
+> ⚠️ **NO es objetivo actual.** Solo se valorará si después del MVP en Elecind se decide vender la app a otras empresas.
+
+### Posibles tareas (si se decide)
+- Migrar a `stancl/tenancy` con BD por tenant.
+- Crear panel central de gestión SaaS.
+- Integración pagos / suscripciones.
+- Alta automática de tenants vía API LucusHost.
+
+---
+
 ## 📅 Resumen de tiempos estimados
 
 | Fase | Tiempo | Acumulado |
@@ -245,5 +233,5 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 | Fase 4 | 2 sem | 11-13 sem |
 | Fase 5 | 2 sem | 13-15 sem |
 | **MVP listo para Elecind** | | **≈ 4 meses** |
-| Fase 6 | 3 sem | 16-18 sem |
-| Fase 7 | A demanda | — |
+| Fase 6 | A demanda | — |
+| Fase 7 | A futuro | — |
