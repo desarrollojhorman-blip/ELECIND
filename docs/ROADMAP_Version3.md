@@ -26,13 +26,14 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - [x] Layouts base: `web` y `mobile`
 - [x] CI/CD básico (workflows GitHub Actions: lint + tests)
 - [x] Configurar Pint + Larastan
+- [x] Login + middleware web/móvil
 
 ### Entregable
-- App levantada con login básico (por username) y dos layouts (web y móvil).
+- [x] App levantada con login básico (por username) y dos layouts (web y móvil).
 
 ---
 
-## 🏗️ Fase 1 — MVP base: usuarios, clientes, proyectos, materiales (3-4 semanas)
+## 🚧 Fase 1 — MVP base: usuarios, clientes, proyectos, materiales (3-4 semanas)
 
 **Rama:** `fase-1-mvp-base`
 
@@ -42,13 +43,14 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - Configuración empresa con logo y colores.
 
 ### Tareas
-- [ ] Modelos + migraciones + factories + seeders
-  - Users (con `username` único, autosugerencia, `tipo_usuario` interno/externo)
-  - Roles, Permissions (con nivel + acceso + es_sistema)
-  - EmpresasClientes
-  - TiposProyecto, Proyectos
-  - Materiales, MaterialLotes, MovimientosStock
-  - Conceptos (catálogo global + pivot N:M con proyectos)
+- [x] Modelos + migraciones base del dominio Fase 1
+  - [x] EmpresasClientes
+  - [x] TiposProyecto, Proyectos
+  - [x] Materiales, MaterialLotes, MovimientosStock
+  - [x] Conceptos (catálogo global + pivot N:M con proyectos)
+  - [x] Relaciones base con Users (`empresa_cliente_id`, responsable principal y asignaciones a proyecto)
+- [ ] Factories + seeders de entidades Fase 1
+- [ ] Extender Roles y Permissions con `nivel` + `acceso` + `es_sistema`
 - [ ] Componente Livewire `<livewire:data-table />` reutilizable
 - [ ] CRUD: Usuarios (con roles y niveles, autosugerencia username, avisos duplicado email/dni/cif)
 - [ ] CRUD: Empresas clientes (con responsables = usuarios externos)
@@ -57,11 +59,17 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - [ ] CRUD: Conceptos (catálogo global) + asignación N:M desde proyecto
 - [ ] Pantalla "Configuración empresa" (logo, colores, datos, plantilla numeración)
 - [ ] Política de soft delete
-- [ ] Login + middleware web/móvil
+- [x] Login + middleware web/móvil
 - [ ] CRUD roles personalizados con filtro por nivel
 
 ### Entregable
 - Admin puede configurar toda la base de datos antes de empezar a crear albaranes.
+
+### Estado actual
+- [x] Fase 0 cerrada y validada
+- [x] Base de datos núcleo de Fase 1 creada y migrando correctamente
+- [ ] CRUD y pantallas de gestión pendientes
+- [ ] Seeds de negocio pendientes
 
 ---
 

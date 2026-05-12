@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -62,5 +64,17 @@ class User extends Authenticatable
             'preferencias_notificaciones' => 'array',
             'snapshot_data' => 'array',
         ];
+    }
+
+    public function empresaCliente(): BelongsTo
+    {
+        return $this->belongsTo(EmpresasCliente::class, 'empresa_cliente_id');
+    }
+
+    public function proyectos(): BelongsToMany
+    {
+        return $this->belongsToMany(Proyecto::class, 'proyecto_usuario')
+            ->withPivot('rol_en_proyecto')
+            ->withTimestamps();
     }
 }
