@@ -22,10 +22,10 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 - [x] Instalar `spatie/laravel-medialibrary`
 - [x] Instalar `carlos-meneses/laravel-mpdf`
 - [x] Instalar `maatwebsite/excel`
-- [] Crear estructura de carpetas
-- [] Layouts base: `web` y `mobile`
-- [] CI/CD básico (workflows GitHub Actions: lint + tests)
-- [] Configurar Pint + Larastan
+- [x] Crear estructura de carpetas
+- [x] Layouts base: `web` y `mobile`
+- [x] CI/CD básico (workflows GitHub Actions: lint + tests)
+- [x] Configurar Pint + Larastan
 
 ### Entregable
 - App levantada con login básico (por username) y dos layouts (web y móvil).
