@@ -47,4 +47,40 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function trabajador(): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'tipo_usuario' => 'interno',
+            'empresa_cliente_id' => null,
+            'acceso' => 'movil',
+            'dni' => $this->generarDni(),
+        ]);
+    }
+
+    public function responsableDe(int $empresaClienteId): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'tipo_usuario' => 'externo',
+            'empresa_cliente_id' => $empresaClienteId,
+            'acceso' => 'movil',
+        ]);
+    }
+
+    public function administrador(): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'tipo_usuario' => 'interno',
+            'empresa_cliente_id' => null,
+            'acceso' => 'web',
+        ]);
+    }
+
+    private function generarDni(): string
+    {
+        $numero = fake()->unique()->numberBetween(10_000_000, 99_999_999);
+        $letras = 'TRWAGMYFPDXBNJZSQVHLCKE';
+
+        return $numero.$letras[$numero % 23];
+    }
 }

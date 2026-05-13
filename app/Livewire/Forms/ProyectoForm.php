@@ -1,0 +1,132 @@
+<?php
+
+namespace App\Livewire\Forms;
+
+use App\Models\Proyecto;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+class ProyectoForm extends Form
+{
+    public ?int $id = null;
+
+    #[Validate]
+    public string $nombre = '';
+
+    #[Validate]
+    public ?string $codigo = null;
+
+    #[Validate]
+    public ?int $empresa_cliente_id = null;
+
+    #[Validate]
+    public ?int $tipo_proyecto_id = null;
+
+    #[Validate]
+    public ?int $responsable_principal_id = null;
+
+    #[Validate]
+    public string $estado = 'borrador';
+
+    #[Validate]
+    public ?string $fecha_inicio = null;
+
+    #[Validate]
+    public ?string $fecha_fin = null;
+
+    #[Validate]
+    public ?string $descripcion = null;
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    public function rules(): array
+    {
+        return [
+            'nombre' => ['required', 'string', 'max:255'],
+            'codigo' => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('proyectos', 'codigo')
+                    ->where('empresa_cliente_id', $this->empresa_cliente_id)
+                    ->ignore($this->id)
+                    ->whereNull('deleted_at'),
+            ],
+            'empresa_cliente_id' => ['required', 'integer', 'exists:empresas_clientes,id'],
+            'tipo_proyecto_id' => ['nullable', 'integer', 'exists:tipos_proyectos,id'],
+            'responsable_principal_id' => ['nullable', 'integer', 'exists:users,id'],
+            'estado' => ['required', Rule::in(['borrador', 'activo', 'cerrado', 'archivado'])],
+            'fecha_inicio' => ['nullable', 'date'],
+            'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
+            'descripcion' => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function validationAttributes(): array
+    {
+        return [
+            'nombre' => 'nombre',
+            'codigo' => 'código',
+            'empresa_cliente_id' => 'cliente',
+            'tipo_proyecto_id' => 'tipo de proyecto',
+            'responsable_principal_id' => 'responsable principal',
+            'estado' => 'estado',
+            'fecha_inicio' => 'fecha de inicio',
+            'fecha_fin' => 'fecha de fin',
+            'descripcion' => 'descripción',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'codigo.unique' => 'Ya existe otro proyecto con este código en la misma empresa cliente.',
+            'fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+        ];
+    }
+
+    public function fromModel(Proyecto $proyecto): void
+    {
+        $this->id = (int) $proyecto->getKey();
+        $this->nombre = $proyecto->nombre;
+        $this->codigo = $proyecto->codigo;
+        $this->empresa_cliente_id = $proyecto->empresa_cliente_id;
+        $this->tipo_proyecto_id = $proyecto->tipo_proyecto_id;
+        $this->responsable_principal_id = $proyecto->responsable_principal_id;
+        $this->estado = $proyecto->estado;
+        $this->fecha_inicio = $proyecto->fecha_inicio
+            ? Carbon::parse($proyecto->fecha_inicio)->format('Y-m-d')
+            : null;
+        $this->fecha_fin = $proyecto->fecha_fin
+            ? Carbon::parse($proyecto->fecha_fin)->format('Y-m-d')
+            : null;
+        $this->descripcion = $proyecto->descripcion;
+    }
+
+    public function save(): Proyecto
+    {
+        $this->validate();
+
+        $datos = $this->all();
+        unset($datos['id']);
+
+        if ($this->id === null) {
+            $proyecto = new Proyecto;
+        } else {
+            /** @var Proyecto $proyecto */
+            $proyecto = Proyecto::findOrFail($this->id);
+        }
+
+        $proyecto->fill($datos);
+        $proyecto->save();
+
+        return $proyecto;
+    }
+}

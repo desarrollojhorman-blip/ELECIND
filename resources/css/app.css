@@ -5,7 +5,115 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/*
+ |--------------------------------------------------------------------------
+ | Tokens visuales (CSS variables)
+ |--------------------------------------------------------------------------
+ |
+ | Estos valores son los defaults de ELECIND y se pueden sobrescribir en
+ | runtime desde la pantalla "Configuración empresa" inyectando un <style>
+ | en el head con nuevos valores para :root. La identidad visual completa
+ | (color primario, acento, neutros) se controla desde aquí.
+ |
+ | Cascada: cliente → ENIA (default) → texto/logo de fallback.
+ */
+:root {
+    /* Primary (rojo granate ELECIND) */
+    --c-primary-50: #fdf4f4;
+    --c-primary-100: #f9e2e2;
+    --c-primary-200: #f1bcbc;
+    --c-primary-300: #e58e8e;
+    --c-primary-400: #d35a5a;
+    --c-primary-500: #b83333;
+    --c-primary-600: #a52a2a;
+    --c-primary-700: #871f1f;
+    --c-primary-800: #6c1818;
+    --c-primary-900: #561414;
+    --c-primary-950: #2e0808;
+
+    /* Accent (rosa pálido para item activo sidebar + modal header) */
+    --c-accent-50: #fbf2f2;
+    --c-accent-100: #f5e6e6;
+    --c-accent-200: #ecd0d0;
+
+    /* Neutros (fondo, texto, bordes) */
+    --c-surface: #ffffff;
+    --c-surface-muted: #f8fafc;
+    --c-surface-subtle: #f1f5f9;
+    --c-border: #e2e8f0;
+    --c-border-strong: #cbd5e1;
+
+    /* Texto */
+    --c-text: #0f172a;
+    --c-text-muted: #475569;
+    --c-text-subtle: #64748b;
+    --c-text-inverse: #ffffff;
+
+    /* Estado / semánticos */
+    --c-success-bg: #d1fae5;
+    --c-success-fg: #065f46;
+    --c-warning-bg: #fef3c7;
+    --c-warning-fg: #92400e;
+    --c-danger-bg: #fee2e2;
+    --c-danger-fg: #991b1b;
+    --c-info-bg: #dbeafe;
+    --c-info-fg: #1e40af;
+    --c-neutral-bg: #f1f5f9;
+    --c-neutral-fg: #475569;
+
+    /* Botón oscuro (estilo "Aceptar" móvil + secundario web) */
+    --c-dark: #1f2937;
+    --c-dark-hover: #111827;
+}
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --color-primary-50: var(--c-primary-50);
+    --color-primary-100: var(--c-primary-100);
+    --color-primary-200: var(--c-primary-200);
+    --color-primary-300: var(--c-primary-300);
+    --color-primary-400: var(--c-primary-400);
+    --color-primary-500: var(--c-primary-500);
+    --color-primary-600: var(--c-primary-600);
+    --color-primary-700: var(--c-primary-700);
+    --color-primary-800: var(--c-primary-800);
+    --color-primary-900: var(--c-primary-900);
+    --color-primary-950: var(--c-primary-950);
+
+    --color-accent-50: var(--c-accent-50);
+    --color-accent-100: var(--c-accent-100);
+    --color-accent-200: var(--c-accent-200);
+
+    --color-dark: var(--c-dark);
+    --color-dark-hover: var(--c-dark-hover);
+}
+
+/* Pequeños ajustes globales */
+html,
+body {
+    background-color: var(--c-surface-muted);
+    color: var(--c-text);
+}
+
+/* Alpine: ocultar elementos con x-cloak hasta que Alpine inicialice */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Scrollbar discreta */
+@media (pointer: fine) {
+    *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    *::-webkit-scrollbar-thumb {
+        background: var(--c-border-strong);
+        border-radius: 9999px;
+    }
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
 }

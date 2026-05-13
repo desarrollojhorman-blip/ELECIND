@@ -31,7 +31,6 @@ return new class extends Migration
         Schema::create('tipos_proyectos', function (Blueprint $table): void {
             $table->id();
             $table->string('nombre');
-            $table->string('color', 20)->nullable();
             $table->text('descripcion')->nullable();
             $table->boolean('activo')->default(true);
             $table->softDeletes();

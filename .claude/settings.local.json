@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan migrate:fresh --seed --force 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' lint 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' format 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' vendor\\\\bin\\\\pint 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' analyse 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' require blade-ui-kit/blade-heroicons 2>&1)",
+      "PowerShell(npm install @alpinejs/persist --save 2>&1)",
+      "PowerShell(npm run build 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' vendor\\\\bin\\\\phpstan analyse --memory-limit=512M --no-progress 2>&1)"
+    ]
+  }
+}
