@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             AdminUsersSeeder::class,
             Fase1DemoSeeder::class,
+            Fase2DemoSeeder::class,
         ]);
     }
 }

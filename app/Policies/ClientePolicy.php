@@ -2,17 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use App\Models\User;
 
-class EmpresasClientePolicy
+class ClientePolicy
 {
     public function viewAny(User $user): bool
     {
         return $user->can('clientes.ver');
     }
 
-    public function view(User $user, EmpresasCliente $empresa): bool
+    public function view(User $user, Cliente $cliente): bool
     {
         return $user->can('clientes.ver');
     }
@@ -22,17 +22,17 @@ class EmpresasClientePolicy
         return $user->can('clientes.crear');
     }
 
-    public function update(User $user, EmpresasCliente $empresa): bool
+    public function update(User $user, Cliente $cliente): bool
     {
         return $user->can('clientes.modificar');
     }
 
-    public function delete(User $user, EmpresasCliente $empresa): bool
+    public function delete(User $user, Cliente $cliente): bool
     {
         return $user->can('clientes.eliminar');
     }
 
-    public function restore(User $user, EmpresasCliente $empresa): bool
+    public function restore(User $user, Cliente $cliente): bool
     {
         return $user->can('clientes.modificar');
     }

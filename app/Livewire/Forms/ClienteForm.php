@@ -2,14 +2,17 @@
 
 namespace App\Livewire\Forms;
 
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
-class EmpresasClienteForm extends Form
+class ClienteForm extends Form
 {
     public ?int $id = null;
+
+    #[Validate]
+    public ?int $numero_cliente = null;
 
     #[Validate]
     public string $nombre = '';
@@ -39,9 +42,6 @@ class EmpresasClienteForm extends Form
     public ?string $email = null;
 
     #[Validate]
-    public ?string $correo_notificaciones = null;
-
-    #[Validate]
     public bool $activo = true;
 
     #[Validate]
@@ -53,11 +53,12 @@ class EmpresasClienteForm extends Form
     public function rules(): array
     {
         return [
+            'numero_cliente' => ['required', 'integer', 'min:1', Rule::unique('clientes', 'numero_cliente')->ignore($this->id)],
             'nombre' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
             'cif' => [
                 'nullable', 'string', 'max:20',
-                Rule::unique('empresas_clientes', 'cif')->ignore($this->id)->whereNull('deleted_at'),
+                Rule::unique('clientes', 'cif')->ignore($this->id)->whereNull('deleted_at'),
             ],
             'direccion' => ['nullable', 'string', 'max:255'],
             'codigo_postal' => ['nullable', 'string', 'max:10'],
@@ -65,7 +66,6 @@ class EmpresasClienteForm extends Form
             'provincia' => ['nullable', 'string', 'max:255'],
             'telefono' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
-            'correo_notificaciones' => ['nullable', 'email', 'max:255'],
             'activo' => ['boolean'],
             'observaciones' => ['nullable', 'string', 'max:2000'],
         ];
@@ -77,6 +77,7 @@ class EmpresasClienteForm extends Form
     public function validationAttributes(): array
     {
         return [
+            'numero_cliente' => 'nº cliente',
             'nombre' => 'nombre',
             'nombre_comercial' => 'nombre comercial',
             'cif' => 'CIF',
@@ -86,30 +87,29 @@ class EmpresasClienteForm extends Form
             'provincia' => 'provincia',
             'telefono' => 'teléfono',
             'email' => 'email',
-            'correo_notificaciones' => 'correo de notificaciones',
             'activo' => 'activo',
             'observaciones' => 'observaciones',
         ];
     }
 
-    public function fromModel(EmpresasCliente $empresa): void
+    public function fromModel(Cliente $cliente): void
     {
-        $this->id = (int) $empresa->getKey();
-        $this->nombre = $empresa->nombre;
-        $this->nombre_comercial = $empresa->nombre_comercial;
-        $this->cif = $empresa->cif;
-        $this->direccion = $empresa->direccion;
-        $this->codigo_postal = $empresa->codigo_postal;
-        $this->poblacion = $empresa->poblacion;
-        $this->provincia = $empresa->provincia;
-        $this->telefono = $empresa->telefono;
-        $this->email = $empresa->email;
-        $this->correo_notificaciones = $empresa->correo_notificaciones;
-        $this->activo = (bool) $empresa->activo;
-        $this->observaciones = $empresa->observaciones;
+        $this->id = (int) $cliente->getKey();
+        $this->numero_cliente = $cliente->numero_cliente;
+        $this->nombre = $cliente->nombre;
+        $this->nombre_comercial = $cliente->nombre_comercial;
+        $this->cif = $cliente->cif;
+        $this->direccion = $cliente->direccion;
+        $this->codigo_postal = $cliente->codigo_postal;
+        $this->poblacion = $cliente->poblacion;
+        $this->provincia = $cliente->provincia;
+        $this->telefono = $cliente->telefono;
+        $this->email = $cliente->email;
+        $this->activo = (bool) $cliente->activo;
+        $this->observaciones = $cliente->observaciones;
     }
 
-    public function save(): EmpresasCliente
+    public function save(): Cliente
     {
         $this->validate();
 
@@ -117,15 +117,15 @@ class EmpresasClienteForm extends Form
         unset($datos['id']);
 
         if ($this->id === null) {
-            $empresa = new EmpresasCliente;
+            $cliente = new Cliente;
         } else {
-            /** @var EmpresasCliente $empresa */
-            $empresa = EmpresasCliente::findOrFail($this->id);
+            /** @var Cliente $cliente */
+            $cliente = Cliente::findOrFail($this->id);
         }
 
-        $empresa->fill($datos);
-        $empresa->save();
+        $cliente->fill($datos);
+        $cliente->save();
 
-        return $empresa;
+        return $cliente;
     }
 }

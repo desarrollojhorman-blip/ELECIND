@@ -2,38 +2,48 @@
 
 namespace App\Providers;
 
-use App\Models\EmpresasCliente;
+use App\Models\AlbaranLineaMaterial;
+use App\Models\Cliente;
+use App\Models\Concepto;
+use App\Models\Empresa;
 use App\Models\Material;
 use App\Models\MaterialLote;
 use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\TiposProyecto;
-use App\Policies\EmpresasClientePolicy;
+use App\Models\User;
+use App\Observers\AlbaranLineaMaterialObserver;
+use App\Policies\ClientePolicy;
+use App\Policies\ConceptoPolicy;
+use App\Policies\EmpresaPolicy;
 use App\Policies\MaterialLotePolicy;
 use App\Policies\MaterialPolicy;
 use App\Policies\ProyectoPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\TiposProyectoPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        Gate::policy(EmpresasCliente::class, EmpresasClientePolicy::class);
+        Gate::policy(Cliente::class, ClientePolicy::class);
         Gate::policy(TiposProyecto::class, TiposProyectoPolicy::class);
         Gate::policy(Proyecto::class, ProyectoPolicy::class);
         Gate::policy(Material::class, MaterialPolicy::class);
         Gate::policy(MaterialLote::class, MaterialLotePolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Concepto::class, ConceptoPolicy::class);
+        Gate::policy(Empresa::class, EmpresaPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
+
+        AlbaranLineaMaterial::observe(AlbaranLineaMaterialObserver::class);
     }
 }

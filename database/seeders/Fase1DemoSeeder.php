@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cliente;
 use App\Models\Concepto;
-use App\Models\EmpresasCliente;
 use App\Models\Material;
 use App\Models\MaterialLote;
 use App\Models\Proyecto;
@@ -34,9 +34,9 @@ class Fase1DemoSeeder extends Seeder
 
         $conceptos = Concepto::factory()->count(15)->create();
 
-        $empresas = EmpresasCliente::factory()->count(5)->create();
+        $empresas = Cliente::factory()->count(5)->create();
 
-        $responsables = $empresas->map(function (EmpresasCliente $empresa): User {
+        $responsables = $empresas->map(function (Cliente $empresa): User {
             $responsable = User::factory()
                 ->responsableDe($empresa->id)
                 ->create();
@@ -53,14 +53,14 @@ class Fase1DemoSeeder extends Seeder
                 ->create(['material_id' => $material->id]);
         });
 
-        $empresas->each(function (EmpresasCliente $empresa) use ($tipos, $conceptos, $materiales, $trabajadores, $responsables): void {
-            $responsableEmpresa = $responsables->firstWhere('empresa_cliente_id', $empresa->id);
+        $empresas->each(function (Cliente $empresa) use ($tipos, $conceptos, $materiales, $trabajadores, $responsables): void {
+            $responsableEmpresa = $responsables->firstWhere('cliente_id', $empresa->id);
             $cantidadProyectos = random_int(2, 3);
 
             for ($i = 0; $i < $cantidadProyectos; $i++) {
                 /** @var Proyecto $proyecto */
                 $proyecto = Proyecto::factory()->create([
-                    'empresa_cliente_id' => $empresa->id,
+                    'cliente_id' => $empresa->id,
                     'tipo_proyecto_id' => $tipos->random()->id,
                     'responsable_principal_id' => $responsableEmpresa?->id,
                 ]);

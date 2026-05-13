@@ -47,7 +47,7 @@
         [
             'label' => 'Usuarios',
             'icon' => 'heroicon-o-users',
-            'route' => null,
+            'route' => 'usuarios.index',
             'key' => 'usuarios',
             'permission' => 'usuarios.ver_todos',
         ],
@@ -65,9 +65,33 @@
             'key' => 'incidencias',
             'permission' => 'incidencias.ver_todas',
         ],
-        // Configuración (logo, colores, numeración, conceptos…) volverá aquí cuando
-        // tengamos al menos un subitem real. Por ahora, los Tipos de proyecto se
-        // gestionan al vuelo desde el formulario de Proyecto (no requieren UI propia).
+        [
+            'label' => 'Configuración',
+            'icon' => 'heroicon-o-cog-6-tooth',
+            'route' => null,
+            'key' => 'configuracion',
+            'permission' => null,
+            'children' => [
+                [
+                    'label' => 'Empresa',
+                    'route' => 'configuracion.empresa',
+                    'key' => 'empresa',
+                    'permission' => 'configuracion.empresa',
+                ],
+                [
+                    'label' => 'Roles y permisos',
+                    'route' => 'configuracion.roles',
+                    'key' => 'roles',
+                    'permission' => 'roles.gestionar',
+                ],
+                [
+                    'label' => 'Conceptos',
+                    'route' => 'conceptos.index',
+                    'key' => 'conceptos',
+                    'permission' => 'conceptos.ver',
+                ],
+            ],
+        ],
     ];
 @endphp
 
@@ -127,13 +151,23 @@
                 @endif
 
                 @php
-                    $isActive = $active === $item['key'] || isset($item['children']) && collect($item['children'])->pluck('key')->contains($active);
-                    $disabled = $item['route'] === null && empty($item['children']);
-                    $href = $item['route'] ? route($item['route']) : '#';
+                    // Filtrar children por permission individual antes de pintar.
+                    $childrenVisibles = collect($item['children'] ?? [])
+                        ->filter(fn ($c) => empty($c['permission']) || auth()->user()?->can($c['permission']))
+                        ->values()
+                        ->all();
                 @endphp
 
+                {{-- Si el item es un contenedor (sin route propia) y ningún hijo es visible, saltar. --}}
+                @if (! empty($item['children']) && $item['route'] === null && count($childrenVisibles) === 0)
+                    @continue
+                @endif
+
                 @php
-                    $hasChildren = ! empty($item['children']);
+                    $hasChildren = count($childrenVisibles) > 0;
+                    $isActive = $active === $item['key'] || collect($childrenVisibles)->pluck('key')->contains($active);
+                    $disabled = $item['route'] === null && ! $hasChildren;
+                    $href = $item['route'] ? route($item['route']) : '#';
                     $isToggle = $hasChildren && $item['route'] === null;
                     $itemClasses = [
                         'group flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
@@ -178,7 +212,7 @@
                             x-transition:enter-start="opacity-0 -translate-y-1"
                             x-transition:enter-end="opacity-100 translate-y-0"
                             class="mt-0.5 ml-7 space-y-0.5 border-l border-slate-200 pl-2">
-                            @foreach ($item['children'] as $child)
+                            @foreach ($childrenVisibles as $child)
                                 @php
                                     $childActive = $active === $child['key'];
                                     $childHref = $child['route'] ? route($child['route']) : '#';

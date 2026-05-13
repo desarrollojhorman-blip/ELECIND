@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
@@ -13,61 +13,17 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $permissions = [
-            'albaranes.ver_todos',
-            'albaranes.ver_propios',
-            'albaranes.crear_movil',
-            'albaranes.crear_web',
-            'albaranes.modificar',
-            'albaranes.modificar_terminado',
-            'albaranes.firmar',
-            'albaranes.imprimir',
-            'albaranes.exportar',
-            'usuarios.ver_todos',
-            'usuarios.crear_superadmin',
-            'usuarios.crear_administrador',
-            'usuarios.crear_trabajador',
-            'usuarios.crear_responsable',
-            'usuarios.modificar',
-            'usuarios.eliminar',
-            'clientes.ver',
-            'clientes.crear',
-            'clientes.modificar',
-            'clientes.eliminar',
-            'proyectos.ver',
-            'proyectos.crear',
-            'proyectos.modificar',
-            'proyectos.eliminar',
-            'tipos_proyecto.ver',
-            'tipos_proyecto.crear',
-            'tipos_proyecto.modificar',
-            'tipos_proyecto.eliminar',
-            'materiales.ver',
-            'materiales.crear',
-            'materiales.modificar',
-            'materiales.eliminar',
-            'stock.entrada',
-            'stock.ajustar',
-            'ausencias.ver_todas',
-            'ausencias.ver_propias',
-            'ausencias.solicitar',
-            'ausencias.aprobar',
-            'incidencias.ver_todas',
-            'incidencias.ver_propias',
-            'incidencias.crear',
-            'incidencias.modificar',
-            'configuracion.empresa',
-            'configuracion.numeracion_albaran',
-            'roles.gestionar',
-            'permisos.gestionar',
-            'logs.ver',
-        ];
+        $permisos = $this->catalogoPermisos();
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => 'web',
-            ]);
+        foreach ($permisos as $permiso) {
+            Permission::updateOrCreate(
+                ['name' => $permiso['name'], 'guard_name' => 'web'],
+                [
+                    'ambito' => $permiso['ambito'],
+                    'descripcion' => $permiso['descripcion'],
+                    'categoria' => $permiso['categoria'],
+                ]
+            );
         }
 
         $superadmin = Role::firstOrCreate(
@@ -90,59 +46,135 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
         );
 
+        // Superadmin: todos los permisos.
         $superadmin->syncPermissions(Permission::all());
 
-        $administrador->syncPermissions([
-            'albaranes.ver_todos',
-            'albaranes.crear_web',
-            'albaranes.modificar',
-            'albaranes.imprimir',
-            'albaranes.exportar',
-            'usuarios.ver_todos',
-            'usuarios.crear_administrador',
-            'usuarios.crear_trabajador',
-            'usuarios.crear_responsable',
-            'usuarios.modificar',
-            'clientes.ver',
-            'clientes.crear',
-            'clientes.modificar',
-            'clientes.eliminar',
-            'proyectos.ver',
-            'proyectos.crear',
-            'proyectos.modificar',
-            'proyectos.eliminar',
-            'tipos_proyecto.ver',
-            'tipos_proyecto.crear',
-            'tipos_proyecto.modificar',
-            'tipos_proyecto.eliminar',
-            'materiales.ver',
-            'materiales.crear',
-            'materiales.modificar',
-            'materiales.eliminar',
-            'stock.entrada',
-            'stock.ajustar',
-            'ausencias.ver_todas',
-            'ausencias.aprobar',
-            'incidencias.ver_todas',
-            'incidencias.modificar',
-            'configuracion.empresa',
-            'configuracion.numeracion_albaran',
-            'logs.ver',
-        ]);
+        // Administrador: todos los de ámbito web salvo los de superadmin estrictos.
+        $administrador->syncPermissions(Permission::query()
+            ->whereIn('ambito', ['web', 'ambos'])
+            ->whereNotIn('name', [
+                'usuarios.crear_superadmin',
+                'usuarios.eliminar',       // sólo superadmin elimina usuarios
+                'albaranes.invalidar_firma', // sólo superadmin borra firmas (auditoría legal)
+            ])
+            ->pluck('name')
+            ->all());
 
+        // Trabajador: permisos móviles operativos.
         $trabajador->syncPermissions([
             'albaranes.ver_propios',
             'albaranes.crear_movil',
             'albaranes.firmar',
+            'albaranes.descargar_pdf',
             'ausencias.ver_propias',
             'ausencias.solicitar',
             'incidencias.ver_propias',
             'incidencias.crear',
         ]);
 
+        // Responsable: firma desde móvil o token email.
         $responsable->syncPermissions([
             'albaranes.ver_propios',
             'albaranes.firmar',
+            'albaranes.descargar_pdf',
         ]);
+    }
+
+    /**
+     * Catálogo completo de permisos con ámbito y categoría.
+     *
+     * @return array<int, array{name: string, ambito: string, descripcion: string, categoria: string}>
+     */
+    private function catalogoPermisos(): array
+    {
+        return [
+            // ─────────────── Albaranes ───────────────
+            ['name' => 'albaranes.ver_todos', 'ambito' => 'ambos', 'descripcion' => 'Ver albaranes de TODA la empresa (no solo los propios)', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.ver_propios', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO los albaranes en los que participo', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.crear_movil', 'ambito' => 'movil', 'descripcion' => 'Crear albaranes desde móvil', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.crear_web', 'ambito' => 'web', 'descripcion' => 'Crear albaranes desde web', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar albaranes', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.modificar_terminado', 'ambito' => 'web', 'descripcion' => 'Modificar albaranes terminados', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.firmar', 'ambito' => 'movil', 'descripcion' => 'Firmar albaranes', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir albaranes (PDF)', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar albaranes a Excel', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.descargar_pdf', 'ambito' => 'ambos', 'descripcion' => 'Descargar PDF firmado del albarán', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.solicitar_firma', 'ambito' => 'web', 'descripcion' => 'Generar y enviar tokens de firma por email', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.invalidar_firma', 'ambito' => 'web', 'descripcion' => 'Eliminar firmas registradas (queda en activity log)', 'categoria' => 'albaranes'],
+            ['name' => 'albaranes.facturar', 'ambito' => 'web', 'descripcion' => 'Marcar albaranes como facturados', 'categoria' => 'albaranes'],
+
+            // ─────────────── Usuarios ───────────────
+            ['name' => 'usuarios.ver_todos', 'ambito' => 'web', 'descripcion' => 'Ver lista de usuarios', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.crear_superadmin', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol superadmin', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.crear_administrador', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol administrador', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.crear_trabajador', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol trabajador', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.crear_responsable', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol responsable', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar usuarios', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar usuarios', 'categoria' => 'usuarios'],
+
+            // ─────────────── Clientes ───────────────
+            ['name' => 'clientes.ver', 'ambito' => 'web', 'descripcion' => 'Ver clientes', 'categoria' => 'clientes'],
+            ['name' => 'clientes.crear', 'ambito' => 'web', 'descripcion' => 'Crear clientes', 'categoria' => 'clientes'],
+            ['name' => 'clientes.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar clientes', 'categoria' => 'clientes'],
+            ['name' => 'clientes.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar clientes', 'categoria' => 'clientes'],
+            ['name' => 'clientes.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar clientes a Excel', 'categoria' => 'clientes'],
+            ['name' => 'clientes.importar', 'ambito' => 'web', 'descripcion' => 'Importar clientes desde Excel/CSV', 'categoria' => 'clientes'],
+            ['name' => 'clientes.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de clientes', 'categoria' => 'clientes'],
+
+            // ─────────────── Proyectos ───────────────
+            ['name' => 'proyectos.ver', 'ambito' => 'web', 'descripcion' => 'Ver proyectos', 'categoria' => 'proyectos'],
+            ['name' => 'proyectos.crear', 'ambito' => 'web', 'descripcion' => 'Crear proyectos', 'categoria' => 'proyectos'],
+            ['name' => 'proyectos.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar proyectos', 'categoria' => 'proyectos'],
+            ['name' => 'proyectos.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar proyectos', 'categoria' => 'proyectos'],
+            ['name' => 'proyectos.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar proyectos a Excel', 'categoria' => 'proyectos'],
+            ['name' => 'proyectos.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de proyectos', 'categoria' => 'proyectos'],
+
+            // ─────────────── Tipos de proyecto ───────────────
+            ['name' => 'tipos_proyecto.ver', 'ambito' => 'web', 'descripcion' => 'Ver tipos de proyecto', 'categoria' => 'tipos_proyecto'],
+            ['name' => 'tipos_proyecto.crear', 'ambito' => 'web', 'descripcion' => 'Crear tipos de proyecto', 'categoria' => 'tipos_proyecto'],
+            ['name' => 'tipos_proyecto.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
+            ['name' => 'tipos_proyecto.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
+
+            // ─────────────── Materiales ───────────────
+            ['name' => 'materiales.ver', 'ambito' => 'web', 'descripcion' => 'Ver materiales y lotes', 'categoria' => 'materiales'],
+            ['name' => 'materiales.crear', 'ambito' => 'web', 'descripcion' => 'Crear materiales', 'categoria' => 'materiales'],
+            ['name' => 'materiales.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar materiales', 'categoria' => 'materiales'],
+            ['name' => 'materiales.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar materiales', 'categoria' => 'materiales'],
+            ['name' => 'materiales.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar materiales a Excel', 'categoria' => 'materiales'],
+            ['name' => 'materiales.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de materiales', 'categoria' => 'materiales'],
+
+            // ─────────────── Conceptos ───────────────
+            ['name' => 'conceptos.ver', 'ambito' => 'web', 'descripcion' => 'Ver conceptos', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.crear', 'ambito' => 'web', 'descripcion' => 'Crear conceptos', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar conceptos', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar conceptos', 'categoria' => 'conceptos'],
+
+            // ─────────────── Stock ───────────────
+            ['name' => 'stock.entrada', 'ambito' => 'web', 'descripcion' => 'Registrar entradas de stock', 'categoria' => 'stock'],
+            ['name' => 'stock.ajustar', 'ambito' => 'web', 'descripcion' => 'Ajustar stock (mermas/inventario)', 'categoria' => 'stock'],
+
+            // ─────────────── Ausencias ───────────────
+            ['name' => 'ausencias.ver_todas', 'ambito' => 'web', 'descripcion' => 'Ver ausencias de TODA la empresa (no solo las propias)', 'categoria' => 'ausencias'],
+            ['name' => 'ausencias.ver_propias', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO mis ausencias', 'categoria' => 'ausencias'],
+            ['name' => 'ausencias.solicitar', 'ambito' => 'movil', 'descripcion' => 'Solicitar ausencias', 'categoria' => 'ausencias'],
+            ['name' => 'ausencias.aprobar', 'ambito' => 'web', 'descripcion' => 'Aprobar/rechazar ausencias', 'categoria' => 'ausencias'],
+
+            // ─────────────── Incidencias ───────────────
+            ['name' => 'incidencias.ver_todas', 'ambito' => 'web', 'descripcion' => 'Ver incidencias de TODA la empresa (no solo las propias)', 'categoria' => 'incidencias'],
+            ['name' => 'incidencias.ver_propias', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO mis incidencias', 'categoria' => 'incidencias'],
+            ['name' => 'incidencias.crear', 'ambito' => 'movil', 'descripcion' => 'Crear incidencias', 'categoria' => 'incidencias'],
+            ['name' => 'incidencias.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar incidencias', 'categoria' => 'incidencias'],
+
+            // ─────────────── Configuración ───────────────
+            ['name' => 'configuracion.empresa', 'ambito' => 'web', 'descripcion' => 'Gestionar configuración de empresa', 'categoria' => 'configuracion'],
+            ['name' => 'configuracion.numeracion_albaran', 'ambito' => 'web', 'descripcion' => 'Cambiar plantilla de numeración', 'categoria' => 'configuracion'],
+
+            // ─────────────── Roles y permisos ───────────────
+            ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar roles personalizados', 'categoria' => 'roles'],
+            ['name' => 'permisos.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar permisos (avanzado)', 'categoria' => 'roles'],
+
+            // ─────────────── Sistema ───────────────
+            ['name' => 'logs.ver', 'ambito' => 'ambos', 'descripcion' => 'Ver registro de actividad', 'categoria' => 'sistema'],
+        ];
     }
 }

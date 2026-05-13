@@ -13,7 +13,7 @@ class Proyecto extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'empresa_cliente_id',
+        'cliente_id',
         'tipo_proyecto_id',
         'nombre',
         'codigo',
@@ -32,9 +32,9 @@ class Proyecto extends Model
         ];
     }
 
-    public function empresaCliente(): BelongsTo
+    public function cliente(): BelongsTo
     {
-        return $this->belongsTo(EmpresasCliente::class);
+        return $this->belongsTo(Cliente::class);
     }
 
     public function tipoProyecto(): BelongsTo

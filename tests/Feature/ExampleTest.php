@@ -3,12 +3,20 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+    }
 
     /**
      * A basic test example.
@@ -21,10 +29,10 @@ class ExampleTest extends TestCase
             'apellidos' => 'User',
             'email' => 'test@example.com',
             'tipo_usuario' => 'interno',
-            'acceso' => 'ambos',
             'activo' => true,
             'password' => 'password',
         ]);
+        $user->assignRole('superadmin');
 
         $response = $this->actingAs($user)->get('/');
 

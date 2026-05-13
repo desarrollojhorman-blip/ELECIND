@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +23,7 @@ class ProyectoFactory extends Factory
             : null;
 
         return [
-            'empresa_cliente_id' => EmpresasCliente::factory(),
+            'cliente_id' => Cliente::factory(),
             'tipo_proyecto_id' => TiposProyecto::factory(),
             'nombre' => ucfirst($faker->words(3, true)),
             'codigo' => strtoupper($faker->unique()->bothify('PRY-####-??')),

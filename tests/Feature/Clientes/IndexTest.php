@@ -3,11 +3,12 @@
 namespace Tests\Feature\Clientes;
 
 use App\Livewire\Clientes\Index;
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class IndexTest extends TestCase
@@ -40,7 +41,7 @@ class IndexTest extends TestCase
     public function test_un_admin_puede_ver_el_listado_de_empresas(): void
     {
         $admin = $this->admin();
-        EmpresasCliente::factory()->count(3)->create();
+        Cliente::factory()->count(3)->create();
 
         $response = $this->actingAs($admin)->get(route('clientes.index'));
 
@@ -59,10 +60,16 @@ class IndexTest extends TestCase
 
     public function test_un_usuario_web_sin_permiso_clientes_ver_recibe_403(): void
     {
+        // Rol custom con acceso web pero sin permisos → pasa middleware web pero no policy.
+        $rolSinPermisos = Role::create([
+            'name' => 'web_sin_permisos',
+            'guard_name' => 'web',
+            'nivel' => 10,
+            'acceso' => 'web',
+            'es_sistema' => false,
+        ]);
         $sinPermiso = User::factory()->administrador()->create();
-        // Asignamos rol "trabajador" pero con acceso web manualmente para llegar a la policy.
-        $sinPermiso->update(['acceso' => 'web']);
-        $sinPermiso->assignRole('trabajador');
+        $sinPermiso->assignRole($rolSinPermisos);
 
         $response = $this->actingAs($sinPermiso)->get(route('clientes.index'));
 
@@ -83,10 +90,36 @@ class IndexTest extends TestCase
             ->assertHasNoErrors()
             ->assertSet('modalAbierto', false);
 
-        $this->assertDatabaseHas('empresas_clientes', [
+        $this->assertDatabaseHas('clientes', [
+            'numero_cliente' => 1,
             'nombre' => 'Aluan Industrial SL',
             'cif' => 'B12345678',
         ]);
+    }
+
+    public function test_al_abrir_crear_sugiere_el_siguiente_numero_cliente(): void
+    {
+        $admin = $this->admin();
+        Cliente::factory()->create(['numero_cliente' => 8]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirCrear')
+            ->assertSet('form.numero_cliente', 9);
+    }
+
+    public function test_numero_cliente_debe_ser_unico(): void
+    {
+        $admin = $this->admin();
+        Cliente::factory()->create(['numero_cliente' => 4]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirCrear')
+            ->set('form.numero_cliente', 4)
+            ->set('form.nombre', 'Cliente repetido')
+            ->call('guardar')
+            ->assertHasErrors(['form.numero_cliente' => 'unique']);
     }
 
     public function test_validacion_nombre_obligatorio(): void
@@ -104,7 +137,7 @@ class IndexTest extends TestCase
     public function test_un_admin_puede_editar_una_empresa(): void
     {
         $admin = $this->admin();
-        $empresa = EmpresasCliente::factory()->create(['nombre' => 'Antiguo SL']);
+        $empresa = Cliente::factory()->create(['nombre' => 'Antiguo SL']);
 
         Livewire::actingAs($admin)
             ->test(Index::class)
@@ -114,7 +147,7 @@ class IndexTest extends TestCase
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('empresas_clientes', [
+        $this->assertDatabaseHas('clientes', [
             'id' => $empresa->id,
             'nombre' => 'Renombrado SL',
         ]);
@@ -123,20 +156,20 @@ class IndexTest extends TestCase
     public function test_un_admin_puede_eliminar_y_restaurar_una_empresa(): void
     {
         $admin = $this->admin();
-        $empresa = EmpresasCliente::factory()->create();
+        $empresa = Cliente::factory()->create();
 
         Livewire::actingAs($admin)
             ->test(Index::class)
             ->call('eliminar', $empresa->id);
 
-        $this->assertSoftDeleted('empresas_clientes', ['id' => $empresa->id]);
+        $this->assertSoftDeleted('clientes', ['id' => $empresa->id]);
 
         Livewire::actingAs($admin)
             ->test(Index::class)
             ->set('filtroEstado', 'papelera')
             ->call('restaurar', $empresa->id);
 
-        $this->assertDatabaseHas('empresas_clientes', [
+        $this->assertDatabaseHas('clientes', [
             'id' => $empresa->id,
             'deleted_at' => null,
         ]);
@@ -145,8 +178,8 @@ class IndexTest extends TestCase
     public function test_el_buscador_filtra_por_nombre_cif_email_y_poblacion(): void
     {
         $admin = $this->admin();
-        EmpresasCliente::factory()->create(['nombre' => 'Aluan Industrial SL']);
-        EmpresasCliente::factory()->create(['nombre' => 'Otra empresa SL']);
+        Cliente::factory()->create(['nombre' => 'Aluan Industrial SL']);
+        Cliente::factory()->create(['nombre' => 'Otra empresa SL']);
 
         Livewire::actingAs($admin)
             ->test(Index::class)

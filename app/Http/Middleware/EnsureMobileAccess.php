@@ -8,12 +8,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureMobileAccess
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && (auth()->user()->acceso === 'mobile' || auth()->user()->acceso === 'ambos')) {
+        $user = auth()->user();
+
+        if ($user !== null && $user->tieneAccesoMovil()) {
             return $next($request);
         }
 

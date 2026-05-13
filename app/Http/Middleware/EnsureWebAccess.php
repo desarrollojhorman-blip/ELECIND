@@ -8,12 +8,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureWebAccess
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && (auth()->user()->acceso === 'web' || auth()->user()->acceso === 'ambos')) {
+        $user = auth()->user();
+
+        if ($user !== null && $user->tieneAccesoWeb()) {
             return $next($request);
         }
 

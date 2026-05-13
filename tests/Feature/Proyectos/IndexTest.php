@@ -3,7 +3,7 @@
 namespace Tests\Feature\Proyectos;
 
 use App\Livewire\Proyectos\Index;
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
 use App\Models\User;
@@ -42,8 +42,8 @@ class IndexTest extends TestCase
     public function test_un_admin_puede_ver_el_listado_de_proyectos(): void
     {
         $admin = $this->admin();
-        $cliente = EmpresasCliente::factory()->create();
-        Proyecto::factory()->count(3)->create(['empresa_cliente_id' => $cliente->id]);
+        $cliente = Cliente::factory()->create();
+        Proyecto::factory()->count(3)->create(['cliente_id' => $cliente->id]);
 
         $response = $this->actingAs($admin)->get(route('proyectos.index'));
 
@@ -61,7 +61,7 @@ class IndexTest extends TestCase
     public function test_un_admin_puede_crear_un_proyecto(): void
     {
         $admin = $this->admin();
-        $cliente = EmpresasCliente::factory()->create();
+        $cliente = Cliente::factory()->create();
         $tipo = TiposProyecto::factory()->create();
 
         Livewire::actingAs($admin)
@@ -69,7 +69,7 @@ class IndexTest extends TestCase
             ->call('abrirCrear')
             ->set('form.nombre', 'Marzo-A')
             ->set('form.codigo', 'MAR-A-2026')
-            ->set('form.empresa_cliente_id', $cliente->id)
+            ->set('form.cliente_id', $cliente->id)
             ->set('form.tipo_proyecto_id', $tipo->id)
             ->set('form.estado', 'activo')
             ->call('guardar')
@@ -79,7 +79,7 @@ class IndexTest extends TestCase
         $this->assertDatabaseHas('proyectos', [
             'nombre' => 'Marzo-A',
             'codigo' => 'MAR-A-2026',
-            'empresa_cliente_id' => $cliente->id,
+            'cliente_id' => $cliente->id,
             'tipo_proyecto_id' => $tipo->id,
             'estado' => 'activo',
         ]);
@@ -93,20 +93,20 @@ class IndexTest extends TestCase
             ->test(Index::class)
             ->call('abrirCrear')
             ->set('form.nombre', '')
-            ->set('form.empresa_cliente_id', null)
+            ->set('form.cliente_id', null)
             ->call('guardar')
             ->assertHasErrors([
                 'form.nombre' => 'required',
-                'form.empresa_cliente_id' => 'required',
+                'form.cliente_id' => 'required',
             ]);
     }
 
     public function test_validacion_codigo_unico_por_cliente(): void
     {
         $admin = $this->admin();
-        $cliente = EmpresasCliente::factory()->create();
+        $cliente = Cliente::factory()->create();
         Proyecto::factory()->create([
-            'empresa_cliente_id' => $cliente->id,
+            'cliente_id' => $cliente->id,
             'codigo' => 'PRY-001',
         ]);
 
@@ -114,7 +114,7 @@ class IndexTest extends TestCase
             ->test(Index::class)
             ->call('abrirCrear')
             ->set('form.nombre', 'Otro')
-            ->set('form.empresa_cliente_id', $cliente->id)
+            ->set('form.cliente_id', $cliente->id)
             ->set('form.codigo', 'PRY-001')
             ->call('guardar')
             ->assertHasErrors(['form.codigo' => 'unique']);
@@ -123,11 +123,11 @@ class IndexTest extends TestCase
     public function test_codigo_repetido_es_valido_si_es_otro_cliente(): void
     {
         $admin = $this->admin();
-        $clienteA = EmpresasCliente::factory()->create();
-        $clienteB = EmpresasCliente::factory()->create();
+        $clienteA = Cliente::factory()->create();
+        $clienteB = Cliente::factory()->create();
 
         Proyecto::factory()->create([
-            'empresa_cliente_id' => $clienteA->id,
+            'cliente_id' => $clienteA->id,
             'codigo' => 'PRY-001',
         ]);
 
@@ -135,7 +135,7 @@ class IndexTest extends TestCase
             ->test(Index::class)
             ->call('abrirCrear')
             ->set('form.nombre', 'Para cliente B')
-            ->set('form.empresa_cliente_id', $clienteB->id)
+            ->set('form.cliente_id', $clienteB->id)
             ->set('form.codigo', 'PRY-001')
             ->call('guardar')
             ->assertHasNoErrors();
@@ -144,13 +144,13 @@ class IndexTest extends TestCase
     public function test_validacion_fecha_fin_no_anterior_a_inicio(): void
     {
         $admin = $this->admin();
-        $cliente = EmpresasCliente::factory()->create();
+        $cliente = Cliente::factory()->create();
 
         Livewire::actingAs($admin)
             ->test(Index::class)
             ->call('abrirCrear')
             ->set('form.nombre', 'X')
-            ->set('form.empresa_cliente_id', $cliente->id)
+            ->set('form.cliente_id', $cliente->id)
             ->set('form.fecha_inicio', '2026-05-15')
             ->set('form.fecha_fin', '2026-05-10')
             ->call('guardar')
@@ -242,18 +242,18 @@ class IndexTest extends TestCase
     public function test_filtros_por_tipo_cliente_estado_y_responsable(): void
     {
         $admin = $this->admin();
-        $clienteA = EmpresasCliente::factory()->create();
-        $clienteB = EmpresasCliente::factory()->create();
+        $clienteA = Cliente::factory()->create();
+        $clienteB = Cliente::factory()->create();
         $tipo = TiposProyecto::factory()->create();
 
         Proyecto::factory()->create([
-            'empresa_cliente_id' => $clienteA->id,
+            'cliente_id' => $clienteA->id,
             'tipo_proyecto_id' => $tipo->id,
             'estado' => 'activo',
             'nombre' => 'Visible',
         ]);
         Proyecto::factory()->create([
-            'empresa_cliente_id' => $clienteB->id,
+            'cliente_id' => $clienteB->id,
             'estado' => 'cerrado',
             'nombre' => 'Oculto',
         ]);
@@ -270,7 +270,7 @@ class IndexTest extends TestCase
     public function test_limpiar_filtros_resetea_todo(): void
     {
         $admin = $this->admin();
-        $cliente = EmpresasCliente::factory()->create();
+        $cliente = Cliente::factory()->create();
         $tipo = TiposProyecto::factory()->create();
 
         Livewire::actingAs($admin)

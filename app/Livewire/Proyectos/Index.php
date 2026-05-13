@@ -4,7 +4,7 @@ namespace App\Livewire\Proyectos;
 
 use App\Livewire\Forms\ProyectoForm;
 use App\Livewire\Forms\TipoProyectoQuickForm;
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
 use App\Models\User;
@@ -317,12 +317,12 @@ class Index extends Component
     }
 
     /**
-     * @return Collection<int, EmpresasCliente>
+     * @return Collection<int, Cliente>
      */
     #[Computed]
     public function clientesDisponibles(): Collection
     {
-        return EmpresasCliente::query()
+        return Cliente::query()
             ->where('activo', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre']);
@@ -345,7 +345,7 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = Proyecto::query()->with(['empresaCliente:id,nombre', 'tipoProyecto:id,nombre', 'responsablePrincipal:id,nombre,apellidos']);
+        $query = Proyecto::query()->with(['cliente:id,nombre', 'tipoProyecto:id,nombre', 'responsablePrincipal:id,nombre,apellidos']);
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();
@@ -358,7 +358,7 @@ class Index extends Component
         }
 
         if ($this->filtroCliente !== null) {
-            $query->where('empresa_cliente_id', $this->filtroCliente);
+            $query->where('cliente_id', $this->filtroCliente);
         }
 
         if ($this->filtroResponsable !== null) {

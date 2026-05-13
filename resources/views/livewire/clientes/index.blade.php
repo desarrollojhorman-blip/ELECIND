@@ -15,7 +15,7 @@
             :has-content-to-clear="$this->tieneAlgoQueLimpiar">
 
             <x-slot:leftActions>
-                @can('create', App\Models\EmpresasCliente::class)
+                @can('create', App\Models\Cliente::class)
                     <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
@@ -89,9 +89,12 @@
     </div>
 
     {{-- Tabla --}}
-    <x-ui.data-table :colspan="6" empty="No hay empresas que coincidan con los filtros aplicados.">
+    <x-ui.data-table :colspan="8" empty="No hay clientes que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
+                <x-ui.sortable-header column="numero_cliente" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Nº cliente
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre
                 </x-ui.sortable-header>
@@ -104,6 +107,9 @@
                 <x-ui.sortable-header column="email" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Email
                 </x-ui.sortable-header>
+                <x-ui.sortable-header column="telefono" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Teléfono
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="activo" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Estado
                 </x-ui.sortable-header>
@@ -112,26 +118,28 @@
         </x-slot:head>
 
         <x-slot:rows>
-            @foreach ($empresas as $empresa)
-                <tr wire:key="empresa-{{ $empresa->id }}" class="transition-colors hover:bg-slate-50">
+            @foreach ($clientes as $cliente)
+                <tr wire:key="cliente-{{ $cliente->id }}" class="transition-colors hover:bg-slate-50">
+                    <td class="px-4 py-3 text-slate-700">{{ $cliente->numero_cliente }}</td>
                     <td class="px-4 py-3">
-                        <div class="font-medium text-slate-900">{{ $empresa->nombre }}</div>
-                        @if ($empresa->nombre_comercial)
-                            <div class="text-xs text-slate-500">{{ $empresa->nombre_comercial }}</div>
+                        <div class="font-medium text-slate-900">{{ $cliente->nombre }}</div>
+                        @if ($cliente->nombre_comercial)
+                            <div class="text-xs text-slate-500">{{ $cliente->nombre_comercial }}</div>
                         @endif
                     </td>
-                    <td class="px-4 py-3 text-slate-600">{{ $empresa->cif ?? '—' }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ $cliente->cif ?? '—' }}</td>
                     <td class="px-4 py-3 text-slate-600">
-                        <div>{{ $empresa->poblacion ?? '—' }}</div>
-                        @if ($empresa->provincia)
-                            <div class="text-xs text-slate-400">{{ $empresa->provincia }}</div>
+                        <div>{{ $cliente->poblacion ?? '—' }}</div>
+                        @if ($cliente->provincia)
+                            <div class="text-xs text-slate-400">{{ $cliente->provincia }}</div>
                         @endif
                     </td>
-                    <td class="px-4 py-3 text-slate-600">{{ $empresa->email ?? '—' }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ $cliente->email ?? '—' }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ $cliente->telefono ?? '—' }}</td>
                     <td class="px-4 py-3">
-                        @if ($empresa->trashed())
+                        @if ($cliente->trashed())
                             <x-ui.badge tone="danger" dot>Eliminada</x-ui.badge>
-                        @elseif ($empresa->activo)
+                        @elseif ($cliente->activo)
                             <x-ui.badge tone="success" dot>Activa</x-ui.badge>
                         @else
                             <x-ui.badge tone="neutral" dot>Inactiva</x-ui.badge>
@@ -139,25 +147,25 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
-                            @if ($empresa->trashed())
-                                @can('restore', $empresa)
+                            @if ($cliente->trashed())
+                                @can('restore', $cliente)
                                     <x-ui.icon-button
-                                        wire:click="restaurar({{ $empresa->id }})"
+                                        wire:click="restaurar({{ $cliente->id }})"
                                         icon="heroicon-o-arrow-uturn-left"
                                         variant="success"
                                         tooltip="Restaurar" />
                                 @endcan
                             @else
-                                @can('update', $empresa)
+                                @can('update', $cliente)
                                     <x-ui.icon-button
-                                        wire:click="abrirEditar({{ $empresa->id }})"
+                                        wire:click="abrirEditar({{ $cliente->id }})"
                                         icon="heroicon-o-pencil-square"
                                         variant="info"
                                         tooltip="Editar" />
                                 @endcan
-                                @can('delete', $empresa)
+                                @can('delete', $cliente)
                                     <x-ui.icon-button
-                                        wire:click="confirmarEliminar({{ $empresa->id }})"
+                                        wire:click="confirmarEliminar({{ $cliente->id }})"
                                         icon="heroicon-o-trash"
                                         variant="danger"
                                         tooltip="Eliminar" />
@@ -171,20 +179,24 @@
     </x-ui.data-table>
 
     <div class="mt-3">
-        {{ $empresas->links() }}
+        {{ $clientes->links() }}
     </div>
 
     {{-- Modal crear/editar --}}
     <x-ui.modal
         :show="$modalAbierto"
-        :title="$form->id ? 'Editar empresa cliente' : 'Nueva empresa cliente'"
+        :title="$form->id ? 'Editar cliente' : 'Nuevo cliente'"
         close-action="cerrarModal"
         size="lg">
 
-        <form wire:submit="guardar" id="form-empresa" class="space-y-4">
+        <form wire:submit="guardar" id="form-empresa" class="space-y-4" autocomplete="off">
             <div class="grid gap-4 md:grid-cols-2">
+                <x-ui.field label="Nº cliente" required :error="$errors->first('form.numero_cliente')">
+                    <x-ui.input type="number" min="1" step="1" wire:model="form.numero_cliente" autofocus />
+                </x-ui.field>
+
                 <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                    <x-ui.input wire:model="form.nombre" autofocus />
+                    <x-ui.input wire:model="form.nombre" />
                 </x-ui.field>
 
                 <x-ui.field label="Nombre comercial" :error="$errors->first('form.nombre_comercial')">
@@ -199,28 +211,24 @@
                     <x-ui.input wire:model="form.telefono" />
                 </x-ui.field>
 
-                <x-ui.field label="Dirección" class="md:col-span-2" :error="$errors->first('form.direccion')">
-                    <x-ui.input wire:model="form.direccion" />
-                </x-ui.field>
-
-                <x-ui.field label="Código postal" :error="$errors->first('form.codigo_postal')">
-                    <x-ui.input wire:model="form.codigo_postal" />
-                </x-ui.field>
-
-                <x-ui.field label="Población" :error="$errors->first('form.poblacion')">
-                    <x-ui.input wire:model="form.poblacion" />
-                </x-ui.field>
-
-                <x-ui.field label="Provincia" :error="$errors->first('form.provincia')">
-                    <x-ui.input wire:model="form.provincia" />
-                </x-ui.field>
-
                 <x-ui.field label="Email" :error="$errors->first('form.email')">
                     <x-ui.input type="email" wire:model="form.email" />
                 </x-ui.field>
 
-                <x-ui.field label="Correo de notificaciones" class="md:col-span-2" :error="$errors->first('form.correo_notificaciones')">
-                    <x-ui.input type="email" wire:model="form.correo_notificaciones" />
+                <x-ui.field label="Dirección" :error="$errors->first('form.direccion')">
+                    <x-ui.input wire:model="form.direccion" autocomplete="off" />
+                </x-ui.field>
+
+                <x-ui.field label="Código postal" :error="$errors->first('form.codigo_postal')">
+                    <x-ui.input wire:model="form.codigo_postal" autocomplete="off" />
+                </x-ui.field>
+
+                <x-ui.field label="Población" :error="$errors->first('form.poblacion')">
+                    <x-ui.input wire:model="form.poblacion" autocomplete="off" />
+                </x-ui.field>
+
+                <x-ui.field label="Provincia" :error="$errors->first('form.provincia')">
+                    <x-ui.input wire:model="form.provincia" autocomplete="off" />
                 </x-ui.field>
 
                 <x-ui.field label="Observaciones" class="md:col-span-2" :error="$errors->first('form.observaciones')">
@@ -228,7 +236,7 @@
                 </x-ui.field>
 
                 <div class="md:col-span-2">
-                    <x-ui.checkbox wire:model="form.activo" label="Empresa activa" />
+                    <x-ui.checkbox wire:model="form.activo" label="Cliente activo" />
                 </div>
             </div>
         </form>
@@ -246,7 +254,7 @@
     {{-- Modal confirmar eliminación --}}
     <x-ui.modal
         :show="$confirmarEliminarId !== null"
-        title="Eliminar empresa cliente"
+        title="Eliminar cliente"
         close-action="cancelarEliminar"
         size="sm">
 
@@ -256,7 +264,7 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará la empresa a la <strong>papelera</strong> (eliminación lógica).
+                    Esta acción enviará el cliente a la <strong>papelera</strong> (eliminación lógica).
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
                     Podrás restaurarla más tarde desde el filtro <em>«En papelera»</em>.
