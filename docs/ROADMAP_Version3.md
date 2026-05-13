@@ -49,27 +49,40 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
   - [x] Materiales, MaterialLotes, MovimientosStock
   - [x] Conceptos (catálogo global + pivot N:M con proyectos)
   - [x] Relaciones base con Users (`empresa_cliente_id`, responsable principal y asignaciones a proyecto)
-- [ ] Factories + seeders de entidades Fase 1
-- [ ] Extender Roles y Permissions con `nivel` + `acceso` + `es_sistema`
-- [ ] Componente Livewire `<livewire:data-table />` reutilizable
+- [x] Factories + seeders de entidades Fase 1
+- [x] Extender Roles y Permissions con `nivel` + `acceso` + `es_sistema` *(estructura BD lista desde Fase 0; CRUD de roles aún pendiente)*
+- [x] ~~Componente Livewire `<livewire:data-table />` reutilizable~~ → **Sustituido por catálogo de componentes Blade UI reutilizables** (`<x-ui.button>`, `<x-ui.modal>`, `<x-ui.search-and-filter>`, `<x-ui.data-table>`, `<x-ui.actions-menu>`, `<x-ui.sidebar>`, etc.) más composables y testables.
+- [x] **Sistema de diseño base** (no estaba en lista original): paleta semántica (verde/rojo/azul), tokens CSS vars overridables, Heroicons, Branding helper, layout web con sidebar colapsable y dropdown de avatar.
+- [x] CRUD: Empresas clientes (alta/edición/soft delete/listado/filtros plegables/chips/búsqueda con debounce/exportar disabled "Pronto")
 - [ ] CRUD: Usuarios (con roles y niveles, autosugerencia username, avisos duplicado email/dni/cif)
-- [ ] CRUD: Empresas clientes (con responsables = usuarios externos)
-- [ ] CRUD: Tipos proyecto + Proyectos (con usuarios/materiales/conceptos asignados)
-- [ ] CRUD: Materiales + entrada de stock (lotes)
+- [x] ~~CRUD: Tipos proyecto~~ + **CRUD Proyectos** *(tipos se gestionan al vuelo desde el form de Proyecto via select + botón "+", no requieren pantalla propia)*
+- [x] **CRUD: Materiales + entrada de stock (lotes)** *(2 pantallas: `/materiales` catálogo + `/materiales/{id}/lotes` con migaja, barras de progreso de stock, alertas de caducidad)*
 - [ ] CRUD: Conceptos (catálogo global) + asignación N:M desde proyecto
 - [ ] Pantalla "Configuración empresa" (logo, colores, datos, plantilla numeración)
-- [ ] Política de soft delete
+- [x] Política de soft delete *(implementada en todos los CRUDs con restore desde filtro "papelera")*
 - [x] Login + middleware web/móvil
 - [ ] CRUD roles personalizados con filtro por nivel
 
 ### Entregable
 - Admin puede configurar toda la base de datos antes de empezar a crear albaranes.
 
-### Estado actual
+### Estado actual *(actualizado 13/05/2026 — iter. 3)*
 - [x] Fase 0 cerrada y validada
 - [x] Base de datos núcleo de Fase 1 creada y migrando correctamente
-- [ ] CRUD y pantallas de gestión pendientes
-- [ ] Seeds de negocio pendientes
+- [x] Seeders de negocio operativos (5 empresas · 6 tipos · 15 conceptos · 30 materiales · 14 proyectos · 8 trabajadores · 5 responsables · 42 lotes)
+- [x] Sistema de diseño + 18 componentes Blade UI reutilizables
+- [x] CRUD `EmpresasClientes` operativo (14 tests)
+- [x] CRUD `Proyectos` con creación de Tipo al vuelo (13 tests + sub-modal anidado validado)
+- [x] CRUD `Materiales` + **CRUD `MaterialLotes`** con migaja master-detail (17 tests)
+- [ ] **Siguiente**: CRUD `Usuarios` web (con autosugerencia username, avisos duplicado, jerarquía por nivel)
+- [ ] Después: `Conceptos` (catálogo global) + `Configuración empresa` (cierra Fase 1)
+
+### Avance Fase 1: ~85 %
+
+Ver detalles en:
+- [`docs/resumen/120526_1500_avance_fase_1.md`](./resumen/120526_1500_avance_fase_1.md) (iteración 1: BD + seeders)
+- [`docs/resumen/130526_1800_avance_fase_1.md`](./resumen/130526_1800_avance_fase_1.md) (iteración 2: UI base + Clientes)
+- [`docs/resumen/130526_0300_avance_fase_1.md`](./resumen/130526_0300_avance_fase_1.md) (iteración 3: Proyectos + Materiales + balance global)
 
 ---
 

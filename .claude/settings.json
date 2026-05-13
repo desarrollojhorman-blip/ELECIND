@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan migrate:fresh --seed --force 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan tinker --execute=\"echo 'Pivots: proyecto_usuario=' . DB::table\\('proyecto_usuario'\\)->count\\(\\) . ', proyecto_concepto=' . DB::table\\('proyecto_concepto'\\)->count\\(\\) . ', material_proyecto=' . DB::table\\('material_proyecto'\\)->count\\(\\) . ', material_lotes=' . DB::table\\('material_lotes'\\)->count\\(\\) . PHP_EOL;\")",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\ProgramData\\\\ComposerSetup\\\\bin\\\\composer.phar' lint 2>&1)",
+      "PowerShell($cmd = Get-Command composer -ErrorAction SilentlyContinue; if \\($cmd\\) { $cmd.Source } else { Get-ChildItem -Path 'C:\\\\','D:\\\\' -Filter 'composer.phar' -ErrorAction SilentlyContinue -Recurse -Depth 4 | Select-Object -First 5 FullName })",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' lint 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' analyse 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test 2>&1)"
+    ]
+  }
+}

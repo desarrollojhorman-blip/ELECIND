@@ -13,7 +13,6 @@ class TiposProyecto extends Model
 
     protected $fillable = [
         'nombre',
-        'color',
         'descripcion',
         'activo',
     ];
