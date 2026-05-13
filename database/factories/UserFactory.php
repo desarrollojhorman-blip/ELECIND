@@ -31,7 +31,6 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'tipo_usuario' => 'interno',
-            'acceso' => 'web',
             'activo' => true,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -52,18 +51,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attrs) => [
             'tipo_usuario' => 'interno',
-            'empresa_cliente_id' => null,
-            'acceso' => 'movil',
+            'cliente_id' => null,
             'dni' => $this->generarDni(),
         ]);
     }
 
-    public function responsableDe(int $empresaClienteId): static
+    public function responsableDe(int $clienteId): static
     {
         return $this->state(fn (array $attrs) => [
             'tipo_usuario' => 'externo',
-            'empresa_cliente_id' => $empresaClienteId,
-            'acceso' => 'movil',
+            'cliente_id' => $clienteId,
         ]);
     }
 
@@ -71,8 +68,15 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attrs) => [
             'tipo_usuario' => 'interno',
-            'empresa_cliente_id' => null,
-            'acceso' => 'web',
+            'cliente_id' => null,
+        ]);
+    }
+
+    public function superadmin(): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'tipo_usuario' => 'interno',
+            'cliente_id' => null,
         ]);
     }
 

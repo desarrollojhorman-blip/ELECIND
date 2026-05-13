@@ -12,6 +12,13 @@
     @if (! app()->runningUnitTests())
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
+    {{-- Override de tokens visuales con la configuración guardada --}}
+    <style>
+        :root {
+            --c-primary-700: {{ \App\Support\Branding::colorPrimario() }};
+            --c-accent-100: {{ \App\Support\Branding::colorSecundario() }};
+        }
+    </style>
     @livewireStyles
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">

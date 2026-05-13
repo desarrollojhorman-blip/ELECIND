@@ -31,8 +31,7 @@ class User extends Authenticatable
         'cif',
         'telefono',
         'tipo_usuario',
-        'empresa_cliente_id',
-        'acceso',
+        'cliente_id',
         'activo',
         'preferencias_notificaciones',
         'deleted_by',
@@ -66,9 +65,9 @@ class User extends Authenticatable
         ];
     }
 
-    public function empresaCliente(): BelongsTo
+    public function cliente(): BelongsTo
     {
-        return $this->belongsTo(EmpresasCliente::class, 'empresa_cliente_id');
+        return $this->belongsTo(Cliente::class);
     }
 
     public function proyectos(): BelongsToMany
@@ -76,5 +75,26 @@ class User extends Authenticatable
         return $this->belongsToMany(Proyecto::class, 'proyecto_usuario')
             ->withPivot('rol_en_proyecto')
             ->withTimestamps();
+    }
+
+    public function nivelMaximo(): int
+    {
+        $roles = $this->roles;
+
+        if ($roles->isEmpty()) {
+            return 0;
+        }
+
+        return (int) $roles->max('nivel');
+    }
+
+    public function tieneAccesoWeb(): bool
+    {
+        return $this->roles->contains(fn ($rol): bool => in_array($rol->getAttribute('acceso'), ['web', 'ambos'], true));
+    }
+
+    public function tieneAccesoMovil(): bool
+    {
+        return $this->roles->contains(fn ($rol): bool => in_array($rol->getAttribute('acceso'), ['movil', 'ambos'], true));
     }
 }

@@ -33,9 +33,10 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 
 ---
 
-## 🚧 Fase 1 — MVP base: usuarios, clientes, proyectos, materiales (3-4 semanas)
+## ✅ Fase 1 — MVP base: usuarios, clientes, proyectos, materiales (3-4 semanas)
 
 **Rama:** `fase-1-mvp-base`
+**Estado:** ✅ COMPLETADA + EXTENDIDA (13/05/2026 — 14/05/2026)
 
 ### Objetivos
 - CRUD completos de entidades base.
@@ -44,85 +45,132 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 
 ### Tareas
 - [x] Modelos + migraciones base del dominio Fase 1
-  - [x] EmpresasClientes
+  - [x] Clientes *(antes `EmpresasClientes`, renombrado)*
   - [x] TiposProyecto, Proyectos
   - [x] Materiales, MaterialLotes, MovimientosStock
   - [x] Conceptos (catálogo global + pivot N:M con proyectos)
-  - [x] Relaciones base con Users (`empresa_cliente_id`, responsable principal y asignaciones a proyecto)
+  - [x] Empresa *(singleton, antes `ConfiguracionEmpresa`, renombrado)*
+  - [x] Relaciones base con Users (`cliente_id` —antes `empresa_cliente_id`—, responsable principal y asignaciones a proyecto)
 - [x] Factories + seeders de entidades Fase 1
-- [x] Extender Roles y Permissions con `nivel` + `acceso` + `es_sistema` *(estructura BD lista desde Fase 0; CRUD de roles aún pendiente)*
+- [x] Extender Roles y Permissions con `nivel` + `acceso` + `es_sistema` + `ambito` + `descripcion` + `categoria`
 - [x] ~~Componente Livewire `<livewire:data-table />` reutilizable~~ → **Sustituido por catálogo de componentes Blade UI reutilizables** (`<x-ui.button>`, `<x-ui.modal>`, `<x-ui.search-and-filter>`, `<x-ui.data-table>`, `<x-ui.actions-menu>`, `<x-ui.sidebar>`, etc.) más composables y testables.
 - [x] **Sistema de diseño base** (no estaba en lista original): paleta semántica (verde/rojo/azul), tokens CSS vars overridables, Heroicons, Branding helper, layout web con sidebar colapsable y dropdown de avatar.
-- [x] CRUD: Empresas clientes (alta/edición/soft delete/listado/filtros plegables/chips/búsqueda con debounce/exportar disabled "Pronto")
-- [ ] CRUD: Usuarios (con roles y niveles, autosugerencia username, avisos duplicado email/dni/cif)
+- [x] CRUD: Clientes *(antes Empresas clientes)* — alta/edición/soft delete/listado/filtros plegables/chips/búsqueda con debounce/exportar disabled "Pronto" + campo `numero_cliente` único
+- [x] **CRUD: Usuarios** (autosugerencia username, avisos no-bloqueantes de duplicados email/DNI/CIF, jerarquía por nivel, scoping en listado)
 - [x] ~~CRUD: Tipos proyecto~~ + **CRUD Proyectos** *(tipos se gestionan al vuelo desde el form de Proyecto via select + botón "+", no requieren pantalla propia)*
 - [x] **CRUD: Materiales + entrada de stock (lotes)** *(2 pantallas: `/materiales` catálogo + `/materiales/{id}/lotes` con migaja, barras de progreso de stock, alertas de caducidad)*
-- [ ] CRUD: Conceptos (catálogo global) + asignación N:M desde proyecto
-- [ ] Pantalla "Configuración empresa" (logo, colores, datos, plantilla numeración)
+- [x] **CRUD: Conceptos** (catálogo global + pivot N:M con proyectos preparado para Fase 2)
+- [x] **Pantalla "Configuración Empresa"** (logo upload + colores en runtime sin rebuild + plantilla numeración + caducidad token firma)
 - [x] Política de soft delete *(implementada en todos los CRUDs con restore desde filtro "papelera")*
-- [x] Login + middleware web/móvil
-- [ ] CRUD roles personalizados con filtro por nivel
+- [x] Login + middleware web/móvil **+ refactor: middleware lee acceso del rol (fuente única, bug `mobile`→`movil` corregido)**
+- [x] **CRUD Roles y permisos personalizados** *(extensión post-cierre, antes pospuesto a Fase 4)* — con filtro por nivel + ámbito web/móvil/ambos + regla de delegación "no delegues más de lo que tienes" + protección de roles del sistema + reset al cambiar ámbito + toggle "marcar todos por categoría" + ordenamiento web→móvil→ambos dentro de cada categoría
+- [x] **Refactor de nombres** *(consolidación pre-Fase 2)*:
+  - Tablas: `empresas_clientes` → `clientes`, `configuracion_empresa` → `empresa`
+  - Modelos: `EmpresasCliente` → `Cliente`, `ConfiguracionEmpresa` → `Empresa`
+  - Columna FK: `users.empresa_cliente_id` → `users.cliente_id`, `proyectos.empresa_cliente_id` → `proyectos.cliente_id`
+  - Relaciones: `$user->empresaCliente` → `$user->cliente`, idem en `Proyecto`
+  - Policies, Forms, Livewire components, factory, seeder, tests y blade — todo coherente
 
 ### Entregable
-- Admin puede configurar toda la base de datos antes de empezar a crear albaranes.
+✅ Admin puede configurar toda la base de datos antes de empezar a crear albaranes.
 
-### Estado actual *(actualizado 13/05/2026 — iter. 3)*
+### Estado final *(actualizado 14/05/2026 — extensión + refactor)*
 - [x] Fase 0 cerrada y validada
-- [x] Base de datos núcleo de Fase 1 creada y migrando correctamente
-- [x] Seeders de negocio operativos (5 empresas · 6 tipos · 15 conceptos · 30 materiales · 14 proyectos · 8 trabajadores · 5 responsables · 42 lotes)
+- [x] Base de datos completa: 11 tablas + pivots + `empresa` singleton (con migraciones de renombre incluidas)
+- [x] Seeders demo operativos (5 empresas · 6 tipos · 15 conceptos · 30 materiales · 42 lotes · 10-14 proyectos · 8 trabajadores · 5 responsables)
 - [x] Sistema de diseño + 18 componentes Blade UI reutilizables
-- [x] CRUD `EmpresasClientes` operativo (14 tests)
-- [x] CRUD `Proyectos` con creación de Tipo al vuelo (13 tests + sub-modal anidado validado)
-- [x] CRUD `Materiales` + **CRUD `MaterialLotes`** con migaja master-detail (17 tests)
-- [ ] **Siguiente**: CRUD `Usuarios` web (con autosugerencia username, avisos duplicado, jerarquía por nivel)
-- [ ] Después: `Conceptos` (catálogo global) + `Configuración empresa` (cierra Fase 1)
+- [x] **8 CRUDs operativos**: Clientes · Proyectos · Materiales · MaterialLotes · Usuarios · Conceptos · Empresa · **Roles y permisos**
+- [x] **9 Policies** registradas (incluida `RolePolicy` con jerarquía + protección de roles del sistema)
+- [x] **126 tests feature** · 447 assertions · Pint OK · Larastan 45/45 OK
+- [x] **Catálogo de 54 permisos** clasificados por ámbito (web/movil/ambos) y categoría con descripciones inequívocas
 
-### Avance Fase 1: ~85 %
+### Avance Fase 1: 100 % ✅ + extensión CRUD Roles
 
 Ver detalles en:
-- [`docs/resumen/120526_1500_avance_fase_1.md`](./resumen/120526_1500_avance_fase_1.md) (iteración 1: BD + seeders)
-- [`docs/resumen/130526_1800_avance_fase_1.md`](./resumen/130526_1800_avance_fase_1.md) (iteración 2: UI base + Clientes)
-- [`docs/resumen/130526_0300_avance_fase_1.md`](./resumen/130526_0300_avance_fase_1.md) (iteración 3: Proyectos + Materiales + balance global)
+- [`docs/resumen/120526_1500_avance_fase_1.md`](./resumen/120526_1500_avance_fase_1.md) (iter. 1: BD + seeders)
+- [`docs/resumen/130526_1800_avance_fase_1.md`](./resumen/130526_1800_avance_fase_1.md) (iter. 2: UI base + Clientes)
+- [`docs/resumen/130526_0300_avance_fase_1.md`](./resumen/130526_0300_avance_fase_1.md) (iter. 3: Proyectos + Materiales)
+- [`docs/resumen/130526_2300_cierre_fase_1.md`](./resumen/130526_2300_cierre_fase_1.md) (iter. 4 — cierre Fase 1)
+- [`docs/resumen/140526_0100_extension_roles_y_refactor.md`](./resumen/140526_0100_extension_roles_y_refactor.md) (iter. 5 — **extensión post-cierre**: CRUD Roles + refactor de nombres)
 
 ---
 
-## 📄 Fase 2 — Albaranes core + firma (3 semanas)
+## 🚧 Fase 2 — Albaranes core + firma (3 semanas)
 
 **Rama:** `fase-2-albaranes`
+**Estado:** 🚧 EN CURSO (Iter. 1 de 6 completada — ~17 %)
+**Orden estratégico:** móvil primero, web después (decisión 14/05/2026).
 
 ### Objetivos
 - Crear/firmar albaranes desde móvil y web.
 - PDF generado y exportable.
 - Tokens de firma por email.
 
-### Tareas
-- [ ] Modelo `Albaran` + tablas:
-  - `albaranes` (cabecera)
-  - `albaran_lineas_personal` (trabajadores + horas)
-  - `albaran_lineas_material` (materiales)
-  - `albaran_firmas` (evento legal auditable)
-- [ ] **Móvil**: pantalla "Parte de Trabajo" (albarán normal)
-  - Form Livewire con selects dependientes
-  - Compañeros dinámicos (horas normales + extras opcionales)
-  - Materiales con cantidad y descuento de stock
-- [ ] **Móvil**: pantalla "Firmar"
-  - Canvas API + Alpine
-  - 2 firmas (trabajador + responsable)
-  - Guardar como PNG via medialibrary
-- [ ] **Web**: CRUD de albaranes con tabla + modal
-- [ ] **Web**: adjuntar múltiples PDFs/imágenes del albarán y factura
-- [ ] Servicio `NumeracionService` con plantillas configurables
-- [ ] Estados + transiciones + bloqueo "terminado"/"facturado"
-- [ ] Notificación email al crear albarán (con o sin token)
-- [ ] Flujo de **token email** para firma sin cuenta
-  - Generación + invalidación al usar o caducar
-  - Vista pública para firmar
-- [ ] Generación PDF con mPDF (plantilla configurable: colores, toggles campos)
-- [ ] Geolocalización al firmar
-- [ ] Activity log de todas las acciones críticas
+### División en 6 iteraciones
+
+#### ✅ Iter. 1 — Núcleo de datos (completada 14/05/2026)
+- [x] Migración con 5 tablas: `albaranes`, `albaran_lineas_personal`, `albaran_lineas_material`, `albaran_firmas`, `albaran_tokens_firma`
+- [x] Enums: `EstadoAlbaran` (con transiciones), `TipoHora` (4 tipos), `TipoFirma`
+- [x] 5 Modelos Eloquent con relaciones, casts, soft deletes en `Albaran`
+- [x] Observer `AlbaranLineaMaterialObserver` para descuento automático de stock (created/updated/deleted, con `lockForUpdate`)
+- [x] Servicio `NumeracionService` con plantilla configurable (`{YYYY}`, `{YY}`, `{MM}`, `{NNNN}`, `{NNN}`, `{NN}`)
+- [x] Factories de los 5 modelos con states (firmado/facturado/archivado/usado/caducado/invalidado)
+- [x] `Fase2DemoSeeder` con 5 albaranes en estados distintos + líneas + firmas + tokens
+- [x] 4 permisos nuevos: `albaranes.descargar_pdf` (ambos), `albaranes.solicitar_firma` (web), `albaranes.invalidar_firma` (web · solo superadmin), `albaranes.facturar` (web)
+- [x] 19 tests nuevos (7 EstadoAlbaran + 6 NumeracionService + 6 Observer) · 145 totales
+
+#### ⏳ Iter. 2 — Infraestructura móvil (siguiente)
+- [ ] Layout `mobile.blade.php` con header + nav inferior táctil
+- [ ] Rutas `/movil/...` con middleware `EnsureMobileAccess`
+- [ ] Dashboard del trabajador (lista "Mis albaranes recientes" + atajos)
+- [ ] Componentes Blade UI móviles mínimos (`<x-mobile.button>`, `<x-mobile.card>`, `<x-mobile.list-item>`, etc.)
+
+#### ⏳ Iter. 3 — CRUD albarán desde móvil
+- [ ] Pantalla "Nuevo Parte de Trabajo" optimizada táctil
+- [ ] Selects dependientes (proyecto → trabajadores del proyecto → materiales/lotes)
+- [ ] Líneas de personal y de material táctiles
+- [ ] Guardar como borrador / editar / eliminar borradores propios
+
+#### ⏳ Iter. 4 — Firma + flujo legal
+- [ ] Componente firma Canvas + Alpine (PNG en storage)
+- [ ] Doble firma presencial in-situ
+- [ ] Generación de token email + ruta pública `/firmar/{token}` sin auth
+- [ ] Transiciones: borrador → pendiente_firma → firmado
+- [ ] Activity log + geolocalización opcional
+- [ ] Mailable de notificación al responsable
+- [ ] Generación PDF con mPDF
+
+#### ⏳ Iter. 5 — CRUD web del admin
+- [ ] Pantalla `/albaranes` con tabla + filtros + modal alta/edición
+- [ ] Cambio de firmantes asignados (`creado_por`, `responsable_id`) si hueco vacío
+- [ ] Modal "Solicitar firma" con selector (trabajador/responsable/email custom)
+- [ ] Gestión de tokens (reenviar/regenerar/invalidar)
+- [ ] Eliminar firmas con `albaranes.invalidar_firma` + activity log
+- [ ] Forzar transiciones de estado con permiso
+- [ ] Descargar PDF desde tabla
+
+#### ⏳ Iter. 6 — Refinamiento + adjuntos
+- [ ] Adjuntos múltiples vía medialibrary (PDFs externos, fotos)
+- [ ] Snapshot de datos al firmar (auditoría histórica)
+- [ ] Tests adicionales y edge cases
 
 ### Entregable
 - Trabajador crea albarán desde móvil → firma → email al responsable → responsable firma vía link → PDF generado.
+
+### Decisiones cerradas (9)
+| # | Decisión |
+|---|---|
+| 1 | Móvil primero, web después |
+| 2 | 4 tipos de hora: `laborable_normal`, `laborable_extra`, `festivo_normal`, `festivo_extra` |
+| 3 | Stock descuenta al crear/editar la línea de material (Observer) |
+| 4 | Estados: borrador → pendiente_firma → firmado → facturado → archivado |
+| 5 | Token de firma: single-use + caducidad por tiempo |
+| 6 | 2 huecos de firma (trabajador + responsable). Cualquiera con token puede firmar (el token sabe a qué hueco va) |
+| 7 | Geolocalización opcional con prompt del navegador |
+| 8 | Modal "Solicitar firma" con selector (trabajador / responsable del proyecto / email custom) |
+| 9 | Sin pedir nombre/DNI en firma pública. Borrar firmas = borrar imagen + activity log |
+
+Ver detalle de iteración 1 en [`docs/resumen/140526_0300_iter1_fase2_nucleo_datos.md`](./resumen/140526_0300_iter1_fase2_nucleo_datos.md).
 
 ---
 
@@ -171,6 +219,8 @@ Ver detalles en:
 - [ ] Notificaciones email configurables (toggles por usuario)
 - [ ] Alertas automáticas de stock bajo → email al admin + incidencia auto
 - [ ] Vista de incidencias asociadas dentro de albarán/ausencia
+
+> 📌 **Nota**: El CRUD de Roles personalizados se anticipó como extensión de Fase 1 (ya operativo). En Fase 4 podría revisarse la regla *"Acceso por defecto al asignar usuario"* (¿el `acceso` del usuario se hereda del rol elegido al asignarlo?) si el cliente la requiere durante la operativa de ausencias/aprobaciones.
 
 ### Entregable
 - Flujo completo de ausencias e incidencias.

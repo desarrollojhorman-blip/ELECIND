@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('telefono')->nullable();
             $table->enum('tipo_usuario', ['interno', 'externo'])->default('interno');
             $table->unsignedBigInteger('empresa_cliente_id')->nullable();
-            $table->enum('acceso', ['web', 'movil', 'ambos'])->default('web');
             $table->boolean('activo')->default(true);
             $table->json('preferencias_notificaciones')->nullable();
             $table->json('snapshot_data')->nullable();
@@ -30,7 +29,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['tipo_usuario', 'acceso', 'activo']);
+            $table->index(['tipo_usuario', 'activo']);
             $table->index('empresa_cliente_id');
         });
     }

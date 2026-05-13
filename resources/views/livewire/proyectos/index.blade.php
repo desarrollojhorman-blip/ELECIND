@@ -160,7 +160,7 @@
                         @endif
                     </td>
                     <td class="px-4 py-3 text-slate-600">
-                        {{ $proyecto->empresaCliente?->nombre ?? '—' }}
+                        {{ $proyecto->cliente?->nombre ?? '—' }}
                     </td>
                     <td class="px-4 py-3 text-slate-600">
                         @if ($proyecto->responsablePrincipal)
@@ -228,8 +228,8 @@
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Cliente" required :error="$errors->first('form.empresa_cliente_id')">
-                    <x-ui.select wire:model="form.empresa_cliente_id">
+                <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')">
+                    <x-ui.select wire:model="form.cliente_id">
                         <option value="">— Selecciona cliente —</option>
                         @foreach ($this->clientesDisponibles as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>

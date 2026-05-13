@@ -10,7 +10,20 @@
       "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' require blade-ui-kit/blade-heroicons 2>&1)",
       "PowerShell(npm install @alpinejs/persist --save 2>&1)",
       "PowerShell(npm run build 2>&1)",
-      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' vendor\\\\bin\\\\phpstan analyse --memory-limit=512M --no-progress 2>&1)"
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' vendor\\\\bin\\\\phpstan analyse --memory-limit=512M --no-progress 2>&1)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Policies/UserPolicy.php app/Livewire/Forms/UserForm.php app/Livewire/Usuarios/Index.php tests/Feature/Usuarios/IndexTest.php app/Models/User.php app/Providers/AppServiceProvider.php database/factories/UserFactory.php)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/phpstan analyse --memory-limit=2G)",
+      "Bash(/c/xampp/php/php.exe artisan *)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Policies/ConceptoPolicy.php app/Livewire/Forms/ConceptoForm.php app/Livewire/Conceptos/Index.php tests/Feature/Conceptos/IndexTest.php app/Providers/AppServiceProvider.php database/seeders/RolesAndPermissionsSeeder.php routes/web.php)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Models/ConfiguracionEmpresa.php app/Policies/ConfiguracionEmpresaPolicy.php app/Livewire/Forms/ConfiguracionEmpresaForm.php app/Livewire/ConfiguracionEmpresa/Edit.php app/Support/Branding.php tests/Feature/ConfiguracionEmpresa/EditTest.php app/Providers/AppServiceProvider.php routes/web.php database/migrations/2026_05_13_000000_create_configuracion_empresa_table.php)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint --test)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Roles/Index.php tests/Feature/Roles/IndexTest.php)",
+      "Bash(rm app/Models/EmpresasCliente.php app/Models/ConfiguracionEmpresa.php app/Policies/EmpresasClientePolicy.php app/Policies/ConfiguracionEmpresaPolicy.php app/Livewire/Forms/EmpresasClienteForm.php app/Livewire/Forms/ConfiguracionEmpresaForm.php database/factories/EmpresasClienteFactory.php && rm -rf app/Livewire/ConfiguracionEmpresa resources/views/livewire/configuracion-empresa && rm -f storage/framework/views/*.php && echo \"OK\")",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Usuarios/Index.php)"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"
     ]
   }
 }

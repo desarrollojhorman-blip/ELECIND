@@ -16,7 +16,6 @@ class AdminUsersSeeder extends Seeder
                 'apellidos' => 'Admin',
                 'email' => 'superadmin@elecind.local',
                 'tipo_usuario' => 'interno',
-                'acceso' => 'ambos',
                 'activo' => true,
                 'password' => 'password',
             ]
@@ -29,7 +28,6 @@ class AdminUsersSeeder extends Seeder
                 'apellidos' => 'Elecind',
                 'email' => 'admin@elecind.local',
                 'tipo_usuario' => 'interno',
-                'acceso' => 'web',
                 'activo' => true,
                 'password' => 'password',
             ]

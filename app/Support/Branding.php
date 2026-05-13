@@ -2,52 +2,94 @@
 
 namespace App\Support;
 
+use App\Models\Empresa;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
+
 /**
- * Centraliza la lógica de marca (logo + nombre) con cascada:
- *  1. Logo/nombre del cliente (futuro: tabla configuracion_empresa).
- *  2. Logo/nombre ENIA por defecto (asset estático).
- *  3. Texto fallback "ENIA" si no hay imagen.
+ * Centraliza la lógica de marca (logo + nombre + colores) leyendo de la
+ * tabla `empresa` con caché de request para evitar consultas
+ * duplicadas en una misma petición.
  *
- * Cuando se monte la pantalla "Configuración empresa" (Fase 1), basta
- * con cambiar las implementaciones aquí — el resto de la UI ya consulta
- * estos métodos.
+ * Cascada:
+ *  1. Valores guardados en `empresa` (editables desde UI).
+ *  2. Asset ENIA por defecto (img/enia-logo.png) si está presente.
+ *  3. Texto fallback (abreviatura) si no hay imagen.
  */
 class Branding
 {
-    /**
-     * URL pública de la imagen del logo a mostrar, o null si no hay
-     * ninguna (entonces la UI debe pintar el fallback de texto).
-     */
+    private static ?Empresa $cache = null;
+
+    private static bool $cacheCargada = false;
+
+    public static function actual(): ?Empresa
+    {
+        if (self::$cacheCargada) {
+            return self::$cache;
+        }
+
+        self::$cacheCargada = true;
+
+        try {
+            if (! Schema::hasTable('empresa')) {
+                return self::$cache = null;
+            }
+
+            self::$cache = Empresa::query()->first();
+        } catch (Throwable) {
+            self::$cache = null;
+        }
+
+        return self::$cache;
+    }
+
+    public static function limpiarCache(): void
+    {
+        self::$cache = null;
+        self::$cacheCargada = false;
+    }
+
     public static function logoUrl(): ?string
     {
-        // TODO Fase 1 — Configuración empresa: leer de configuracion_empresa->logo
-        // Si esa tabla devuelve null, comprobar asset ENIA por defecto:
-        // if (file_exists(public_path('img/enia-logo.png'))) {
-        //     return asset('img/enia-logo.png');
-        // }
+        $logo = self::actual()?->logoUrl();
+
+        if ($logo !== null) {
+            return $logo;
+        }
+
+        if (file_exists(public_path('img/enia-logo.png'))) {
+            return asset('img/enia-logo.png');
+        }
+
         return null;
     }
 
-    /**
-     * Nombre de marca a mostrar (texto). Se usa como alt del logo o
-     * como fallback visual cuando no hay imagen.
-     */
     public static function nombre(): string
     {
-        // TODO Fase 1 — leer configuracion_empresa->nombre_comercial
-        return 'ENIA';
+        $config = self::actual();
+
+        return $config?->nombre_comercial
+            ?: $config?->nombre
+            ?: 'ELECIND';
     }
 
-    /**
-     * Texto/letra corta para el sidebar colapsado (cuando no hay logo).
-     */
     public static function abreviatura(): string
     {
-        return mb_substr(self::nombre(), 0, 1);
+        return mb_strtoupper(mb_substr(self::nombre(), 0, 1));
     }
 
     public static function tieneLogo(): bool
     {
         return self::logoUrl() !== null;
+    }
+
+    public static function colorPrimario(): string
+    {
+        return self::actual()?->color_primario ?? '#871f1f';
+    }
+
+    public static function colorSecundario(): string
+    {
+        return self::actual()?->color_secundario ?? '#f5e6e6';
     }
 }

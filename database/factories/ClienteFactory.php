@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\EmpresasCliente;
+use App\Models\Cliente;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<EmpresasCliente>
+ * @extends Factory<Cliente>
  */
-class EmpresasClienteFactory extends Factory
+class ClienteFactory extends Factory
 {
-    protected $model = EmpresasCliente::class;
+    protected $model = Cliente::class;
 
     public function definition(): array
     {
@@ -18,6 +18,7 @@ class EmpresasClienteFactory extends Factory
         $nombre = $faker->company();
 
         return [
+            'numero_cliente' => $faker->unique()->numberBetween(1, 999_999),
             'nombre' => $nombre,
             'nombre_comercial' => $faker->boolean(40) ? $faker->companySuffix().' '.$faker->lastName() : null,
             'cif' => $this->generarCif(),
@@ -27,7 +28,6 @@ class EmpresasClienteFactory extends Factory
             'provincia' => $faker->state(),
             'telefono' => $faker->phoneNumber(),
             'email' => $faker->unique()->companyEmail(),
-            'correo_notificaciones' => $faker->boolean(60) ? $faker->safeEmail() : null,
             'activo' => $faker->boolean(90),
             'observaciones' => $faker->boolean(25) ? $faker->sentence(8) : null,
         ];

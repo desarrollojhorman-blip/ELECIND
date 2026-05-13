@@ -21,9 +21,14 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('guard_name');
+            $table->enum('ambito', ['web', 'movil', 'ambos'])->default('web');
+            $table->string('descripcion', 200)->nullable();
+            $table->string('categoria', 60)->nullable();
             $table->timestamps();
 
             $table->unique(['name', 'guard_name']);
+            $table->index('ambito');
+            $table->index('categoria');
         });
 
         Schema::create($tableNames['roles'], function (Blueprint $table): void {

@@ -19,7 +19,7 @@ class ProyectoForm extends Form
     public ?string $codigo = null;
 
     #[Validate]
-    public ?int $empresa_cliente_id = null;
+    public ?int $cliente_id = null;
 
     #[Validate]
     public ?int $tipo_proyecto_id = null;
@@ -49,11 +49,11 @@ class ProyectoForm extends Form
             'codigo' => [
                 'nullable', 'string', 'max:255',
                 Rule::unique('proyectos', 'codigo')
-                    ->where('empresa_cliente_id', $this->empresa_cliente_id)
+                    ->where('cliente_id', $this->cliente_id)
                     ->ignore($this->id)
                     ->whereNull('deleted_at'),
             ],
-            'empresa_cliente_id' => ['required', 'integer', 'exists:empresas_clientes,id'],
+            'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
             'tipo_proyecto_id' => ['nullable', 'integer', 'exists:tipos_proyectos,id'],
             'responsable_principal_id' => ['nullable', 'integer', 'exists:users,id'],
             'estado' => ['required', Rule::in(['borrador', 'activo', 'cerrado', 'archivado'])],
@@ -71,7 +71,7 @@ class ProyectoForm extends Form
         return [
             'nombre' => 'nombre',
             'codigo' => 'código',
-            'empresa_cliente_id' => 'cliente',
+            'cliente_id' => 'cliente',
             'tipo_proyecto_id' => 'tipo de proyecto',
             'responsable_principal_id' => 'responsable principal',
             'estado' => 'estado',
@@ -87,7 +87,7 @@ class ProyectoForm extends Form
     public function messages(): array
     {
         return [
-            'codigo.unique' => 'Ya existe otro proyecto con este código en la misma empresa cliente.',
+            'codigo.unique' => 'Ya existe otro proyecto con este código para el mismo cliente.',
             'fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ];
     }
@@ -97,7 +97,7 @@ class ProyectoForm extends Form
         $this->id = (int) $proyecto->getKey();
         $this->nombre = $proyecto->nombre;
         $this->codigo = $proyecto->codigo;
-        $this->empresa_cliente_id = $proyecto->empresa_cliente_id;
+        $this->cliente_id = $proyecto->cliente_id;
         $this->tipo_proyecto_id = $proyecto->tipo_proyecto_id;
         $this->responsable_principal_id = $proyecto->responsable_principal_id;
         $this->estado = $proyecto->estado;

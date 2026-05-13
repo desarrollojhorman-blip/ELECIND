@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Clientes;
 
-use App\Livewire\Forms\EmpresasClienteForm;
-use App\Models\EmpresasCliente;
+use App\Livewire\Forms\ClienteForm;
+use App\Models\Cliente;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -21,7 +21,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    public EmpresasClienteForm $form;
+    public ClienteForm $form;
 
     #[Url(as: 'q')]
     public string $buscar = '';
@@ -56,7 +56,7 @@ class Index extends Component
 
     public function mount(): void
     {
-        Gate::authorize('viewAny', EmpresasCliente::class);
+        Gate::authorize('viewAny', Cliente::class);
     }
 
     public function updatedBuscar(): void
@@ -111,7 +111,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['nombre', 'cif', 'poblacion', 'email', 'activo', 'created_at'];
+        $columnasPermitidas = ['numero_cliente', 'nombre', 'cif', 'poblacion', 'email', 'telefono', 'activo', 'created_at'];
         if (! \in_array($columna, $columnasPermitidas, true)) {
             return;
         }
@@ -126,21 +126,23 @@ class Index extends Component
 
     public function abrirCrear(): void
     {
-        Gate::authorize('create', EmpresasCliente::class);
+        Gate::authorize('create', Cliente::class);
 
         $this->form->reset();
+        $ultimoNumero = (int) (Cliente::withTrashed()->max('numero_cliente') ?? 0);
+        $this->form->numero_cliente = $ultimoNumero + 1;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
 
     public function abrirEditar(int $id): void
     {
-        /** @var EmpresasCliente $empresa */
-        $empresa = EmpresasCliente::withTrashed()->findOrFail($id);
+        /** @var Cliente $cliente */
+        $cliente = Cliente::withTrashed()->findOrFail($id);
 
-        Gate::authorize('update', $empresa);
+        Gate::authorize('update', $cliente);
 
-        $this->form->fromModel($empresa);
+        $this->form->fromModel($cliente);
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -150,21 +152,21 @@ class Index extends Component
         $esNuevo = $this->form->id === null;
 
         if ($esNuevo) {
-            Gate::authorize('create', EmpresasCliente::class);
+            Gate::authorize('create', Cliente::class);
         } else {
-            /** @var EmpresasCliente $existente */
-            $existente = EmpresasCliente::withTrashed()->findOrFail($this->form->id);
+            /** @var Cliente $existente */
+            $existente = Cliente::withTrashed()->findOrFail($this->form->id);
             Gate::authorize('update', $existente);
         }
 
-        $empresa = $this->form->save();
+        $cliente = $this->form->save();
 
         $this->modalAbierto = false;
         $this->form->reset();
 
         session()->flash('status', $esNuevo
-            ? "Empresa «{$empresa->nombre}» creada correctamente."
-            : "Empresa «{$empresa->nombre}» actualizada correctamente.");
+            ? "Cliente «{$cliente->nombre}» creado correctamente."
+            : "Cliente «{$cliente->nombre}» actualizado correctamente.");
     }
 
     public function cerrarModal(): void
@@ -186,25 +188,25 @@ class Index extends Component
 
     public function eliminar(int $id): void
     {
-        /** @var EmpresasCliente $empresa */
-        $empresa = EmpresasCliente::findOrFail($id);
-        Gate::authorize('delete', $empresa);
+        /** @var Cliente $cliente */
+        $cliente = Cliente::findOrFail($id);
+        Gate::authorize('delete', $cliente);
 
-        $empresa->delete();
+        $cliente->delete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Empresa «{$empresa->nombre}» enviada a papelera.");
+        session()->flash('status', "Cliente «{$cliente->nombre}» enviado a papelera.");
     }
 
     public function restaurar(int $id): void
     {
-        /** @var EmpresasCliente $empresa */
-        $empresa = EmpresasCliente::withTrashed()->findOrFail($id);
-        Gate::authorize('restore', $empresa);
+        /** @var Cliente $cliente */
+        $cliente = Cliente::withTrashed()->findOrFail($id);
+        Gate::authorize('restore', $cliente);
 
-        $empresa->restore();
+        $cliente->restore();
 
-        session()->flash('status', "Empresa «{$empresa->nombre}» restaurada.");
+        session()->flash('status', "Cliente «{$cliente->nombre}» restaurado.");
     }
 
     #[Computed]
@@ -233,7 +235,7 @@ class Index extends Component
     #[Computed]
     public function provinciasDisponibles(): Collection
     {
-        return EmpresasCliente::query()
+        return Cliente::query()
             ->withTrashed()
             ->whereNotNull('provincia')
             ->where('provincia', '!=', '')
@@ -244,7 +246,7 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = EmpresasCliente::query();
+        $query = Cliente::query();
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();
@@ -261,10 +263,12 @@ class Index extends Component
         if ($this->buscar !== '') {
             $termino = '%'.trim($this->buscar).'%';
             $query->where(function (Builder $q) use ($termino): void {
-                $q->where('nombre', 'like', $termino)
+                $q->where('numero_cliente', 'like', $termino)
+                    ->orWhere('nombre', 'like', $termino)
                     ->orWhere('nombre_comercial', 'like', $termino)
                     ->orWhere('cif', 'like', $termino)
                     ->orWhere('email', 'like', $termino)
+                    ->orWhere('telefono', 'like', $termino)
                     ->orWhere('poblacion', 'like', $termino);
             });
         }
@@ -272,7 +276,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.clientes.index', [
-            'empresas' => $query->paginate(15),
+            'clientes' => $query->paginate(15),
         ]);
     }
 }
