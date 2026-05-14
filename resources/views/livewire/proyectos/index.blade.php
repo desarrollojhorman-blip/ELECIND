@@ -302,6 +302,22 @@
                         </div>
                     </x-ui.field>
 
+                    <x-ui.field label="Material añadir" :error="$errors->first('materialAAgregar')" class="md:col-span-2">
+                        <div class="flex items-center gap-2">
+                            <x-ui.select wire:key="material-select-{{ $materialSelectKey }}" wire:model="materialAAgregar" class="flex-1" :disabled="$modoSoloLectura">
+                                <option value="">— Selecciona material —</option>
+                                @foreach ($this->materialesDisponibles as $mat)
+                                    <option value="{{ $mat->id }}">{{ $mat->descripcion }} | {{ $mat->stock }} {{ $mat->unidad_medida }}</option>
+                                @endforeach
+                            </x-ui.select>
+                            @if (! $modoSoloLectura)
+                                <x-ui.button type="button" variant="info" wire:click="agregarMaterialProyecto" icon="heroicon-o-plus">
+                                    Añadir
+                                </x-ui.button>
+                            @endif
+                        </div>
+                    </x-ui.field>
+
                     <div class="md:col-span-2 grid gap-4 md:grid-cols-2">
                         <div x-data="{ abierto: false }" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                             <table class="min-w-full text-sm">
@@ -382,6 +398,51 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+
+                    {{-- Tabla materiales asignados --}}
+                    <div x-data="{ abierto: false }" class="md:col-span-2 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Material</th>
+                                    <th class="px-3 py-2 text-left">Unidad</th>
+                                    <th class="px-3 py-2 text-left">Stock</th>
+                                    <th class="px-3 py-2 text-right">
+                                        <button type="button"
+                                                x-on:click="abierto = !abierto"
+                                                class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
+                                                x-bind:title="abierto ? 'Ocultar tabla de materiales' : 'Mostrar tabla de materiales'">
+                                            <span x-text="abierto ? 'Ocultar' : 'Mostrar'"></span>
+                                            <x-heroicon-o-chevron-down class="size-3 transition-transform" x-bind:class="abierto ? 'rotate-180' : ''" />
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody x-show="abierto" x-cloak x-transition>
+                                @forelse ($this->materialesProyecto as $mat)
+                                    <tr wire:key="material-asignado-{{ $mat->id }}" class="border-t border-slate-100">
+                                        <td class="px-3 py-2 text-slate-700">{{ $mat->descripcion }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ $mat->unidad_medida }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ $mat->stock }}</td>
+                                        <td class="px-3 py-2 text-right">
+                                            @if (! $modoSoloLectura)
+                                                <button type="button"
+                                                        wire:click="quitarMaterialProyecto({{ $mat->id }})"
+                                                        class="inline-flex size-7 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                                        title="Quitar material">
+                                                    <x-heroicon-o-x-mark class="size-4" />
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-3 py-3 text-center text-xs text-slate-400">Sin materiales asignados.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 @endif
             </div>

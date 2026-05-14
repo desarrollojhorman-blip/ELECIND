@@ -5,6 +5,7 @@ namespace App\Livewire\Proyectos;
 use App\Livewire\Forms\ProyectoForm;
 use App\Livewire\Forms\TipoProyectoQuickForm;
 use App\Models\Cliente;
+use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
 use App\Models\User;
@@ -40,9 +41,13 @@ class Index extends Component
 
     public ?int $responsableAAgregar = null;
 
+    public ?int $materialAAgregar = null;
+
     public int $trabajadorSelectKey = 0;
 
     public int $responsableSelectKey = 0;
+
+    public int $materialSelectKey = 0;
 
     #[Url(as: 'q')]
     public string $buscar = '';
@@ -185,6 +190,7 @@ class Index extends Component
         $this->nuevoGrupoNombre = null;
         $this->trabajadorAAgregar = null;
         $this->responsableAAgregar = null;
+        $this->materialAAgregar = null;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -202,6 +208,7 @@ class Index extends Component
         $this->nuevoGrupoNombre = null;
         $this->trabajadorAAgregar = null;
         $this->responsableAAgregar = null;
+        $this->materialAAgregar = null;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -219,6 +226,7 @@ class Index extends Component
         $this->nuevoGrupoNombre = null;
         $this->trabajadorAAgregar = null;
         $this->responsableAAgregar = null;
+        $this->materialAAgregar = null;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -249,6 +257,7 @@ class Index extends Component
         $this->nuevoGrupoNombre = null;
         $this->trabajadorAAgregar = null;
         $this->responsableAAgregar = null;
+        $this->materialAAgregar = null;
 
         session()->flash('status', $esNuevo
             ? "Proyecto «{$proyecto->nombre}» creado correctamente."
@@ -264,6 +273,7 @@ class Index extends Component
         $this->nuevoGrupoNombre = null;
         $this->trabajadorAAgregar = null;
         $this->responsableAAgregar = null;
+        $this->materialAAgregar = null;
         $this->resetErrorBag();
     }
 
@@ -357,6 +367,50 @@ class Index extends Component
         $proyecto->usuarios()
             ->wherePivot('rol_en_proyecto', 'responsable')
             ->detach($userId);
+    }
+
+    public function agregarMaterialProyecto(): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        $this->validate([
+            'materialAAgregar' => ['required', 'integer', Rule::exists('materiales', 'id')],
+        ], [], [
+            'materialAAgregar' => 'material',
+        ]);
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $yaExiste = $proyecto->materiales()
+            ->where('materiales.id', $this->materialAAgregar)
+            ->exists();
+
+        if ($yaExiste) {
+            $this->addError('materialAAgregar', 'Este material ya está asignado al proyecto.');
+
+            return;
+        }
+
+        $proyecto->materiales()->attach($this->materialAAgregar);
+        $this->materialAAgregar = null;
+        $this->materialSelectKey++;
+    }
+
+    public function quitarMaterialProyecto(int $materialId): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $proyecto->materiales()->detach($materialId);
     }
 
     /* ───────────── Sub-modal: crear tipo de proyecto al vuelo ───────────── */
@@ -592,6 +646,51 @@ class Index extends Component
     public function responsablesProyecto(): Collection
     {
         return $this->usuariosProyectoPorRol('responsable');
+    }
+
+    /**
+     * @return Collection<int, Material>
+     */
+    #[Computed]
+    public function materialesProyecto(): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        /** @var Proyecto|null $proyecto */
+        $proyecto = Proyecto::query()
+            ->with(['materiales' => function ($q): void {
+                $q->orderBy('descripcion');
+            }])
+            ->find($this->form->id);
+
+        if (! $proyecto instanceof Proyecto) {
+            return collect();
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Material> $materiales */
+        $materiales = $proyecto->materiales;
+
+        return $materiales->toBase();
+    }
+
+    /**
+     * @return Collection<int, Material>
+     */
+    #[Computed]
+    public function materialesDisponibles(): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        $asignados = $this->materialesProyecto->pluck('id')->all();
+
+        return Material::query()
+            ->whereNotIn('id', $asignados)
+            ->orderBy('descripcion')
+            ->get(['id', 'descripcion', 'unidad_medida', 'stock']);
     }
 
     private function resolverGrupoSeleccionado(): void
