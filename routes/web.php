@@ -7,6 +7,7 @@ use App\Livewire\Empresa\Edit as EmpresaEdit;
 use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
 use App\Livewire\Materiales\Index as MaterialesIndex;
 use App\Livewire\Materiales\NumeroPedidos\Index as NumeroPedidosIndex;
+use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
@@ -28,6 +29,10 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/proyectos', ProyectosIndex::class)
         ->middleware('can:proyectos.ver')
         ->name('proyectos.index');
+
+    Route::get('/proyectos/grupos', GruposProyectosIndex::class)
+        ->middleware('can:tipos_proyecto.ver')
+        ->name('proyectos.grupos');
 
     Route::get('/materiales/pedidos', NumeroPedidosIndex::class)
         ->middleware('can:pedidos.ver')

@@ -70,7 +70,7 @@ class IndexTest extends TestCase
             ->set('form.nombre', 'Marzo-A')
             ->set('form.codigo', 'MAR-A-2026')
             ->set('form.cliente_id', $cliente->id)
-            ->set('form.tipo_proyecto_id', $tipo->id)
+            ->set('selectorGrupo', (string) $tipo->id)
             ->set('form.estado', 'activo')
             ->call('guardar')
             ->assertHasNoErrors()
@@ -99,6 +99,31 @@ class IndexTest extends TestCase
                 'form.nombre' => 'required',
                 'form.cliente_id' => 'required',
             ]);
+    }
+
+    public function test_crear_proyecto_con_grupo_otro_crea_el_grupo_y_lo_asigna(): void
+    {
+        $admin = $this->admin();
+        $cliente = Cliente::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirCrear')
+            ->set('form.nombre', 'Proyecto con grupo nuevo')
+            ->set('form.cliente_id', $cliente->id)
+            ->set('selectorGrupo', '__otro__')
+            ->set('nuevoGrupoNombre', 'Grupo Especial 2026')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $grupo = TiposProyecto::where('nombre', 'Grupo Especial 2026')->first();
+        $this->assertNotNull($grupo);
+
+        $this->assertDatabaseHas('proyectos', [
+            'nombre' => 'Proyecto con grupo nuevo',
+            'cliente_id' => $cliente->id,
+            'tipo_proyecto_id' => $grupo->id,
+        ]);
     }
 
     public function test_validacion_codigo_unico_por_cliente(): void
@@ -173,6 +198,51 @@ class IndexTest extends TestCase
         $this->assertDatabaseHas('proyectos', [
             'id' => $proyecto->id,
             'nombre' => 'Renombrado',
+        ]);
+    }
+
+    public function test_en_edicion_se_pueden_asignar_y_quitar_trabajador_y_responsable(): void
+    {
+        $admin = $this->admin();
+        $proyecto = Proyecto::factory()->create();
+        $trabajador = User::factory()->trabajador()->create();
+        $responsable = User::factory()->responsableDe(Cliente::factory()->create()->id)->create();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $proyecto->id)
+            ->set('trabajadorAAgregar', $trabajador->id)
+            ->call('agregarTrabajador')
+            ->set('responsableAAgregar', $responsable->id)
+            ->call('agregarResponsableProyecto')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('proyecto_usuario', [
+            'proyecto_id' => $proyecto->id,
+            'user_id' => $trabajador->id,
+            'rol_en_proyecto' => 'trabajador',
+        ]);
+        $this->assertDatabaseHas('proyecto_usuario', [
+            'proyecto_id' => $proyecto->id,
+            'user_id' => $responsable->id,
+            'rol_en_proyecto' => 'responsable',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $proyecto->id)
+            ->call('quitarTrabajador', $trabajador->id)
+            ->call('quitarResponsableProyecto', $responsable->id);
+
+        $this->assertDatabaseMissing('proyecto_usuario', [
+            'proyecto_id' => $proyecto->id,
+            'user_id' => $trabajador->id,
+            'rol_en_proyecto' => 'trabajador',
+        ]);
+        $this->assertDatabaseMissing('proyecto_usuario', [
+            'proyecto_id' => $proyecto->id,
+            'user_id' => $responsable->id,
+            'rol_en_proyecto' => 'responsable',
         ]);
     }
 

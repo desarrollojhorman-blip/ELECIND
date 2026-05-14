@@ -42,7 +42,7 @@ class Index extends Component
     public ?string $filtroRol = null;
 
     #[Url(as: 'empresa')]
-    public ?int $filtroEmpresaCliente = null;
+    public string $filtroEmpresaCliente = '';
 
     #[Url(as: 'orden')]
     public string $ordenColumna = 'nombre';
@@ -113,7 +113,7 @@ class Index extends Component
         $this->filtroEstado = 'activos';
         $this->filtroTipo = null;
         $this->filtroRol = null;
-        $this->filtroEmpresaCliente = null;
+        $this->filtroEmpresaCliente = '';
         $this->buscar = '';
         $this->resetPage();
         $this->resetKey++;
@@ -149,7 +149,7 @@ class Index extends Component
 
     public function quitarFiltroEmpresaCliente(): void
     {
-        $this->filtroEmpresaCliente = null;
+        $this->filtroEmpresaCliente = '';
         $this->resetPage();
         $this->resetKey++;
     }
@@ -414,7 +414,7 @@ class Index extends Component
         if ($this->filtroRol !== null) {
             $count++;
         }
-        if ($this->filtroEmpresaCliente !== null) {
+        if (trim($this->filtroEmpresaCliente) !== '') {
             $count++;
         }
 
@@ -508,8 +508,9 @@ class Index extends Component
             $query->whereHas('roles', fn (Builder $q) => $q->where('name', $rol));
         }
 
-        if ($this->filtroEmpresaCliente !== null) {
-            $query->where('cliente_id', $this->filtroEmpresaCliente);
+        if (trim($this->filtroEmpresaCliente) !== '') {
+            $terminoCliente = '%'.trim($this->filtroEmpresaCliente).'%';
+            $query->whereHas('cliente', fn (Builder $q) => $q->where('nombre', 'like', $terminoCliente));
         }
 
         if ($this->buscar !== '') {

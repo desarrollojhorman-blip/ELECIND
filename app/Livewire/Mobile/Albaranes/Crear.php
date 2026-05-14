@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Mobile\Albaranes;
 
-use App\Enums\TipoDia;
+use App\Enums\TipoHora;
 use App\Livewire\Forms\AlbaranForm;
 use App\Models\Albaran;
 use App\Models\Concepto;
@@ -177,7 +177,7 @@ class Crear extends Component
             : route('mobile.dashboard');
 
         return view('livewire.mobile.albaranes.crear', [
-            'tiposDia' => TipoDia::cases(),
+            'tiposHora' => TipoHora::cases(),
         ])->layout('components.layouts.mobile', [
             'title' => $titulo,
             'showBack' => true,

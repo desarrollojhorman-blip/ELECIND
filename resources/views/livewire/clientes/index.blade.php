@@ -43,7 +43,7 @@
             <div class="grid gap-3 md:grid-cols-2">
                 <x-ui.field label="Estado">
                     <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
-                        <option value="todos">Todos</option>
+                        <option value="">Todos los estados</option>
                         <option value="activas">Activas</option>
                         <option value="inactivas">Inactivas</option>
                         <option value="papelera">En papelera</option>
@@ -51,12 +51,10 @@
                 </x-ui.field>
 
                 <x-ui.field label="Provincia">
-                    <x-ui.select wire:key="provincia-{{ $resetKey }}" wire:model.live="filtroProvincia">
-                        <option value="">Todas las provincias</option>
-                        @foreach ($this->provinciasDisponibles as $provincia)
-                            <option value="{{ $provincia }}">{{ $provincia }}</option>
-                        @endforeach
-                    </x-ui.select>
+                    <x-ui.input
+                        wire:key="provincia-{{ $resetKey }}"
+                        wire:model.live.debounce.300ms="filtroProvincia"
+                        placeholder="Escribe provincia..." />
                 </x-ui.field>
             </div>
 
@@ -65,7 +63,7 @@
                 <x-slot:chips>
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs text-slate-500">Filtros aplicados:</span>
-                        @if ($filtroEstado !== 'todos')
+                        @if ($filtroEstado !== '')
                             <x-ui.filter-chip
                                 label="Estado"
                                 :value="ucfirst($filtroEstado)"

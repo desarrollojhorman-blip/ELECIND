@@ -77,6 +77,66 @@ class IndexTest extends TestCase
         ]);
     }
 
+    public function test_agregar_material_asigna_inmediatamente_a_la_familia_y_resetea_el_select(): void
+    {
+        $admin = $this->admin();
+        $familia = FamiliaMaterial::factory()->create(['nombre' => 'Cables']);
+        $pedido = NumeroPedido::factory()->create();
+        $material = Material::factory()->create([
+            'familia_id' => null,
+            'numero_pedido_id' => $pedido->id,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $familia->id)
+            ->set('materialAAsignar', $material->id)
+            ->call('agregarMaterialAFamilia')
+            ->assertSet('materialAAsignar', null);
+
+        $this->assertDatabaseHas('materiales', [
+            'id' => $material->id,
+            'familia_id' => $familia->id,
+        ]);
+    }
+
+    public function test_no_se_puede_asignar_un_material_que_ya_tiene_otra_familia(): void
+    {
+        $admin = $this->admin();
+        $familia = FamiliaMaterial::factory()->create();
+        $otraFamilia = FamiliaMaterial::factory()->create();
+        $pedido = NumeroPedido::factory()->create();
+        $material = Material::factory()->create([
+            'familia_id' => $otraFamilia->id,
+            'numero_pedido_id' => $pedido->id,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $familia->id)
+            ->set('materialAAsignar', $material->id)
+            ->call('agregarMaterialAFamilia');
+
+        // El material sigue perteneciendo a la otraFamilia: la asignación silenciosa no debe pisarlo.
+        $this->assertDatabaseHas('materiales', [
+            'id' => $material->id,
+            'familia_id' => $otraFamilia->id,
+        ]);
+    }
+
+    public function test_agregar_sin_material_seleccionado_no_hace_nada(): void
+    {
+        $admin = $this->admin();
+        $familia = FamiliaMaterial::factory()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $familia->id)
+            ->assertSet('materialAAsignar', null)
+            ->call('agregarMaterialAFamilia')
+            ->assertSet('materialAAsignar', null);
+    }
+
     public function test_validacion_nombre_obligatorio(): void
     {
         $admin = $this->admin();
@@ -141,7 +201,6 @@ class IndexTest extends TestCase
 
     public function test_eliminar_familia_deja_materiales_sin_familia(): void
     {
-        $admin = $this->admin();
         $familia = FamiliaMaterial::factory()->create();
         $material = Material::factory()->create(['familia_id' => $familia->id]);
 
@@ -187,72 +246,6 @@ class IndexTest extends TestCase
             ->call('abrirVer', $familia->id)
             ->assertSee('Material asignado')
             ->assertDontSee('Material huerfano');
-    }
-
-    public function test_modal_asignar_muestra_solo_huerfanos_por_defecto(): void
-    {
-        $admin = $this->admin();
-        $familia = FamiliaMaterial::factory()->create();
-        $otraFamilia = FamiliaMaterial::factory()->create();
-        $pedido = NumeroPedido::factory()->create();
-        Material::factory()->create([
-            'familia_id' => null,
-            'numero_pedido_id' => $pedido->id,
-            'descripcion' => 'Huerfano disponible',
-        ]);
-        Material::factory()->create([
-            'familia_id' => $otraFamilia->id,
-            'numero_pedido_id' => $pedido->id,
-            'descripcion' => 'Ocupado por otra familia',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test(Index::class)
-            ->call('abrirEditar', $familia->id)
-            ->call('abrirModalAsignar')
-            ->assertSet('mostrarTodosAsignar', false)
-            ->assertSee('Huerfano disponible')
-            ->assertDontSee('Ocupado por otra familia');
-    }
-
-    public function test_toggle_mostrar_todos_incluye_materiales_con_otra_familia(): void
-    {
-        $admin = $this->admin();
-        $familia = FamiliaMaterial::factory()->create();
-        $otraFamilia = FamiliaMaterial::factory()->create(['nombre' => 'Otra familia']);
-        $pedido = NumeroPedido::factory()->create();
-        Material::factory()->create([
-            'familia_id' => $otraFamilia->id,
-            'numero_pedido_id' => $pedido->id,
-            'descripcion' => 'Reasignable',
-        ]);
-
-        Livewire::actingAs($admin)
-            ->test(Index::class)
-            ->call('abrirEditar', $familia->id)
-            ->call('abrirModalAsignar')
-            ->set('mostrarTodosAsignar', true)
-            ->assertSee('Reasignable');
-    }
-
-    public function test_asignar_seleccionados_setea_familia_id_en_los_materiales(): void
-    {
-        $admin = $this->admin();
-        $familia = FamiliaMaterial::factory()->create(['nombre' => 'Cables']);
-        $pedido = NumeroPedido::factory()->create();
-        $mat1 = Material::factory()->create(['familia_id' => null, 'numero_pedido_id' => $pedido->id]);
-        $mat2 = Material::factory()->create(['familia_id' => null, 'numero_pedido_id' => $pedido->id]);
-
-        Livewire::actingAs($admin)
-            ->test(Index::class)
-            ->call('abrirEditar', $familia->id)
-            ->call('abrirModalAsignar')
-            ->set('materialesSeleccionados', [$mat1->id, $mat2->id])
-            ->call('asignarSeleccionados')
-            ->assertSet('modalAsignarAbierto', false);
-
-        $this->assertDatabaseHas('materiales', ['id' => $mat1->id, 'familia_id' => $familia->id]);
-        $this->assertDatabaseHas('materiales', ['id' => $mat2->id, 'familia_id' => $familia->id]);
     }
 
     public function test_quitar_material_de_la_familia_pone_familia_id_a_null(): void

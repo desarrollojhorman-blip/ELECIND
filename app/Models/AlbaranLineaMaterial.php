@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $albaran_id
  * @property int $material_id
  * @property string $cantidad
- * @property string|null $observaciones
  *
  * Nota: el descuento de stock en el material se gestiona automáticamente vía
  * AlbaranLineaMaterialObserver (creado/actualizado/eliminado).
@@ -28,7 +27,6 @@ class AlbaranLineaMaterial extends Model
         'albaran_id',
         'material_id',
         'cantidad',
-        'observaciones',
     ];
 
     protected function casts(): array

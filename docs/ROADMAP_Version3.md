@@ -93,6 +93,7 @@ Ver detalles en:
 - [`docs/resumen/130526_2300_cierre_fase_1.md`](./resumen/130526_2300_cierre_fase_1.md) (iter. 4 — cierre Fase 1)
 - [`docs/resumen/140526_0100_extension_roles_y_refactor.md`](./resumen/140526_0100_extension_roles_y_refactor.md) (iter. 5 — **extensión post-cierre**: CRUD Roles + refactor de nombres)
 - [`docs/resumen/140526_2200_familias_y_estado_actual.md`](./resumen/140526_2200_familias_y_estado_actual.md) (**resumen consolidado**: refactor materiales, refactor horas, Familias, estado actual + pendientes)
+- [`docs/resumen/140526_2300_fase2_claude.md`](./resumen/140526_2300_fase2_claude.md) (**último consolidado**: refactor `tipo_hora` 4 valores, eliminación `observaciones` por línea, mejoras UX móvil, **Configuración Empresa ampliada** con cascada ENIA + logo de albarán + ratio aspect + zoom configurable)
 
 ### 🔧 Extensiones post-cierre (mayo 2026)
 
@@ -119,6 +120,15 @@ Cambios estructurales realizados después del cierre formal de Fase 1, mientras 
 - [x] **Login redirect por rol** *(2026-05-14)*
   - Trabajadores intentando entrar en `/login` con rol móvil van directos al dashboard móvil.
   - Admins/superadmins van al dashboard web.
+- [x] **Configuración Empresa ampliada** *(2026-05-14)*
+  - Cascada de logo: empresa → **logo de fábrica ENIA** (`public/images/brand/enia.svg`) → texto fallback.
+  - **Logo separado para albarán/factura** (`empresa.logo_albaran_path`) con cascada propia: si vacío, usa el principal.
+  - **Detección automática de ratio aspect** al subir (raster vía `getimagesize`, SVG vía `viewBox`/`width+height`). Persistido en `empresa.logo_ratio` y `empresa.logo_albaran_ratio`.
+  - **Reglas inteligentes por ratio**: cuadrado (0.85-1.15) se muestra en todos los contextos; rectangular muestra abreviatura en sidebar colapsado (32×32).
+  - **Zoom configurable** por logo (`empresa.logo_zoom`, `empresa.logo_albaran_zoom`) con 6 niveles 80-130 % aplicado vía CSS `max-height` sin reprocesar imagen.
+  - UI en `/configuracion/empresa` con dos paneles paralelos (principal + albarán), preview en vivo con zoom, hints contextuales según ratio detectado.
+  - Fallback `@error` Alpine: si la imagen falla a cargar en navegador, muestra "Imagen no disponible" / abreviatura en colapsado.
+  - Helpers nuevos en `App\Support\Branding`: `detectarRatio`, `logoRatio`, `logoZoom`, `logoEsCuadrado`, `logoAlbaranUrl/Ratio/Zoom/EsCuadrado`, `ratioEsCuadrado`.
 
 ---
 
@@ -159,7 +169,9 @@ Cambios estructurales realizados después del cierre formal de Fase 1, mientras 
 - [x] Selects dependientes (proyecto → conceptos del proyecto → usuarios del proyecto → materiales del proyecto)
 - [x] Líneas de personal: yo + compañeros, con `horas` + `horas_extra` (refactor post-iter)
 - [x] Líneas de material: select Material directo (sin lotes, post-refactor) + cantidad
-- [x] Cabecera: `tipo_dia` (laborable/festivo) en cabecera (refactor post-iter)
+- [x] Cabecera: **`tipo_hora` con 4 valores** (`laboral`, `laboral_noche`, `festivo`, `festivo_noche`) *(refactor 14/05/2026 — antes `tipo_dia` con 2 valores)*
+- [x] **Sin `observaciones` por línea** *(refactor 14/05/2026 — el campo global de cabecera lo cubre)*
+- [x] **Unidad de medida visible** junto al input de cantidad y **stock visible** dentro del `<option>` del select de material *(mejora UX 14/05/2026)*
 - [x] Guardar como borrador (estado por defecto), editar borradores propios
 - [x] Permisos visibles para trabajadores: solo ven proyectos donde están asignados (o son responsable principal)
 
@@ -193,7 +205,7 @@ Cambios estructurales realizados después del cierre formal de Fase 1, mientras 
 | # | Decisión |
 |---|---|
 | 1 | Móvil primero, web después |
-| 2 | ~~4 tipos de hora~~ → **revisado 14/05**: `tipo_dia` (laborable/festivo) en cabecera + `horas` + `horas_extra` por línea personal |
+| 2 | ~~4 tipos de hora~~ → ~~`tipo_dia` 2 valores~~ → **revisado 14/05/2026 (final)**: `tipo_hora` con 4 valores (`laboral`, `laboral_noche`, `festivo`, `festivo_noche`) en cabecera + `horas` + `horas_extra` por línea personal |
 | 3 | Stock descuenta al crear/editar la línea de material (Observer). **Ahora ajusta `material.stock` directo** (los lotes se eliminaron en refactor) |
 | 4 | Estados: borrador → pendiente_firma → firmado → facturado → archivado |
 | 5 | Token de firma: single-use + caducidad por tiempo |
@@ -205,6 +217,7 @@ Cambios estructurales realizados después del cierre formal de Fase 1, mientras 
 
 Ver detalle de iteración 1 en [`docs/resumen/140526_1500_iter1_fase2_nucleo_datos.md`](./resumen/140526_1500_iter1_fase2_nucleo_datos.md).
 Ver estado consolidado tras Iter. 2-3 + extensiones en [`docs/resumen/140526_2200_familias_y_estado_actual.md`](./resumen/140526_2200_familias_y_estado_actual.md).
+Ver consolidado tras refactor `tipo_hora` + UX móvil + ampliación Configuración Empresa en [`docs/resumen/140526_2300_fase2_claude.md`](./resumen/140526_2300_fase2_claude.md).
 
 ---
 

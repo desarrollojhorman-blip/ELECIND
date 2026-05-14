@@ -28,7 +28,7 @@ class ProyectoForm extends Form
     public ?int $responsable_principal_id = null;
 
     #[Validate]
-    public string $estado = 'borrador';
+    public string $estado = 'activo';
 
     #[Validate]
     public ?string $fecha_inicio = null;
@@ -56,7 +56,7 @@ class ProyectoForm extends Form
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
             'tipo_proyecto_id' => ['nullable', 'integer', 'exists:tipos_proyectos,id'],
             'responsable_principal_id' => ['nullable', 'integer', 'exists:users,id'],
-            'estado' => ['required', Rule::in(['borrador', 'activo', 'cerrado', 'archivado'])],
+            'estado' => ['required', Rule::in(['activo', 'cerrado', 'archivado'])],
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
             'descripcion' => ['nullable', 'string', 'max:2000'],
@@ -100,7 +100,7 @@ class ProyectoForm extends Form
         $this->cliente_id = $proyecto->cliente_id;
         $this->tipo_proyecto_id = $proyecto->tipo_proyecto_id;
         $this->responsable_principal_id = $proyecto->responsable_principal_id;
-        $this->estado = $proyecto->estado;
+        $this->estado = $proyecto->estado === 'borrador' ? 'activo' : $proyecto->estado;
         $this->fecha_inicio = $proyecto->fecha_inicio
             ? Carbon::parse($proyecto->fecha_inicio)->format('Y-m-d')
             : null;

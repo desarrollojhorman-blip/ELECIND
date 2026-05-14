@@ -339,7 +339,7 @@ class IndexTest extends TestCase
             ->assertSet('filtroProvincia', 'Madrid')
             ->call('limpiarFiltros')
             ->assertSet('buscar', '')
-            ->assertSet('filtroEstado', 'todos')
+            ->assertSet('filtroEstado', '')
             ->assertSet('filtroProvincia', '')
             ->assertSet('resetKey', 1);
     }
@@ -366,7 +366,7 @@ class IndexTest extends TestCase
             ->set('filtroEstado', 'activas')
             ->set('filtroProvincia', 'Madrid')
             ->call('quitarFiltroEstado')
-            ->assertSet('filtroEstado', 'todos')
+            ->assertSet('filtroEstado', '')
             ->assertSet('filtroProvincia', 'Madrid')
             ->assertSet('resetKey', 1)
             ->call('quitarFiltroProvincia')

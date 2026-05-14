@@ -10,6 +10,7 @@
     $rolPrincipal = $user?->getRoleNames()->first() ?? 'Usuario';
     $logoUrl = \App\Support\Branding::logoUrl();
     $marca = \App\Support\Branding::nombre();
+    $logoZoom = \App\Support\Branding::logoZoom();
 @endphp
 
 <header class="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 bg-primary-700 px-3 text-white shadow"
@@ -28,11 +29,17 @@
     </div>
 
     {{-- Logo / título centrado --}}
-    <div class="flex flex-1 items-center justify-center overflow-hidden">
+    <div class="flex flex-1 items-center justify-center overflow-hidden"
+         x-data="{ logoRoto: false }">
         @if ($title)
             <h1 class="truncate text-base font-semibold">{{ $title }}</h1>
         @elseif ($logoUrl)
-            <img src="{{ $logoUrl }}" alt="{{ $marca }}" class="max-h-8 w-auto">
+            <img x-show="! logoRoto" src="{{ $logoUrl }}" alt="{{ $marca }}"
+                 style="max-height: calc(2rem * {{ $logoZoom / 100 }});"
+                 class="w-auto" x-on:error="logoRoto = true">
+            <span x-show="logoRoto" x-cloak class="text-xs font-medium text-white/80">
+                Imagen no disponible
+            </span>
         @else
             <span class="text-lg font-bold tracking-wide">{{ $marca }}</span>
         @endif

@@ -27,17 +27,17 @@
     <x-ui.data-table :colspan="5" empty="No hay números de pedido que coincidan con la búsqueda.">
         <x-slot:head>
             <tr>
-                <x-ui.sortable-header column="numero" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="numero" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Nº Pedido
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="fecha" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="fecha" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Fecha
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="proveedor" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="proveedor" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Proveedor
                 </x-ui.sortable-header>
-                <x-ui.sortable-header>Materiales</x-ui.sortable-header>
-                <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
+                <x-ui.sortable-header align="center">Materiales</x-ui.sortable-header>
+                <x-ui.sortable-header align="center">Acciones</x-ui.sortable-header>
             </tr>
         </x-slot:head>
 
@@ -56,9 +56,7 @@
                     <td class="px-4 py-3 text-sm text-slate-700">
                         {{ $pedido->proveedor ?? '—' }}
                     </td>
-                    <td class="px-4 py-3">
-                        <x-ui.badge tone="primary">{{ $pedido->materiales_count }}</x-ui.badge>
-                    </td>
+                    <td class="px-4 py-3 text-center text-sm text-slate-700">{{ $pedido->materiales_count }}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
                             @if ($pedido->trashed())
@@ -124,89 +122,9 @@
                     Materiales del pedido
                 </h3>
 
-                {{-- Materiales ya guardados (solo en edición) --}}
-                @if ($form->id !== null)
-                    @php $matsGuardados = $this->materialesDelPedidoActual; @endphp
-                    @if ($matsGuardados->isNotEmpty())
-                        <div class="mb-3 overflow-hidden rounded-md border border-slate-200">
-                            <table class="w-full text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left">Descripción</th>
-                                        <th class="px-3 py-2 text-left">Unidad</th>
-                                        <th class="px-3 py-2 text-right">Stock</th>
-                                        @if (! $modoSoloLectura)
-                                            <th class="px-3 py-2 text-right"></th>
-                                        @endif
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @foreach ($matsGuardados as $mat)
-                                        <tr wire:key="mat-saved-{{ $mat->id }}" class="hover:bg-slate-50">
-                                            <td class="px-3 py-2 text-slate-800">{{ $mat->descripcion }}</td>
-                                            <td class="px-3 py-2 text-slate-500">{{ $mat->unidad_medida }}</td>
-                                            <td class="px-3 py-2 text-right font-mono text-slate-700">
-                                                {{ rtrim(rtrim(number_format((float) $mat->stock, 2, ',', ''), '0'), ',') }}
-                                            </td>
-                                            @if (! $modoSoloLectura)
-                                                <td class="px-3 py-2 text-right">
-                                                    @can('delete', $mat)
-                                                        <button type="button"
-                                                                wire:click="eliminarMaterialDelPedido({{ $mat->id }})"
-                                                                class="text-slate-400 hover:text-red-500"
-                                                                title="Eliminar material">
-                                                            <x-heroicon-o-trash class="size-4" />
-                                                        </button>
-                                                    @endcan
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <p class="mb-3 text-sm text-slate-400">No hay materiales en este pedido aún.</p>
-                    @endif
-                @endif
-
-                {{-- Materiales pendientes (nuevos aún no guardados) --}}
-                @if (count($materialesPendientes) > 0)
-                    <div class="mb-3 overflow-hidden rounded-md border border-amber-200 bg-amber-50">
-                        <table class="w-full text-sm">
-                            <thead class="bg-amber-100 text-xs uppercase text-amber-700">
-                                <tr>
-                                    <th class="px-3 py-2 text-left">Descripción</th>
-                                    <th class="px-3 py-2 text-left">Unidad</th>
-                                    <th class="px-3 py-2 text-right">Stock</th>
-                                    <th class="px-3 py-2 text-right"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-amber-100">
-                                @foreach ($materialesPendientes as $i => $mat)
-                                    <tr wire:key="mat-pend-{{ $i }}" class="hover:bg-amber-100">
-                                        <td class="px-3 py-2 text-slate-800">{{ $mat['descripcion'] }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ $mat['unidad_medida'] }}</td>
-                                        <td class="px-3 py-2 text-right font-mono text-slate-700">
-                                            {{ rtrim(rtrim(number_format((float) $mat['stock'], 2, ',', ''), '0'), ',') }}
-                                        </td>
-                                        <td class="px-3 py-2 text-right">
-                                            <button type="button"
-                                                    wire:click="quitarMaterialPendiente({{ $i }})"
-                                                    class="text-amber-500 hover:text-red-500"
-                                                    title="Quitar">
-                                                <x-heroicon-o-x-mark class="size-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-
                 {{-- Mini-formulario añadir material (solo en modo edición) --}}
                 @if (! $modoSoloLectura)
+                    @can('create', App\Models\Material::class)
                     <div class="grid grid-cols-12 gap-2 items-end rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
                         <div class="col-span-6">
                             <x-ui.field label="Descripción" :error="$errors->first('matDescripcion')">
@@ -234,7 +152,115 @@
                             </x-ui.button>
                         </div>
                     </div>
+                    @endcan
                 @endif
+
+                @php
+                    $matsGuardados = $form->id !== null ? $this->materialesDelPedidoActual : collect();
+                    $totalMateriales = $matsGuardados->count() + count($materialesPendientes);
+                @endphp
+
+                {{-- Lista de materiales (plegable para evitar scroll largo) --}}
+                <div class="mt-3" x-data="{ abierto: false }">
+                    <div class="mb-2 flex items-center justify-between">
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Lista de materiales
+                            <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+                                {{ $totalMateriales }}
+                            </span>
+                        </h4>
+                        <button type="button" x-on:click="abierto = !abierto"
+                                class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                x-bind:title="abierto ? 'Plegar lista' : 'Desplegar lista'">
+                            <x-heroicon-o-chevron-down x-bind:class="abierto ? 'rotate-180' : ''"
+                                                       class="size-4 transition-transform" />
+                        </button>
+                    </div>
+
+                    <div x-show="abierto" x-cloak x-transition class="space-y-3">
+                        {{-- Materiales pendientes (nuevos aún no guardados) --}}
+                        @if (count($materialesPendientes) > 0)
+                            <div class="overflow-hidden rounded-md border border-amber-200 bg-amber-50">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-amber-100 text-xs uppercase text-amber-700">
+                                        <tr>
+                                            <th class="px-3 py-2 text-center">Descripción</th>
+                                            <th class="px-3 py-2 text-center">Unidad</th>
+                                            <th class="px-3 py-2 text-center">Stock</th>
+                                            <th class="px-3 py-2 text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-amber-100">
+                                        @foreach ($materialesPendientes as $i => $mat)
+                                            <tr wire:key="mat-pend-{{ $i }}" class="hover:bg-amber-100">
+                                                <td class="px-3 py-2 text-slate-800">{{ $mat['descripcion'] }}</td>
+                                                <td class="px-3 py-2 text-slate-500">{{ $mat['unidad_medida'] }}</td>
+                                                <td class="px-3 py-2 text-right font-mono text-slate-700">
+                                                    {{ rtrim(rtrim(number_format((float) $mat['stock'], 2, ',', ''), '0'), ',') }}
+                                                </td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <button type="button"
+                                                            wire:click="quitarMaterialPendiente({{ $i }})"
+                                                            class="text-amber-500 hover:text-red-500"
+                                                            title="Quitar">
+                                                        <x-heroicon-o-x-mark class="size-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                        {{-- Materiales ya guardados (solo en edición) --}}
+                        @if ($form->id !== null)
+                            @if ($matsGuardados->isNotEmpty())
+                                <div class="overflow-hidden rounded-md border border-slate-200">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                            <tr>
+                                                <th class="px-3 py-2 text-center">Descripción</th>
+                                                <th class="px-3 py-2 text-center">Unidad</th>
+                                                <th class="px-3 py-2 text-center">Stock</th>
+                                                @if (! $modoSoloLectura)
+                                                    <th class="px-3 py-2 text-center"></th>
+                                                @endif
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            @foreach ($matsGuardados as $mat)
+                                                <tr wire:key="mat-saved-{{ $mat->id }}" class="hover:bg-slate-50">
+                                                    <td class="px-3 py-2 text-slate-800">{{ $mat->descripcion }}</td>
+                                                    <td class="px-3 py-2 text-slate-500">{{ $mat->unidad_medida }}</td>
+                                                    <td class="px-3 py-2 text-right font-mono text-slate-700">
+                                                        {{ rtrim(rtrim(number_format((float) $mat->stock, 2, ',', ''), '0'), ',') }}
+                                                    </td>
+                                                    @if (! $modoSoloLectura)
+                                                        <td class="px-3 py-2 text-right">
+                                                            @can('delete', $mat)
+                                                                <button type="button"
+                                                                        wire:click="eliminarMaterialDelPedido({{ $mat->id }})"
+                                                                        class="text-slate-400 hover:text-red-500"
+                                                                        title="Eliminar material">
+                                                                    <x-heroicon-o-trash class="size-4" />
+                                                                </button>
+                                                            @endcan
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @elseif (count($materialesPendientes) === 0)
+                                <p class="text-sm text-slate-400">No hay materiales en este pedido aún.</p>
+                            @endif
+                        @elseif (count($materialesPendientes) === 0)
+                            <p class="text-sm text-slate-400">No hay materiales añadidos aún.</p>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 

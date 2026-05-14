@@ -21,7 +21,6 @@ class AlbaranLineaPersonalFactory extends Factory
             'trabajador_id' => User::factory()->trabajador(),
             'horas' => fake()->randomFloat(2, 0.5, 10),
             'horas_extra' => fake()->boolean(30) ? fake()->randomFloat(2, 0.5, 4) : 0,
-            'observaciones' => fake()->boolean(20) ? fake()->sentence(5) : null,
         ];
     }
 }

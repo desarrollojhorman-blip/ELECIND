@@ -32,7 +32,7 @@ class Index extends Component
      * Estados: todos | activas | inactivas | papelera
      */
     #[Url(as: 'estado')]
-    public string $filtroEstado = 'todos';
+    public string $filtroEstado = '';
 
     #[Url(as: 'provincia')]
     public string $filtroProvincia = '';
@@ -85,7 +85,7 @@ class Index extends Component
 
     public function limpiarFiltros(): void
     {
-        $this->filtroEstado = 'todos';
+        $this->filtroEstado = '';
         $this->filtroProvincia = '';
         $this->buscar = '';
         $this->resetPage();
@@ -101,7 +101,7 @@ class Index extends Component
 
     public function quitarFiltroEstado(): void
     {
-        $this->filtroEstado = 'todos';
+        $this->filtroEstado = '';
         $this->resetPage();
         $this->resetKey++;
     }
@@ -241,7 +241,7 @@ class Index extends Component
     public function filtrosAplicados(): int
     {
         $count = 0;
-        if ($this->filtroEstado !== 'todos') {
+        if ($this->filtroEstado !== '') {
             $count++;
         }
         if ($this->filtroProvincia !== '') {
@@ -315,7 +315,7 @@ class Index extends Component
         }
 
         if ($this->filtroProvincia !== '') {
-            $query->where('provincia', $this->filtroProvincia);
+            $query->where('provincia', 'like', '%'.trim($this->filtroProvincia).'%');
         }
 
         if ($this->buscar !== '') {

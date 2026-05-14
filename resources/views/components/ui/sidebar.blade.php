@@ -19,9 +19,23 @@
         [
             'label' => 'Proyectos',
             'icon' => 'heroicon-o-folder',
-            'route' => 'proyectos.index',
+            'route' => null,
             'key' => 'proyectos',
-            'permission' => 'proyectos.ver',
+            'permission' => null,
+            'children' => [
+                [
+                    'label' => 'Grupo proyectos',
+                    'route' => 'proyectos.grupos',
+                    'key' => 'proyectos_grupos',
+                    'permission' => 'tipos_proyecto.ver',
+                ],
+                [
+                    'label' => 'Proyectos',
+                    'route' => 'proyectos.index',
+                    'key' => 'proyectos_lista',
+                    'permission' => 'proyectos.ver',
+                ],
+            ],
         ],
         [
             'label' => 'Albaranes',
@@ -129,21 +143,47 @@
        @keydown.escape.window="menuOpen = false"
        :class="open ? 'w-60' : 'w-16'"
        class="hidden shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:flex">
-    {{-- Brand --}}
     @php
         $logoUrl = \App\Support\Branding::logoUrl();
         $marca = \App\Support\Branding::nombre();
         $abreviatura = \App\Support\Branding::abreviatura();
+        $logoZoom = \App\Support\Branding::logoZoom();
+        $logoEsCuadrado = \App\Support\Branding::logoEsCuadrado();
     @endphp
     <div class="flex h-16 items-center justify-between gap-2 border-b border-slate-200 px-3">
-        <a href="{{ route('web.dashboard') }}" class="flex min-w-0 flex-1 items-center justify-center overflow-hidden">
+        <a href="{{ route('web.dashboard') }}"
+           x-data="{ logoRoto: false }"
+           class="flex min-w-0 flex-1 items-center justify-center overflow-hidden">
             @if ($logoUrl)
-                {{-- Logo expandido --}}
-                <img x-show="open" x-transition.opacity src="{{ $logoUrl }}" alt="{{ $marca }}" class="max-h-9 w-auto">
-                {{-- Logo colapsado: misma imagen reducida --}}
-                <img x-show="! open" x-transition.opacity src="{{ $logoUrl }}" alt="{{ $marca }}" class="size-8 object-contain">
+                {{-- Expandido: siempre se muestra el logo --}}
+                <img x-show="open && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
+                     alt="{{ $marca }}"
+                     style="max-height: calc(2.25rem * {{ $logoZoom / 100 }});"
+                     class="w-auto" x-on:error="logoRoto = true">
+
+                {{-- Colapsado: si el logo es cuadrado lo mostramos; si es rectangular, la abreviatura --}}
+                @if ($logoEsCuadrado)
+                    <img x-show="! open && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
+                         alt="{{ $marca }}" class="size-8 object-contain" x-on:error="logoRoto = true">
+                @else
+                    <span x-show="! open" x-transition.opacity
+                          class="text-lg font-bold text-primary-700">
+                        {{ $abreviatura }}
+                    </span>
+                @endif
+
+                {{-- Fallback si la imagen no carga --}}
+                <span x-show="open && logoRoto" x-cloak x-transition.opacity
+                      class="text-xs font-medium text-slate-500">
+                    Imagen no disponible
+                </span>
+                @if ($logoEsCuadrado)
+                    <span x-show="! open && logoRoto" x-cloak x-transition.opacity
+                          class="text-xs font-bold text-slate-400">
+                        {{ $abreviatura }}
+                    </span>
+                @endif
             @else
-                {{-- Sin logo configurado: texto placeholder --}}
                 <span x-show="open" x-transition.opacity
                       class="text-lg font-bold tracking-wide text-primary-700">
                     {{ $marca }}
@@ -162,7 +202,6 @@
         </button>
     </div>
 
-    {{-- Items --}}
     <nav class="flex-1 overflow-y-auto px-2 py-3">
         <ul class="space-y-0.5">
             @foreach ($items as $item)
@@ -171,19 +210,15 @@
                 @endif
 
                 @php
-                    // Filtrar children por permission individual antes de pintar.
                     $childrenVisibles = collect($item['children'] ?? [])
                         ->filter(fn ($c) => empty($c['permission']) || auth()->user()?->can($c['permission']))
                         ->values()
                         ->all();
-                @endphp
 
-                {{-- Si el item es un contenedor (sin route propia) y ningún hijo es visible, saltar. --}}
-                @if (! empty($item['children']) && $item['route'] === null && count($childrenVisibles) === 0)
-                    @continue
-                @endif
+                    if (! empty($item['children']) && $item['route'] === null && count($childrenVisibles) === 0) {
+                        continue;
+                    }
 
-                @php
                     $hasChildren = count($childrenVisibles) > 0;
                     $isActive = $active === $item['key'] || collect($childrenVisibles)->pluck('key')->contains($active);
                     $disabled = $item['route'] === null && ! $hasChildren;
@@ -199,7 +234,6 @@
 
                 <li>
                     @if ($isToggle)
-                        {{-- Item con submenú: botón que expande/colapsa --}}
                         <button type="button"
                                 @click="open ? toggleExpand('{{ $item['key'] }}') : (open = true, expanded = isExpanded('{{ $item['key'] }}') ? expanded : [...expanded, '{{ $item['key'] }}'])"
                                 @class($itemClasses)>
@@ -213,7 +247,6 @@
                                 class="size-4 shrink-0 text-slate-400 transition-transform" />
                         </button>
                     @else
-                        {{-- Item normal: enlace --}}
                         <a href="{{ $href }}"
                            @if ($disabled) aria-disabled="true" @endif
                            @class($itemClasses)>
@@ -224,7 +257,6 @@
                         </a>
                     @endif
 
-                    {{-- Submenú: visible si está activo (estás dentro) o si lo expandiste manualmente --}}
                     @if ($hasChildren)
                         <ul x-show="open && (isExpanded('{{ $item['key'] }}') || {{ $isActive ? 'true' : 'false' }})"
                             x-cloak
@@ -255,7 +287,6 @@
         </ul>
     </nav>
 
-    {{-- Footer: avatar como dropdown que contiene cerrar sesión --}}
     @auth
         @php
             $user = auth()->user();
@@ -265,7 +296,6 @@
         @endphp
         <div class="relative border-t border-slate-200 p-2"
              @click.outside="menuOpen = false">
-            {{-- Botón disparador --}}
             <button type="button"
                     @click="menuOpen = ! menuOpen"
                     :class="menuOpen ? 'bg-slate-100' : ''"
@@ -288,7 +318,6 @@
                     class="size-4 shrink-0 text-slate-400 transition-transform" />
             </button>
 
-            {{-- Menú flotante --}}
             <div x-show="menuOpen"
                  x-cloak
                  x-transition:enter="transition ease-out duration-150"

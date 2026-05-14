@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-header title="Proyectos" subtitle="Gestión de proyectos: tipos, clientes, responsables, fechas y estado." />
+    <x-ui.page-header title="Proyectos" subtitle="Gestión de proyectos: grupos, clientes, responsables y planificación." />
 
     {{-- Toolbar --}}
     <div class="mb-3">
@@ -43,7 +43,6 @@
                 <x-ui.field label="Estado">
                     <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
                         <option value="todos">Todos</option>
-                        <option value="borrador">Borrador</option>
                         <option value="activo">Activo</option>
                         <option value="cerrado">Cerrado</option>
                         <option value="archivado">Archivado</option>
@@ -51,9 +50,9 @@
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Tipo">
+                <x-ui.field label="Grupo">
                     <x-ui.select wire:key="tipo-{{ $resetKey }}" wire:model.live="filtroTipo">
-                        <option value="">Todos los tipos</option>
+                        <option value="">Todos los grupos</option>
                         @foreach ($this->tiposDisponibles as $tipo)
                             <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
                         @endforeach
@@ -87,7 +86,7 @@
                             <x-ui.filter-chip label="Estado" :value="ucfirst($filtroEstado)" remove-action="quitarFiltroEstado" />
                         @endif
                         @if ($filtroTipo !== null)
-                            <x-ui.filter-chip label="Tipo"
+                            <x-ui.filter-chip label="Grupo"
                                 :value="$this->tiposDisponibles->firstWhere('id', $filtroTipo)?->nombre ?? '?'"
                                 remove-action="quitarFiltroTipo" />
                         @endif
@@ -113,12 +112,12 @@
         <x-slot:head>
             <tr>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Nombre
+                    Nombre proyecto
                 </x-ui.sortable-header>
                 <x-ui.sortable-header column="codigo" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Código
+                    Código proyecto
                 </x-ui.sortable-header>
-                <x-ui.sortable-header>Tipo</x-ui.sortable-header>
+                <x-ui.sortable-header>Grupo</x-ui.sortable-header>
                 <x-ui.sortable-header>Cliente</x-ui.sortable-header>
                 <x-ui.sortable-header>Responsable</x-ui.sortable-header>
                 <x-ui.sortable-header column="estado" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
@@ -132,7 +131,6 @@
             @foreach ($proyectos as $proyecto)
                 @php
                     $estadoTone = match ($proyecto->estado) {
-                        'borrador' => 'neutral',
                         'activo' => 'success',
                         'cerrado' => 'info',
                         'archivado' => 'warning',
@@ -184,6 +182,10 @@
                                         icon="heroicon-o-arrow-uturn-left" variant="success" tooltip="Restaurar" />
                                 @endcan
                             @else
+                                @can('view', $proyecto)
+                                    <x-ui.icon-button wire:click="abrirVer({{ $proyecto->id }})"
+                                        icon="heroicon-o-eye" variant="neutral" tooltip="Ver detalle" />
+                                @endcan
                                 @can('update', $proyecto)
                                     <x-ui.icon-button wire:click="abrirEditar({{ $proyecto->id }})"
                                         icon="heroicon-o-pencil-square" variant="info" tooltip="Editar" />
@@ -204,32 +206,52 @@
 
     {{-- Modal principal: crear/editar proyecto --}}
     <x-ui.modal :show="$modalAbierto"
-        :title="$form->id ? 'Editar proyecto' : 'Nuevo proyecto'"
+        :title="$modoSoloLectura ? 'Ver proyecto' : ($form->id ? 'Editar proyecto' : 'Nuevo proyecto')"
         close-action="cerrarModal"
         size="lg">
 
         <form wire:submit="guardar" id="form-proyecto" class="space-y-4">
-            <div class="grid gap-4 md:grid-cols-2">
-                <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')" class="md:col-span-2">
-                    <x-ui.input wire:model="form.nombre" autofocus />
-                </x-ui.field>
-
-                <x-ui.field label="Código" :error="$errors->first('form.codigo')"
+            <div @class([
+                'grid gap-4 md:grid-cols-2',
+                'max-h-[62vh] overflow-y-auto pr-1' => $form->id,
+            ])>
+                <x-ui.field label="Código proyecto" :error="$errors->first('form.codigo')"
                             hint="Único por cliente. Se usará en albaranes y reportes.">
-                    <x-ui.input wire:model="form.codigo" placeholder="Ej. MAR-A-2026" class="font-mono" />
+                    <x-ui.input wire:model="form.codigo" placeholder="Ej. MAR-A-2026" class="font-mono" :disabled="$modoSoloLectura" autofocus />
                 </x-ui.field>
 
-                <x-ui.field label="Estado" required :error="$errors->first('form.estado')">
-                    <x-ui.select wire:model="form.estado">
-                        <option value="borrador">Borrador</option>
-                        <option value="activo">Activo</option>
-                        <option value="cerrado">Cerrado</option>
-                        <option value="archivado">Archivado</option>
+                <x-ui.field label="Nombre proyecto" required :error="$errors->first('form.nombre')">
+                    <x-ui.input wire:model="form.nombre" :disabled="$modoSoloLectura" />
+                </x-ui.field>
+
+                <x-ui.field label="Grupo" :error="$errors->first('form.tipo_proyecto_id')">
+                    <x-ui.select wire:model.live="selectorGrupo" class="flex-1" :disabled="$modoSoloLectura">
+                        <option value="">— Sin grupo —</option>
+                        @foreach ($this->tiposDisponibles as $tipo)
+                            <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                        @endforeach
+                        <option value="__otro__">Otro…</option>
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')">
-                    <x-ui.select wire:model="form.cliente_id">
+                @if ($selectorGrupo === '__otro__')
+                    <x-ui.field label="Grupo nuevo" :error="$errors->first('nuevoGrupoNombre')">
+                        <x-ui.input wire:model="nuevoGrupoNombre"
+                                    :disabled="$modoSoloLectura"
+                                    placeholder="Escribe el nombre del nuevo grupo" />
+                    </x-ui.field>
+                @endif
+
+                <x-ui.field label="Fecha inicio" :error="$errors->first('form.fecha_inicio')">
+                    <x-ui.input type="date" wire:model="form.fecha_inicio" :disabled="$modoSoloLectura" />
+                </x-ui.field>
+
+                <x-ui.field label="Fecha fin" :error="$errors->first('form.fecha_fin')">
+                    <x-ui.input type="date" wire:model="form.fecha_fin" :disabled="$modoSoloLectura" />
+                </x-ui.field>
+
+                <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')" class="md:col-span-2">
+                    <x-ui.select wire:model="form.cliente_id" :disabled="$modoSoloLectura">
                         <option value="">— Selecciona cliente —</option>
                         @foreach ($this->clientesDisponibles as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
@@ -237,54 +259,142 @@
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Tipo de proyecto (grupo)" :error="$errors->first('form.tipo_proyecto_id')">
-                    <div class="flex items-center gap-2">
-                        <x-ui.select wire:model="form.tipo_proyecto_id" class="flex-1">
-                            <option value="">— Sin tipo —</option>
-                            @foreach ($this->tiposDisponibles as $tipo)
-                                <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                            @endforeach
-                        </x-ui.select>
-                        @can('create', App\Models\TiposProyecto::class)
-                            <button type="button"
-                                    wire:click="abrirModalTipo"
-                                    class="inline-flex shrink-0 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-2 text-emerald-700 transition-colors hover:bg-emerald-100"
-                                    title="Crear nuevo tipo">
-                                <x-heroicon-o-plus class="size-4" />
-                            </button>
-                        @endcan
+                <x-ui.field label="Observaciones" :error="$errors->first('form.descripcion')" class="md:col-span-2">
+                    <x-ui.textarea wire:model="form.descripcion" rows="3" :disabled="$modoSoloLectura" />
+                </x-ui.field>
+
+                @if (! $form->id)
+                    <p class="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                        Para asignar responsables y trabajadores, primero crea este proyecto y luego edítalo.
+                    </p>
+                @endif
+
+                @if ($form->id)
+                    <x-ui.field label="Trabajador añadir" :error="$errors->first('trabajadorAAgregar')" class="md:col-span-2">
+                        <div class="flex items-center gap-2">
+                            <x-ui.select wire:key="trabajador-select-{{ $trabajadorSelectKey }}" wire:model="trabajadorAAgregar" class="flex-1" :disabled="$modoSoloLectura">
+                                <option value="">— Selecciona trabajador —</option>
+                                @foreach ($this->trabajadoresDisponibles as $trab)
+                                    <option value="{{ $trab->id }}">{{ trim($trab->nombre.' '.$trab->apellidos) }}</option>
+                                @endforeach
+                            </x-ui.select>
+                            @if (! $modoSoloLectura)
+                                <x-ui.button type="button" variant="info" wire:click="agregarTrabajador" icon="heroicon-o-plus">
+                                    Añadir
+                                </x-ui.button>
+                            @endif
+                        </div>
+                    </x-ui.field>
+
+                    <x-ui.field label="Responsable añadir" :error="$errors->first('responsableAAgregar')" class="md:col-span-2">
+                        <div class="flex items-center gap-2">
+                            <x-ui.select wire:key="responsable-select-{{ $responsableSelectKey }}" wire:model="responsableAAgregar" class="flex-1" :disabled="$modoSoloLectura">
+                                <option value="">— Selecciona responsable —</option>
+                                @foreach ($this->responsablesProyectoDisponibles as $resp)
+                                    <option value="{{ $resp->id }}">{{ trim($resp->nombre.' '.$resp->apellidos) }}</option>
+                                @endforeach
+                            </x-ui.select>
+                            @if (! $modoSoloLectura)
+                                <x-ui.button type="button" variant="info" wire:click="agregarResponsableProyecto" icon="heroicon-o-plus">
+                                    Añadir
+                                </x-ui.button>
+                            @endif
+                        </div>
+                    </x-ui.field>
+
+                    <div class="md:col-span-2 grid gap-4 md:grid-cols-2">
+                        <div x-data="{ abierto: false }" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-100 text-slate-600">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">Trabajador</th>
+                                        <th class="px-3 py-2 text-right">
+                                            <button type="button"
+                                                    x-on:click="abierto = !abierto"
+                                                    class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
+                                                    x-bind:title="abierto ? 'Ocultar tabla de trabajadores' : 'Mostrar tabla de trabajadores'">
+                                                <span x-text="abierto ? 'Ocultar' : 'Mostrar'"></span>
+                                                <x-heroicon-o-chevron-down class="size-3 transition-transform" x-bind:class="abierto ? 'rotate-180' : ''" />
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody x-show="abierto" x-cloak x-transition>
+                                    @forelse ($this->trabajadoresProyecto as $trab)
+                                        <tr wire:key="trabajador-asignado-{{ $trab->id }}" class="border-t border-slate-100">
+                                            <td class="px-3 py-2 text-slate-700">{{ trim($trab->nombre.' '.$trab->apellidos) }}</td>
+                                            <td class="px-3 py-2 text-right">
+                                                @if (! $modoSoloLectura)
+                                                    <button type="button"
+                                                            wire:click="quitarTrabajador({{ $trab->id }})"
+                                                            class="inline-flex size-7 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                                            title="Quitar trabajador">
+                                                        <x-heroicon-o-x-mark class="size-4" />
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="2" class="px-3 py-3 text-center text-xs text-slate-400">Sin trabajadores asignados.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div x-data="{ abierto: false }" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-slate-100 text-slate-600">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">Responsable</th>
+                                        <th class="px-3 py-2 text-right">
+                                            <button type="button"
+                                                    x-on:click="abierto = !abierto"
+                                                    class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
+                                                    x-bind:title="abierto ? 'Ocultar tabla de responsables' : 'Mostrar tabla de responsables'">
+                                                <span x-text="abierto ? 'Ocultar' : 'Mostrar'"></span>
+                                                <x-heroicon-o-chevron-down class="size-3 transition-transform" x-bind:class="abierto ? 'rotate-180' : ''" />
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody x-show="abierto" x-cloak x-transition>
+                                    @forelse ($this->responsablesProyecto as $resp)
+                                        <tr wire:key="responsable-asignado-{{ $resp->id }}" class="border-t border-slate-100">
+                                            <td class="px-3 py-2 text-slate-700">{{ trim($resp->nombre.' '.$resp->apellidos) }}</td>
+                                            <td class="px-3 py-2 text-right">
+                                                @if (! $modoSoloLectura)
+                                                    <button type="button"
+                                                            wire:click="quitarResponsableProyecto({{ $resp->id }})"
+                                                            class="inline-flex size-7 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                                            title="Quitar responsable">
+                                                        <x-heroicon-o-x-mark class="size-4" />
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="2" class="px-3 py-3 text-center text-xs text-slate-400">Sin responsables asignados.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </x-ui.field>
-
-                <x-ui.field label="Responsable principal" :error="$errors->first('form.responsable_principal_id')" class="md:col-span-2">
-                    <x-ui.select wire:model="form.responsable_principal_id">
-                        <option value="">— Sin asignar —</option>
-                        @foreach ($this->responsablesDisponibles as $resp)
-                            <option value="{{ $resp->id }}">{{ trim($resp->nombre.' '.$resp->apellidos) }}</option>
-                        @endforeach
-                    </x-ui.select>
-                </x-ui.field>
-
-                <x-ui.field label="Fecha inicio" :error="$errors->first('form.fecha_inicio')">
-                    <x-ui.input type="date" wire:model="form.fecha_inicio" />
-                </x-ui.field>
-
-                <x-ui.field label="Fecha fin" :error="$errors->first('form.fecha_fin')">
-                    <x-ui.input type="date" wire:model="form.fecha_fin" />
-                </x-ui.field>
-
-                <x-ui.field label="Descripción" :error="$errors->first('form.descripcion')" class="md:col-span-2">
-                    <x-ui.textarea wire:model="form.descripcion" rows="3" />
-                </x-ui.field>
+                @endif
             </div>
         </form>
 
         <x-slot:footer>
             <x-ui.button variant="ghost" wire:click="cerrarModal">Cancelar</x-ui.button>
-            <x-ui.button variant="success" type="submit" form="form-proyecto"
-                         wire:loading.attr="disabled" icon="heroicon-o-check">
-                Guardar
-            </x-ui.button>
+            @if (! $modoSoloLectura)
+                <x-ui.button variant="success" type="submit" form="form-proyecto"
+                             wire:loading.attr="disabled" icon="heroicon-o-check">
+                    Guardar
+                </x-ui.button>
+            @endif
         </x-slot:footer>
     </x-ui.modal>
 

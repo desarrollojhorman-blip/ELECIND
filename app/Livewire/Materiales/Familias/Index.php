@@ -41,19 +41,8 @@ class Index extends Component
 
     public int $resetKey = 0;
 
-    // ── Modal "Asignar materiales" ────────────────────────────────────
-    public bool $modalAsignarAbierto = false;
-
-    public string $buscarAsignar = '';
-
-    /**
-     * Toggle UX (opción C): por defecto solo materiales sin familia,
-     * activable para reasignar materiales que ya tengan otra familia.
-     */
-    public bool $mostrarTodosAsignar = false;
-
-    /** @var array<int, int> ids de materiales seleccionados en el modal asignar */
-    public array $materialesSeleccionados = [];
+    /** Id del material seleccionado en el select para añadir a la familia. */
+    public ?int $materialAAsignar = null;
 
     public function mount(): void
     {
@@ -94,6 +83,7 @@ class Index extends Component
         Gate::authorize('create', FamiliaMaterial::class);
 
         $this->form->reset();
+        $this->materialAAsignar = null;
         $this->resetErrorBag();
         $this->modoSoloLectura = false;
         $this->modalAbierto = true;
@@ -106,6 +96,7 @@ class Index extends Component
         Gate::authorize('view', $familia);
 
         $this->form->fromModel($familia);
+        $this->materialAAsignar = null;
         $this->resetErrorBag();
         $this->modoSoloLectura = true;
         $this->modalAbierto = true;
@@ -118,6 +109,7 @@ class Index extends Component
         Gate::authorize('update', $familia);
 
         $this->form->fromModel($familia);
+        $this->materialAAsignar = null;
         $this->resetErrorBag();
         $this->modoSoloLectura = false;
         $this->modalAbierto = true;
@@ -142,6 +134,7 @@ class Index extends Component
         $familia = $this->form->save();
 
         $this->modalAbierto = false;
+        $this->materialAAsignar = null;
         $this->form->reset();
 
         session()->flash('status', $esNuevo
@@ -153,6 +146,7 @@ class Index extends Component
     {
         $this->modalAbierto = false;
         $this->modoSoloLectura = false;
+        $this->materialAAsignar = null;
         $this->form->reset();
         $this->resetErrorBag();
     }
@@ -190,11 +184,15 @@ class Index extends Component
         session()->flash('status', "Familia «{$familia->nombre}» restaurada.");
     }
 
-    // ── Modal "Asignar materiales a esta familia" ─────────────────────
+    // ── Asignación inmediata de materiales a la familia ────────────────
 
-    public function abrirModalAsignar(): void
+    /**
+     * Asigna el material seleccionado a la familia abierta (en modo edición).
+     * Acción inmediata sobre BD: solo válido si la familia ya existe.
+     */
+    public function agregarMaterialAFamilia(): void
     {
-        if ($this->form->id === null) {
+        if ($this->form->id === null || $this->materialAAsignar === null) {
             return;
         }
 
@@ -202,52 +200,18 @@ class Index extends Component
         $familia = FamiliaMaterial::findOrFail($this->form->id);
         Gate::authorize('update', $familia);
 
-        $this->buscarAsignar = '';
-        $this->mostrarTodosAsignar = false;
-        $this->materialesSeleccionados = [];
-        $this->modalAsignarAbierto = true;
-    }
-
-    public function cerrarModalAsignar(): void
-    {
-        $this->modalAsignarAbierto = false;
-        $this->materialesSeleccionados = [];
-        $this->buscarAsignar = '';
-    }
-
-    public function asignarSeleccionados(): void
-    {
-        if ($this->form->id === null) {
-            return;
-        }
-
-        /** @var FamiliaMaterial $familia */
-        $familia = FamiliaMaterial::findOrFail($this->form->id);
-        Gate::authorize('update', $familia);
-
-        if ($this->materialesSeleccionados === []) {
-            $this->cerrarModalAsignar();
-
-            return;
-        }
-
-        $ids = array_values(array_unique(array_map('intval', $this->materialesSeleccionados)));
-
-        $cuantos = Material::query()
-            ->whereIn('id', $ids)
+        Material::query()
+            ->where('id', $this->materialAAsignar)
+            ->whereNull('familia_id')
             ->update(['familia_id' => $familia->id]);
 
-        $this->cerrarModalAsignar();
-        unset($this->materialesDeLaFamiliaActual);
-
-        session()->flash(
-            'status',
-            $cuantos === 1
-                ? "1 material asignado a «{$familia->nombre}»."
-                : "{$cuantos} materiales asignados a «{$familia->nombre}»."
-        );
+        $this->materialAAsignar = null;
+        unset($this->materialesDeLaFamiliaActual, $this->materialesHuerfanos);
     }
 
+    /**
+     * Quita un material asignado a la familia (acción inmediata sobre BD).
+     */
     public function quitarMaterialDeFamilia(int $materialId): void
     {
         if ($this->form->id === null) {
@@ -263,7 +227,7 @@ class Index extends Component
             ->where('familia_id', $familia->id)
             ->update(['familia_id' => null]);
 
-        unset($this->materialesDeLaFamiliaActual);
+        unset($this->materialesDeLaFamiliaActual, $this->materialesHuerfanos);
     }
 
     // ── Computed ──────────────────────────────────────────────────────
@@ -294,44 +258,17 @@ class Index extends Component
     }
 
     /**
-     * Materiales asignables en el modal "Asignar materiales".
-     * Por defecto: solo huérfanos (familia_id IS NULL).
-     * Con $mostrarTodosAsignar: incluye los que ya tienen otra familia (no la actual).
+     * Materiales sin familia disponibles para asignar a la familia abierta.
      *
      * @return EloquentCollection<int, Material>
      */
     #[Computed(persist: false)]
-    public function materialesAsignables(): EloquentCollection
+    public function materialesHuerfanos(): EloquentCollection
     {
-        if ($this->form->id === null) {
-            return new EloquentCollection;
-        }
-
-        $familiaId = (int) $this->form->id;
-
-        $query = Material::query()
-            ->with(['numeroPedido:id,numero', 'familia:id,nombre']);
-
-        if ($this->mostrarTodosAsignar) {
-            $query->where(function (Builder $q) use ($familiaId): void {
-                $q->whereNull('familia_id')->orWhere('familia_id', '!=', $familiaId);
-            });
-        } else {
-            $query->whereNull('familia_id');
-        }
-
-        if ($this->buscarAsignar !== '') {
-            $termino = '%'.trim($this->buscarAsignar).'%';
-            $query->where(function (Builder $q) use ($termino): void {
-                $q->where('descripcion', 'like', $termino)
-                    ->orWhere('unidad_medida', 'like', $termino)
-                    ->orWhereHas('numeroPedido', fn ($q2) => $q2->where('numero', 'like', $termino));
-            });
-        }
-
-        return $query
+        return Material::query()
+            ->whereNull('familia_id')
+            ->with('numeroPedido:id,numero')
             ->orderBy('descripcion')
-            ->limit(100)
             ->get(['id', 'descripcion', 'unidad_medida', 'stock', 'numero_pedido_id', 'familia_id']);
     }
 

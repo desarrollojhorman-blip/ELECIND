@@ -60,7 +60,7 @@ class CrearTest extends TestCase
             ->set('form.proyecto_id', $proyecto->id)
             ->set('form.mi_horas', '8.00')
             ->set('form.mi_horas_extra', '1.50')
-            ->set('form.tipo_dia', 'laborable')
+            ->set('form.tipo_hora', 'laboral')
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -111,7 +111,7 @@ class CrearTest extends TestCase
             ->assertHasErrors(['form.mi_horas' => 'min']);
     }
 
-    public function test_validacion_tipo_dia_obligatorio(): void
+    public function test_validacion_tipo_hora_solo_acepta_valores_del_enum(): void
     {
         $trabajador = $this->trabajador();
         $proyecto = $this->proyectoCompleto($trabajador);
@@ -119,9 +119,9 @@ class CrearTest extends TestCase
         Livewire::actingAs($trabajador)
             ->test(Crear::class)
             ->set('form.proyecto_id', $proyecto->id)
-            ->set('form.tipo_dia', 'inventado')
+            ->set('form.tipo_hora', 'inventado')
             ->call('guardar')
-            ->assertHasErrors(['form.tipo_dia']);
+            ->assertHasErrors(['form.tipo_hora']);
     }
 
     public function test_horas_extra_se_guardan_correctamente(): void
@@ -132,14 +132,14 @@ class CrearTest extends TestCase
         Livewire::actingAs($trabajador)
             ->test(Crear::class)
             ->set('form.proyecto_id', $proyecto->id)
-            ->set('form.tipo_dia', 'festivo')
+            ->set('form.tipo_hora', 'festivo_noche')
             ->set('form.mi_horas', '6.00')
             ->set('form.mi_horas_extra', '2.50')
             ->call('guardar')
             ->assertHasNoErrors();
 
         $albaran = Albaran::query()->where('creado_por', $trabajador->getKey())->firstOrFail();
-        $this->assertSame('festivo', $albaran->tipo_dia->value);
+        $this->assertSame('festivo_noche', $albaran->tipo_hora->value);
         $miLinea = $albaran->lineasPersonal->first();
         $this->assertSame('6.00', (string) $miLinea?->horas);
         $this->assertSame('2.50', (string) $miLinea?->horas_extra);

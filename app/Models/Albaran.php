@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EstadoAlbaran;
-use App\Enums\TipoDia;
+use App\Enums\TipoHora;
 use Database\Factories\AlbaranFactory;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $creado_por
  * @property int|null $responsable_id
  * @property EstadoAlbaran $estado
- * @property TipoDia $tipo_dia
+ * @property TipoHora $tipo_hora
  * @property string|null $observaciones
  * @property array<string, mixed>|null $snapshot_data
  * @property-read EloquentCollection<int, AlbaranLineaPersonal> $lineasPersonal
@@ -47,7 +47,7 @@ class Albaran extends Model
         'creado_por',
         'responsable_id',
         'estado',
-        'tipo_dia',
+        'tipo_hora',
         'observaciones',
         'snapshot_data',
     ];
@@ -57,7 +57,7 @@ class Albaran extends Model
         return [
             'fecha' => 'date',
             'estado' => EstadoAlbaran::class,
-            'tipo_dia' => TipoDia::class,
+            'tipo_hora' => TipoHora::class,
             'snapshot_data' => 'array',
         ];
     }

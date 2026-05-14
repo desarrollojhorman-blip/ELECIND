@@ -59,6 +59,24 @@ Stack oficial Entreredes — **100% gratis**:
 | [`docs/CONVENCIONES_Version3.md`](./docs/CONVENCIONES_Version3.md) | Naming, ramas, commits |
 | [`docs/INSTALACION_Version3.md`](./docs/INSTALACION_Version3.md) | Guía instalación local XAMPP |
 
+## 🧭 Estado actual (Fase 2)
+
+Avance funcional reciente en navegación y módulo de proyectos:
+
+- Menú lateral restaurado al comportamiento clásico con iconos y submenús plegables.
+- Sección Proyectos dividida en dos entradas:
+	- Grupo proyectos
+	- Proyectos
+- Nuevo submódulo Grupo proyectos con CRUD, estado activo/desactivado, papelera (soft delete), restauración y asignación de proyectos.
+- Regla de negocio aplicada: un grupo puede tener varios proyectos y cada proyecto pertenece a un solo grupo.
+- Formulario de Proyectos reorganizado y simplificado:
+	- Se elimina estado borrador en flujo de trabajo.
+	- Soporte de Grupo nuevo al seleccionar Otro...
+	- Gestión de trabajadores y responsables en edición con altas/bajas directas.
+	- Acción Ver (solo lectura) disponible desde la tabla.
+
+Resumen operativo detallado: [`docs/resumen/140526_2300_fase2_copilot.md`](./docs/resumen/140526_2300_fase2_copilot.md)
+
 ## 🚀 Instalación rápida
 
 Ver [`docs/INSTALACION_Version3.md`](./docs/INSTALACION_Version3.md) para guía detallada.

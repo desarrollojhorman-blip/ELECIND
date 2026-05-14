@@ -135,6 +135,10 @@ class Index extends Component
 
         $pedido = $this->form->save();
 
+        if (count($this->materialesPendientes) > 0) {
+            Gate::authorize('create', Material::class);
+        }
+
         // Guardar materiales pendientes añadidos inline
         foreach ($this->materialesPendientes as $mat) {
             Material::create([
@@ -168,6 +172,8 @@ class Index extends Component
 
     public function agregarMaterialPendiente(): void
     {
+        Gate::authorize('create', Material::class);
+
         $this->validate([
             'matDescripcion' => ['required', 'string', 'max:500'],
             'matUnidad' => ['required', 'string', 'max:20'],

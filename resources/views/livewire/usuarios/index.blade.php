@@ -40,8 +40,8 @@
                     <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
                         <option value="activos">Activos</option>
                         <option value="inactivos">Inactivos</option>
-                        <option value="todos">Todos</option>
                         <option value="papelera">En papelera</option>
+                        <option value="todos">Todos</option>
                     </x-ui.select>
                 </x-ui.field>
 
@@ -62,13 +62,11 @@
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Empresa cliente">
-                    <x-ui.select wire:key="empresa-{{ $resetKey }}" wire:model.live="filtroEmpresaCliente">
-                        <option value="">Todas las empresas</option>
-                        @foreach ($this->empresasDisponibles as $empresa)
-                            <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
-                        @endforeach
-                    </x-ui.select>
+                <x-ui.field label="Cliente">
+                    <x-ui.input
+                        wire:key="cliente-{{ $resetKey }}"
+                        wire:model.live.debounce.300ms="filtroEmpresaCliente"
+                        placeholder="Escribe nombre del cliente..." />
                 </x-ui.field>
             </div>
 
@@ -85,9 +83,9 @@
                         @if ($filtroRol !== null)
                             <x-ui.filter-chip label="Rol" :value="ucfirst($filtroRol)" remove-action="quitarFiltroRol" />
                         @endif
-                        @if ($filtroEmpresaCliente !== null)
+                        @if (trim($filtroEmpresaCliente) !== '')
                             <x-ui.filter-chip label="Empresa"
-                                :value="$this->empresasDisponibles->firstWhere('id', $filtroEmpresaCliente)?->nombre ?? '?'"
+                            :value="$filtroEmpresaCliente"
                                 remove-action="quitarFiltroEmpresaCliente" />
                         @endif
                         <button type="button"

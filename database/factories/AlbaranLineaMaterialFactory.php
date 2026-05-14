@@ -20,7 +20,6 @@ class AlbaranLineaMaterialFactory extends Factory
             'albaran_id' => Albaran::factory(),
             'material_id' => Material::factory(),
             'cantidad' => fake()->randomFloat(2, 1, 20),
-            'observaciones' => fake()->boolean(15) ? fake()->sentence(4) : null,
         ];
     }
 }

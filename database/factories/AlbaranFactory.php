@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\EstadoAlbaran;
-use App\Enums\TipoDia;
+use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\Cliente;
 use App\Models\Proyecto;
@@ -30,7 +30,7 @@ class AlbaranFactory extends Factory
             'creado_por' => User::factory()->trabajador(),
             'responsable_id' => null,
             'estado' => EstadoAlbaran::BORRADOR,
-            'tipo_dia' => $faker->boolean(85) ? TipoDia::LABORABLE : TipoDia::FESTIVO,
+            'tipo_hora' => $faker->randomElement(TipoHora::cases()),
             'observaciones' => $faker->boolean(35) ? $faker->sentence(8) : null,
             'snapshot_data' => null,
         ];

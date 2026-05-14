@@ -57,6 +57,22 @@ class Edit extends Component
         $this->form->nuevoLogo = null;
     }
 
+    public function quitarLogoAlbaran(): void
+    {
+        $this->form->eliminarLogoAlbaran = true;
+        $this->form->nuevoLogoAlbaran = null;
+    }
+
+    public function cancelarQuitarLogoAlbaran(): void
+    {
+        $this->form->eliminarLogoAlbaran = false;
+    }
+
+    public function descartarNuevoLogoAlbaran(): void
+    {
+        $this->form->nuevoLogoAlbaran = null;
+    }
+
     public function render(): View
     {
         return view('livewire.empresa.edit');

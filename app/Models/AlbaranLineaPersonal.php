@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $trabajador_id
  * @property string $horas
  * @property string $horas_extra
- * @property string|null $observaciones
  */
 class AlbaranLineaPersonal extends Model
 {
@@ -27,7 +26,6 @@ class AlbaranLineaPersonal extends Model
         'trabajador_id',
         'horas',
         'horas_extra',
-        'observaciones',
     ];
 
     protected function casts(): array

@@ -12,7 +12,7 @@
                     <dt class="text-slate-500">Fecha</dt>
                     <dd class="font-medium text-slate-800">
                         {{ \Illuminate\Support\Carbon::parse($albaran->fecha)->format('d/m/Y') }}
-                        <span class="ml-1 text-xs text-slate-500">({{ $albaran->tipo_dia->etiqueta() }})</span>
+                        <span class="ml-1 text-xs text-slate-500">({{ $albaran->tipo_hora->etiqueta() }})</span>
                     </dd>
                 </div>
                 <div class="flex justify-between gap-3">
@@ -70,9 +70,6 @@
                             <p class="truncate text-sm font-medium text-slate-800">
                                 {{ trim($linea->trabajador->nombre.' '.$linea->trabajador->apellidos) }}
                             </p>
-                            @if ($linea->observaciones)
-                                <p class="mt-0.5 text-xs text-slate-500">{{ $linea->observaciones }}</p>
-                            @endif
                         </div>
                         <p class="shrink-0 text-right text-sm">
                             <span class="font-semibold text-slate-900">{{ $horasFmt }} h</span>
@@ -97,9 +94,6 @@
                             <p class="truncate text-sm font-medium text-slate-800">
                                 {{ $linea->material->descripcion ?? '—' }}
                             </p>
-                            @if ($linea->observaciones)
-                                <p class="mt-0.5 truncate text-xs text-slate-500">{{ $linea->observaciones }}</p>
-                            @endif
                         </div>
                         <p class="shrink-0 text-sm font-semibold text-slate-900">
                             {{ rtrim(rtrim(number_format((float) $linea->cantidad, 2, ',', ''), '0'), ',') }}

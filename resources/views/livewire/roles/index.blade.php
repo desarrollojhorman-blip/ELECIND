@@ -177,28 +177,39 @@
                     <div class="space-y-3">
                         @foreach ($this->permisosAgrupados as $categoria => $permisos)
                             @php $estadoCat = $this->estadoCategoria($categoria); @endphp
-                            <div class="rounded-md border border-slate-200">
-                                <label class="flex cursor-pointer items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2 hover:bg-slate-100">
-                                    <div class="flex items-center gap-2">
+                            <div x-data="{ abierto: false }" class="rounded-md border border-slate-200">
+                                <div class="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
+                                    <label class="flex min-w-0 cursor-pointer items-center gap-2">
                                         <input type="checkbox"
                                                wire:key="cat-toggle-{{ $categoria }}-{{ $estadoCat }}"
                                                wire:click="toggleCategoria('{{ $categoria }}')"
                                                data-state="{{ $estadoCat }}"
                                                x-init="$el.checked = $el.dataset.state === 'all'; $el.indeterminate = $el.dataset.state === 'some'"
                                                class="size-4 shrink-0 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ str_replace('_', ' ', $categoria) }}</p>
+                                        <p class="truncate text-xs font-semibold uppercase tracking-wide text-slate-600">{{ str_replace('_', ' ', $categoria) }}</p>
+                                    </label>
+
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs text-slate-400">
+                                            @if ($estadoCat === 'all')
+                                                Todos seleccionados ({{ count($permisos) }})
+                                            @elseif ($estadoCat === 'some')
+                                                Algunos seleccionados
+                                            @else
+                                                Ninguno seleccionado ({{ count($permisos) }} disponibles)
+                                            @endif
+                                        </span>
+                                        <button type="button"
+                                                x-on:click="abierto = !abierto"
+                                                x-bind:title="abierto ? 'Plegar permisos' : 'Desplegar permisos'"
+                                                class="inline-flex items-center justify-center rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
+                                            <x-heroicon-o-chevron-down x-bind:class="abierto ? 'rotate-180' : ''"
+                                                                       class="size-4 transition-transform" />
+                                        </button>
                                     </div>
-                                    <span class="text-xs text-slate-400">
-                                        @if ($estadoCat === 'all')
-                                            Todos seleccionados ({{ count($permisos) }})
-                                        @elseif ($estadoCat === 'some')
-                                            Algunos seleccionados
-                                        @else
-                                            Ninguno seleccionado ({{ count($permisos) }} disponibles)
-                                        @endif
-                                    </span>
-                                </label>
-                                <div class="grid gap-1 p-3 md:grid-cols-2">
+                                </div>
+
+                                <div x-show="abierto" x-cloak x-transition class="grid gap-1 p-3 md:grid-cols-2">
                                     @foreach ($permisos as $permiso)
                                         <label class="flex items-start gap-2 rounded p-1.5 text-sm hover:bg-slate-50">
                                             <input type="checkbox"

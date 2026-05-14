@@ -10,8 +10,10 @@ use App\Models\TiposProyecto;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -19,7 +21,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.web', ['active' => 'proyectos'])]
+#[Layout('components.layouts.web', ['active' => 'proyectos_lista'])]
 #[Title('Proyectos')]
 class Index extends Component
 {
@@ -29,10 +31,23 @@ class Index extends Component
 
     public TipoProyectoQuickForm $tipoForm;
 
+    /** Selector de grupo en UI: '' | id | '__otro__' */
+    public string $selectorGrupo = '';
+
+    public ?string $nuevoGrupoNombre = null;
+
+    public ?int $trabajadorAAgregar = null;
+
+    public ?int $responsableAAgregar = null;
+
+    public int $trabajadorSelectKey = 0;
+
+    public int $responsableSelectKey = 0;
+
     #[Url(as: 'q')]
     public string $buscar = '';
 
-    /** Estados: todos | borrador | activo | cerrado | archivado | papelera */
+    /** Estados: todos | activo | cerrado | archivado | papelera */
     #[Url(as: 'estado')]
     public string $filtroEstado = 'todos';
 
@@ -54,6 +69,8 @@ class Index extends Component
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
+
+    public bool $modoSoloLectura = false;
 
     public bool $modalTipoAbierto = false;
 
@@ -162,7 +179,12 @@ class Index extends Component
         Gate::authorize('create', Proyecto::class);
 
         $this->form->reset();
-        $this->form->estado = 'borrador';
+        $this->modoSoloLectura = false;
+        $this->form->estado = 'activo';
+        $this->selectorGrupo = '';
+        $this->nuevoGrupoNombre = null;
+        $this->trabajadorAAgregar = null;
+        $this->responsableAAgregar = null;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -175,12 +197,38 @@ class Index extends Component
         Gate::authorize('update', $proyecto);
 
         $this->form->fromModel($proyecto);
+        $this->modoSoloLectura = false;
+        $this->selectorGrupo = $this->form->tipo_proyecto_id !== null ? (string) $this->form->tipo_proyecto_id : '';
+        $this->nuevoGrupoNombre = null;
+        $this->trabajadorAAgregar = null;
+        $this->responsableAAgregar = null;
+        $this->resetErrorBag();
+        $this->modalAbierto = true;
+    }
+
+    public function abrirVer(int $id): void
+    {
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::withTrashed()->findOrFail($id);
+
+        Gate::authorize('view', $proyecto);
+
+        $this->form->fromModel($proyecto);
+        $this->modoSoloLectura = true;
+        $this->selectorGrupo = $this->form->tipo_proyecto_id !== null ? (string) $this->form->tipo_proyecto_id : '';
+        $this->nuevoGrupoNombre = null;
+        $this->trabajadorAAgregar = null;
+        $this->responsableAAgregar = null;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
 
     public function guardar(): void
     {
+        if ($this->modoSoloLectura) {
+            return;
+        }
+
         $esNuevo = $this->form->id === null;
 
         if ($esNuevo) {
@@ -191,10 +239,16 @@ class Index extends Component
             Gate::authorize('update', $existente);
         }
 
+        $this->resolverGrupoSeleccionado();
+
         $proyecto = $this->form->save();
 
         $this->modalAbierto = false;
         $this->form->reset();
+        $this->selectorGrupo = '';
+        $this->nuevoGrupoNombre = null;
+        $this->trabajadorAAgregar = null;
+        $this->responsableAAgregar = null;
 
         session()->flash('status', $esNuevo
             ? "Proyecto «{$proyecto->nombre}» creado correctamente."
@@ -204,8 +258,105 @@ class Index extends Component
     public function cerrarModal(): void
     {
         $this->modalAbierto = false;
+        $this->modoSoloLectura = false;
         $this->form->reset();
+        $this->selectorGrupo = '';
+        $this->nuevoGrupoNombre = null;
+        $this->trabajadorAAgregar = null;
+        $this->responsableAAgregar = null;
         $this->resetErrorBag();
+    }
+
+    public function agregarTrabajador(): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        $this->validate([
+            'trabajadorAAgregar' => ['required', 'integer', Rule::exists('users', 'id')],
+        ], [], [
+            'trabajadorAAgregar' => 'trabajador',
+        ]);
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $yaExiste = $proyecto->usuarios()
+            ->where('users.id', $this->trabajadorAAgregar)
+            ->exists();
+
+        if ($yaExiste) {
+            $this->addError('trabajadorAAgregar', 'Este usuario ya está asignado al proyecto.');
+
+            return;
+        }
+
+        $proyecto->usuarios()->attach($this->trabajadorAAgregar, ['rol_en_proyecto' => 'trabajador']);
+        $this->trabajadorAAgregar = null;
+        $this->trabajadorSelectKey++;
+    }
+
+    public function quitarTrabajador(int $userId): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $proyecto->usuarios()
+            ->wherePivot('rol_en_proyecto', 'trabajador')
+            ->detach($userId);
+    }
+
+    public function agregarResponsableProyecto(): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        $this->validate([
+            'responsableAAgregar' => ['required', 'integer', Rule::exists('users', 'id')],
+        ], [], [
+            'responsableAAgregar' => 'responsable',
+        ]);
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $yaExiste = $proyecto->usuarios()
+            ->where('users.id', $this->responsableAAgregar)
+            ->exists();
+
+        if ($yaExiste) {
+            $this->addError('responsableAAgregar', 'Este usuario ya está asignado al proyecto.');
+
+            return;
+        }
+
+        $proyecto->usuarios()->attach($this->responsableAAgregar, ['rol_en_proyecto' => 'responsable']);
+        $this->responsableAAgregar = null;
+        $this->responsableSelectKey++;
+    }
+
+    public function quitarResponsableProyecto(int $userId): void
+    {
+        if ($this->form->id === null) {
+            return;
+        }
+
+        /** @var Proyecto $proyecto */
+        $proyecto = Proyecto::findOrFail($this->form->id);
+        Gate::authorize('update', $proyecto);
+
+        $proyecto->usuarios()
+            ->wherePivot('rol_en_proyecto', 'responsable')
+            ->detach($userId);
     }
 
     /* ───────────── Sub-modal: crear tipo de proyecto al vuelo ───────────── */
@@ -234,6 +385,8 @@ class Index extends Component
 
         // Auto-seleccionar el nuevo tipo en el form principal
         $this->form->tipo_proyecto_id = (int) $tipo->getKey();
+        $this->selectorGrupo = (string) $tipo->getKey();
+        $this->nuevoGrupoNombre = null;
 
         $this->modalTipoAbierto = false;
         $this->tipoForm->reset();
@@ -349,7 +502,7 @@ class Index extends Component
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();
-        } elseif (\in_array($this->filtroEstado, ['borrador', 'activo', 'cerrado', 'archivado'], true)) {
+        } elseif (\in_array($this->filtroEstado, ['activo', 'cerrado', 'archivado'], true)) {
             $query->where('estado', $this->filtroEstado);
         }
 
@@ -379,5 +532,147 @@ class Index extends Component
         return view('livewire.proyectos.index', [
             'proyectos' => $query->paginate(15),
         ]);
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function trabajadoresDisponibles(): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        $asignados = $this->trabajadoresProyecto->pluck('id')->all();
+
+        return User::query()
+            ->where('tipo_usuario', 'interno')
+            ->where('activo', true)
+            ->whereNotIn('id', $asignados)
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos']);
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function responsablesProyectoDisponibles(): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        $asignados = $this->responsablesProyecto->pluck('id')->all();
+
+        return User::query()
+            ->where('tipo_usuario', 'externo')
+            ->where('activo', true)
+            ->whereNotIn('id', $asignados)
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'nombre', 'apellidos']);
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function trabajadoresProyecto(): Collection
+    {
+        return $this->usuariosProyectoPorRol('trabajador');
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function responsablesProyecto(): Collection
+    {
+        return $this->usuariosProyectoPorRol('responsable');
+    }
+
+    private function resolverGrupoSeleccionado(): void
+    {
+        if ($this->selectorGrupo === '__otro__') {
+            $this->validate([
+                'nuevoGrupoNombre' => ['required', 'string', 'max:255'],
+            ], [], [
+                'nuevoGrupoNombre' => 'nuevo grupo',
+            ]);
+
+            $nombre = trim((string) $this->nuevoGrupoNombre);
+
+            $grupoExistente = TiposProyecto::withTrashed()
+                ->where('nombre', $nombre)
+                ->first();
+
+            if ($grupoExistente !== null) {
+                if ($grupoExistente->trashed()) {
+                    $grupoExistente->restore();
+                }
+
+                if (! $grupoExistente->activo) {
+                    $grupoExistente->activo = true;
+                    $grupoExistente->save();
+                }
+
+                $this->form->tipo_proyecto_id = (int) $grupoExistente->getKey();
+                $this->selectorGrupo = (string) $grupoExistente->getKey();
+
+                return;
+            }
+
+            $grupo = TiposProyecto::create([
+                'nombre' => $nombre,
+                'descripcion' => null,
+                'activo' => true,
+            ]);
+
+            $this->form->tipo_proyecto_id = (int) $grupo->getKey();
+            $this->selectorGrupo = (string) $grupo->getKey();
+
+            return;
+        }
+
+        $this->nuevoGrupoNombre = null;
+
+        if ($this->selectorGrupo === '') {
+            $this->form->tipo_proyecto_id = null;
+
+            return;
+        }
+
+        $this->form->tipo_proyecto_id = (int) $this->selectorGrupo;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function usuariosProyectoPorRol(string $rol): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        /** @var Proyecto|null $proyecto */
+        $proyecto = Proyecto::query()
+            ->with(['usuarios' => function ($q) use ($rol): void {
+                $q->wherePivot('rol_en_proyecto', $rol)
+                    ->orderBy('nombre')
+                    ->orderBy('apellidos');
+            }])
+            ->find($this->form->id);
+
+        if (! $proyecto instanceof Proyecto) {
+            return collect();
+        }
+
+        /** @var EloquentCollection<int, User> $usuarios */
+        $usuarios = $proyecto->usuarios;
+
+        return $usuarios->toBase();
     }
 }

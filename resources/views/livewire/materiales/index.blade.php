@@ -20,6 +20,23 @@
                         Nuevo material
                     </x-ui.button>
                 @endcan
+
+                <x-ui.actions-menu label="Acciones" icon="heroicon-o-bars-3">
+                    <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Pronto">
+                        Importar desde Excel/CSV
+                    </x-ui.actions-menu-item>
+                    <x-ui.actions-menu-divider />
+                    <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Pronto">
+                        Exportar a Excel
+                    </x-ui.actions-menu-item>
+                    <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Pronto">
+                        Exportar a PDF
+                    </x-ui.actions-menu-item>
+                    <x-ui.actions-menu-divider />
+                    <x-ui.actions-menu-item icon="heroicon-o-printer" disabled badge="Pronto">
+                        Imprimir lista
+                    </x-ui.actions-menu-item>
+                </x-ui.actions-menu>
             </x-slot:leftActions>
 
             <div class="grid gap-3 md:grid-cols-2">
@@ -29,7 +46,7 @@
                         <option value="">Todos los pedidos</option>
                         @foreach ($this->pedidosDisponibles as $ped)
                             <option value="{{ $ped->id }}">
-                                {{ $ped->numero }}{{ $ped->proveedor ? ' — '.$ped->proveedor : '' }}
+                                {{ $ped->numero }}{{ $ped->proveedor ? ' - '.$ped->proveedor : '' }}
                             </option>
                         @endforeach
                     </x-ui.select>
@@ -39,7 +56,7 @@
                 <x-ui.field label="Filtrar por Familia">
                     <x-ui.select wire:key="familia-{{ $resetKey }}" wire:model.live="filtroFamilia">
                         <option value="">Todas las familias</option>
-                        <option value="sin_familia">— Sin familia —</option>
+                        <option value="sin_familia">Sin familia</option>
                         @foreach ($this->familiasDisponibles as $fam)
                             <option value="{{ $fam->id }}">{{ $fam->nombre }}</option>
                         @endforeach
@@ -73,22 +90,22 @@
     <x-ui.data-table :colspan="6" empty="No hay materiales que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
-                <x-ui.sortable-header column="numero_pedido_id" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="numero_pedido_id" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Nº Pedido
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="descripcion" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="descripcion" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Descripción
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="familia_id" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="familia_id" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Familia
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="unidad_medida" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="unidad_medida" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Unidad
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="stock" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                <x-ui.sortable-header column="stock" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Stock
                 </x-ui.sortable-header>
-                <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
+                <x-ui.sortable-header align="center">Acciones</x-ui.sortable-header>
             </tr>
         </x-slot:head>
 
@@ -123,7 +140,6 @@
                         <span class="font-mono text-sm font-semibold text-slate-700">
                             {{ rtrim(rtrim(number_format((float) $material->stock, 2, ',', ''), '0'), ',') }}
                         </span>
-                        <span class="text-xs text-slate-400">{{ $material->unidad_medida }}</span>
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">

@@ -38,7 +38,14 @@
       "Bash(xargs grep -l \"permiso\\\\|Permiso\")",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate:fresh --env=testing --force 2>&1)",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate:fresh --seed --force 2>&1)",
-      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan view:clear)"
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan view:clear)",
+      "Bash(/d/xampp/php/php.exe artisan *)",
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Materiales/Familias/Index.php tests/Feature/Materiales/Familias/IndexTest.php)",
+      "Bash(php artisan *)",
+      "Bash(php -l app/Livewire/Forms/EmpresaForm.php)",
+      "Bash(php -l app/Support/Branding.php)",
+      "Bash(php -l app/Models/Empresa.php)",
+      "Bash(php -l app/Livewire/Empresa/Edit.php)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

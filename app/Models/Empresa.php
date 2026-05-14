@@ -21,6 +21,11 @@ class Empresa extends Model
         'email_contacto',
         'email_notificaciones',
         'logo_path',
+        'logo_ratio',
+        'logo_zoom',
+        'logo_albaran_path',
+        'logo_albaran_ratio',
+        'logo_albaran_zoom',
         'color_primario',
         'color_secundario',
         'plantilla_numeracion_albaran',
@@ -33,6 +38,10 @@ class Empresa extends Model
         return [
             'plantilla_pdf_config' => 'array',
             'token_caducidad_dias' => 'integer',
+            'logo_ratio' => 'float',
+            'logo_zoom' => 'integer',
+            'logo_albaran_ratio' => 'float',
+            'logo_albaran_zoom' => 'integer',
         ];
     }
 
@@ -64,5 +73,14 @@ class Empresa extends Model
         }
 
         return Storage::disk('public')->url($this->logo_path);
+    }
+
+    public function logoAlbaranUrl(): ?string
+    {
+        if ($this->logo_albaran_path === null || $this->logo_albaran_path === '') {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->logo_albaran_path);
     }
 }

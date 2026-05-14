@@ -44,9 +44,9 @@
                     <x-ui.input type="date" wire:model="form.fecha" />
                 </x-mobile.field>
 
-                <x-mobile.field label="Tipo de día" required :error="$errors->first('form.tipo_dia')">
-                    <x-ui.select wire:model="form.tipo_dia">
-                        @foreach ($tiposDia as $tipo)
+                <x-mobile.field label="Tipo de hora" required :error="$errors->first('form.tipo_hora')">
+                    <x-ui.select wire:model="form.tipo_hora">
+                        @foreach ($tiposHora as $tipo)
                             <option value="{{ $tipo->value }}">{{ $tipo->etiqueta() }}</option>
                         @endforeach
                     </x-ui.select>
@@ -76,10 +76,6 @@
                         <x-ui.input type="number" step="0.25" min="0" max="24" wire:model="form.mi_horas_extra" />
                     </x-mobile.field>
                 </div>
-
-                <x-mobile.field label="Observaciones" :error="$errors->first('form.mi_observaciones')">
-                    <x-ui.input wire:model="form.mi_observaciones" placeholder="Opcional" />
-                </x-mobile.field>
             </div>
         </x-mobile.line-card>
 
@@ -116,10 +112,6 @@
                                             wire:model="form.companeros.{{ $index }}.horas_extra" />
                             </x-mobile.field>
                         </div>
-
-                        <x-mobile.field label="Observaciones" :error="$errors->first('form.companeros.'.$index.'.observaciones')">
-                            <x-ui.input wire:model="form.companeros.{{ $index }}.observaciones" placeholder="Opcional" />
-                        </x-mobile.field>
                     </div>
                 </x-mobile.line-card>
             @endforeach
@@ -151,26 +143,26 @@
                                          :disabled="$form->proyecto_id === null">
                                 <option value="">— Selecciona —</option>
                                 @foreach ($this->materialesProyecto as $mat)
-                                    <option value="{{ $mat->id }}">{{ $mat->descripcion }}</option>
+                                    @php
+                                        $stockFmt = rtrim(rtrim(number_format((float) $mat->stock, 2, ',', ''), '0'), ',');
+                                    @endphp
+                                    <option value="{{ $mat->id }}">
+                                        {{ $mat->descripcion }} | {{ $stockFmt }} {{ $mat->unidad_medida }}
+                                    </option>
                                 @endforeach
                             </x-ui.select>
                         </x-mobile.field>
 
-                        @if ($matSeleccionado)
-                            <p class="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                                Stock disponible:
-                                <strong>{{ rtrim(rtrim(number_format((float) $matSeleccionado->stock, 2, ',', ''), '0'), ',') }}</strong>
-                                <span class="text-slate-400">{{ $matSeleccionado->unidad_medida }}</span>
-                            </p>
-                        @endif
-
                         <x-mobile.field label="Cantidad" required :error="$errors->first('form.materiales.'.$index.'.cantidad')">
-                            <x-ui.input type="number" step="0.01" min="0.01"
-                                        wire:model="form.materiales.{{ $index }}.cantidad" />
-                        </x-mobile.field>
-
-                        <x-mobile.field label="Observaciones">
-                            <x-ui.input wire:model="form.materiales.{{ $index }}.observaciones" placeholder="Opcional" />
+                            <div class="flex items-stretch gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <x-ui.input type="number" step="0.01" min="0.01"
+                                                wire:model="form.materiales.{{ $index }}.cantidad" />
+                                </div>
+                                <span class="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-3 text-sm font-medium text-slate-600">
+                                    {{ $matSeleccionado?->unidad_medida ?? '—' }}
+                                </span>
+                            </div>
                         </x-mobile.field>
                     </div>
                 </x-mobile.line-card>

@@ -3,7 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Enums\EstadoAlbaran;
-use App\Enums\TipoDia;
+use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
 use App\Models\AlbaranLineaPersonal;
@@ -19,7 +19,8 @@ use Livewire\Form;
  * Formulario de creación y edición de un albarán desde móvil.
  *
  * Estructura:
- *  - Cabecera: cliente, proyecto, concepto, responsable, fecha, tipo_dia, observaciones.
+ *  - Cabecera: cliente, proyecto, concepto, responsable, fecha, tipo_hora
+ *    (laboral / laboral_noche / festivo / festivo_noche), observaciones.
  *  - Mis horas (línea de personal del creador, siempre presente).
  *    Tiene "horas" (normales) y "horas_extra".
  *  - Compañeros: array de líneas adicionales (cada una con horas + horas_extra).
@@ -44,7 +45,7 @@ class AlbaranForm extends Form
 
     public string $fecha = '';
 
-    public string $tipo_dia = 'laborable';
+    public string $tipo_hora = 'laboral';
 
     public ?string $observaciones = null;
 
@@ -54,19 +55,17 @@ class AlbaranForm extends Form
 
     public string $mi_horas_extra = '0.00';
 
-    public ?string $mi_observaciones = null;
-
     /**
      * Líneas de personal de los compañeros (sin contar al creador).
      *
-     * @var array<int, array{trabajador_id: ?int, horas: string, horas_extra: string, observaciones: ?string}>
+     * @var array<int, array{trabajador_id: ?int, horas: string, horas_extra: string}>
      */
     public array $companeros = [];
 
     /**
      * Líneas de material.
      *
-     * @var array<int, array{material_id: ?int, cantidad: string, observaciones: ?string}>
+     * @var array<int, array{material_id: ?int, cantidad: string}>
      */
     public array $materiales = [];
 
@@ -80,12 +79,11 @@ class AlbaranForm extends Form
             'concepto_id' => ['nullable', 'integer', 'exists:conceptos,id'],
             'responsable_id' => ['nullable', 'integer', 'exists:users,id'],
             'fecha' => ['required', 'date'],
-            'tipo_dia' => ['required', Rule::in(array_column(TipoDia::cases(), 'value'))],
+            'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
             'observaciones' => ['nullable', 'string', 'max:2000'],
 
             'mi_horas' => ['required', 'numeric', 'min:0', 'max:24'],
             'mi_horas_extra' => ['required', 'numeric', 'min:0', 'max:24'],
-            'mi_observaciones' => ['nullable', 'string', 'max:255'],
 
             'companeros' => ['array'],
             'companeros.*.trabajador_id' => [
@@ -94,12 +92,10 @@ class AlbaranForm extends Form
             ],
             'companeros.*.horas' => ['required', 'numeric', 'min:0', 'max:24'],
             'companeros.*.horas_extra' => ['required', 'numeric', 'min:0', 'max:24'],
-            'companeros.*.observaciones' => ['nullable', 'string', 'max:255'],
 
             'materiales' => ['array'],
             'materiales.*.material_id' => ['required', 'integer', 'exists:materiales,id'],
             'materiales.*.cantidad' => ['required', 'numeric', 'min:0.01'],
-            'materiales.*.observaciones' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -111,7 +107,7 @@ class AlbaranForm extends Form
         return [
             'proyecto_id.required' => 'Selecciona un proyecto.',
             'fecha.required' => 'La fecha es obligatoria.',
-            'tipo_dia.required' => 'Indica si es laborable o festivo.',
+            'tipo_hora.required' => 'Indica el tipo de hora del parte.',
             'mi_horas.max' => 'Las horas no pueden superar 24.',
             'mi_horas_extra.max' => 'Las horas extra no pueden superar 24.',
             'companeros.*.trabajador_id.not_in' => 'Tú ya estás incluido como creador del parte; añade otros compañeros.',
@@ -130,7 +126,7 @@ class AlbaranForm extends Form
         $this->concepto_id = $albaran->concepto_id;
         $this->responsable_id = $albaran->responsable_id;
         $this->fecha = Carbon::parse($albaran->fecha)->format('Y-m-d');
-        $this->tipo_dia = $albaran->tipo_dia->value;
+        $this->tipo_hora = $albaran->tipo_hora->value;
         $this->observaciones = $albaran->observaciones;
 
         $miId = (int) Auth::id();
@@ -138,7 +134,6 @@ class AlbaranForm extends Form
         if ($miLinea !== null) {
             $this->mi_horas = (string) $miLinea->horas;
             $this->mi_horas_extra = (string) $miLinea->horas_extra;
-            $this->mi_observaciones = $miLinea->observaciones;
         }
 
         $this->companeros = $albaran->lineasPersonal
@@ -147,7 +142,6 @@ class AlbaranForm extends Form
                 'trabajador_id' => $linea->trabajador_id,
                 'horas' => (string) $linea->horas,
                 'horas_extra' => (string) $linea->horas_extra,
-                'observaciones' => $linea->observaciones,
             ])
             ->values()
             ->all();
@@ -156,7 +150,6 @@ class AlbaranForm extends Form
             ->map(fn (AlbaranLineaMaterial $linea): array => [
                 'material_id' => $linea->material_id,
                 'cantidad' => (string) $linea->cantidad,
-                'observaciones' => $linea->observaciones,
             ])
             ->values()
             ->all();
@@ -168,7 +161,6 @@ class AlbaranForm extends Form
             'trabajador_id' => null,
             'horas' => '8.00',
             'horas_extra' => '0.00',
-            'observaciones' => null,
         ];
     }
 
@@ -183,7 +175,6 @@ class AlbaranForm extends Form
         $this->materiales[] = [
             'material_id' => null,
             'cantidad' => '1.00',
-            'observaciones' => null,
         ];
     }
 
@@ -244,7 +235,7 @@ class AlbaranForm extends Form
             $albaran->proyecto_id = $this->proyecto_id;
             $albaran->concepto_id = $this->concepto_id;
             $albaran->responsable_id = $this->responsable_id;
-            $albaran->tipo_dia = TipoDia::from($this->tipo_dia);
+            $albaran->tipo_hora = TipoHora::from($this->tipo_hora);
             $albaran->observaciones = $this->observaciones;
             $albaran->save();
 
@@ -256,7 +247,6 @@ class AlbaranForm extends Form
                 'trabajador_id' => Auth::id(),
                 'horas' => $this->mi_horas,
                 'horas_extra' => $this->mi_horas_extra,
-                'observaciones' => $this->mi_observaciones,
             ]);
 
             foreach ($this->companeros as $companero) {
@@ -264,7 +254,6 @@ class AlbaranForm extends Form
                     'trabajador_id' => $companero['trabajador_id'],
                     'horas' => $companero['horas'],
                     'horas_extra' => $companero['horas_extra'] ?? '0.00',
-                    'observaciones' => $companero['observaciones'] ?? null,
                 ]);
             }
 
@@ -276,7 +265,6 @@ class AlbaranForm extends Form
                 $albaran->lineasMaterial()->create([
                     'material_id' => $material['material_id'],
                     'cantidad' => $material['cantidad'],
-                    'observaciones' => $material['observaciones'] ?? null,
                 ]);
             }
 
