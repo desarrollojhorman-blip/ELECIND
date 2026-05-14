@@ -4,13 +4,12 @@ namespace Database\Seeders;
 
 use App\Enums\EstadoAlbaran;
 use App\Enums\TipoFirma;
-use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\AlbaranFirma;
 use App\Models\AlbaranLineaMaterial;
 use App\Models\AlbaranLineaPersonal;
 use App\Models\AlbaranTokenFirma;
-use App\Models\MaterialLote;
+use App\Models\Material;
 use App\Models\Proyecto;
 use App\Services\NumeracionService;
 use Illuminate\Database\Seeder;
@@ -37,8 +36,8 @@ class Fase2DemoSeeder extends Seeder
 
         $this->command?->info('Sembrando datos de demo Fase 2 (albaranes)…');
 
-        $lotesConStock = MaterialLote::query()
-            ->where('stock_disponible', '>', 10)
+        $materialesConStock = Material::query()
+            ->where('stock', '>', 10)
             ->get();
 
         $estados = [
@@ -84,29 +83,29 @@ class Fase2DemoSeeder extends Seeder
                 AlbaranLineaPersonal::factory()->create([
                     'albaran_id' => $albaran->id,
                     'trabajador_id' => $trabajadores->random()->id,
-                    'tipo_hora' => fake()->randomElement(TipoHora::cases()),
                     'horas' => fake()->randomFloat(2, 1, 8),
+                    'horas_extra' => fake()->boolean(30) ? fake()->randomFloat(2, 0.5, 3) : 0,
                 ]);
             }
 
             // Líneas de material: 0-3 (con stock real)
-            if ($lotesConStock->isNotEmpty()) {
+            if ($materialesConStock->isNotEmpty()) {
                 $cantidadLineasMaterial = random_int(0, 3);
                 for ($j = 0; $j < $cantidadLineasMaterial; $j++) {
-                    /** @var MaterialLote $lote */
-                    $lote = $lotesConStock->random();
-                    $maxCantidad = (float) $lote->stock_disponible;
+                    /** @var Material $material */
+                    $material = $materialesConStock->random();
+                    $maxCantidad = (float) $material->stock;
                     if ($maxCantidad <= 1) {
                         continue;
                     }
 
                     AlbaranLineaMaterial::factory()->create([
                         'albaran_id' => $albaran->id,
-                        'material_lote_id' => $lote->id,
+                        'material_id' => $material->id,
                         'cantidad' => fake()->randomFloat(2, 1, min($maxCantidad, 5)),
                     ]);
 
-                    $lote->refresh();
+                    $material->refresh();
                 }
             }
 

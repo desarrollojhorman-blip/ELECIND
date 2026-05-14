@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $albaran_id
- * @property int $material_lote_id
+ * @property int $material_id
  * @property string $cantidad
  * @property string|null $observaciones
  *
- * Nota: el descuento de stock en el lote se gestiona automáticamente vía
+ * Nota: el descuento de stock en el material se gestiona automáticamente vía
  * AlbaranLineaMaterialObserver (creado/actualizado/eliminado).
  */
 class AlbaranLineaMaterial extends Model
@@ -26,7 +26,7 @@ class AlbaranLineaMaterial extends Model
 
     protected $fillable = [
         'albaran_id',
-        'material_lote_id',
+        'material_id',
         'cantidad',
         'observaciones',
     ];
@@ -43,8 +43,8 @@ class AlbaranLineaMaterial extends Model
         return $this->belongsTo(Albaran::class);
     }
 
-    public function lote(): BelongsTo
+    public function material(): BelongsTo
     {
-        return $this->belongsTo(MaterialLote::class, 'material_lote_id');
+        return $this->belongsTo(Material::class);
     }
 }

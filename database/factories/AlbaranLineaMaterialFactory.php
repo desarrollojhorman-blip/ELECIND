@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
-use App\Models\MaterialLote;
+use App\Models\Material;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +18,7 @@ class AlbaranLineaMaterialFactory extends Factory
     {
         return [
             'albaran_id' => Albaran::factory(),
-            'material_lote_id' => MaterialLote::factory(),
+            'material_id' => Material::factory(),
             'cantidad' => fake()->randomFloat(2, 1, 20),
             'observaciones' => fake()->boolean(15) ? fake()->sentence(4) : null,
         ];

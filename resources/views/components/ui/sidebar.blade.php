@@ -33,9 +33,29 @@
         [
             'label' => 'Materiales',
             'icon' => 'heroicon-o-cube',
-            'route' => 'materiales.index',
+            'route' => null,
             'key' => 'materiales',
-            'permission' => 'materiales.ver',
+            'permission' => null,
+            'children' => [
+                [
+                    'label' => 'Nº Pedido',
+                    'route' => 'materiales.pedidos',
+                    'key' => 'pedidos',
+                    'permission' => 'pedidos.ver',
+                ],
+                [
+                    'label' => 'Familias',
+                    'route' => 'materiales.familias',
+                    'key' => 'familias',
+                    'permission' => 'materiales.familias.ver',
+                ],
+                [
+                    'label' => 'Materiales',
+                    'route' => 'materiales.index',
+                    'key' => 'materiales_lista',
+                    'permission' => 'materiales.ver',
+                ],
+            ],
         ],
         [
             'label' => 'Clientes',

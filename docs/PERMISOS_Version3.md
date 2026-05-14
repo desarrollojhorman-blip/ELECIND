@@ -38,13 +38,13 @@ albaranes.crear_movil
 albaranes.crear_web
 albaranes.modificar
 albaranes.modificar_terminado
-albaranes.desbloquear
-albaranes.eliminar
 albaranes.firmar
 albaranes.imprimir
 albaranes.exportar
-albaranes.cambiar_estado
-albaranes.adjuntar_factura
+albaranes.descargar_pdf       ← Fase 2 iter 1
+albaranes.solicitar_firma     ← Fase 2 iter 1 (web)
+albaranes.invalidar_firma     ← Fase 2 iter 1 (solo superadmin)
+albaranes.facturar            ← Fase 2 iter 1
 ```
 
 ### Usuarios
@@ -70,10 +70,15 @@ conceptos.ver / crear / modificar / eliminar
 ### Materiales y stock
 ```
 materiales.ver / crear / modificar / eliminar
+materiales.exportar
+materiales.imprimir
+materiales.familias.ver / crear / modificar / eliminar    ← extensión 14/05/2026
+pedidos.ver / crear / modificar / eliminar                ← refactor 14/05/2026
 stock.entrada
 stock.ajustar
-stock.ver_historico
 ```
+
+> 📌 **Nota refactor 14/05/2026**: las tablas `material_lotes` y `movimientos_stock` se eliminaron. Los permisos `material_lotes.*` y `stock.ver_historico` se retiraron del catálogo. El stock se descuenta directamente en `materiales.stock` vía Observer. Los **pedidos** (tabla `numero_pedidos`) y las **familias** (tabla `familias_material`) son agrupadores nuevos, ambos con su CRUD propio bajo `Materiales`.
 
 ### Ausencias
 ```

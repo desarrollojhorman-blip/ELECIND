@@ -47,6 +47,9 @@ class Proyecto extends Model
         return $this->belongsTo(User::class, 'responsable_principal_id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function usuarios(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'proyecto_usuario')
@@ -54,15 +57,19 @@ class Proyecto extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<Concepto, $this>
+     */
     public function conceptos(): BelongsToMany
     {
         return $this->belongsToMany(Concepto::class, 'proyecto_concepto')->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<Material, $this>
+     */
     public function materiales(): BelongsToMany
     {
-        return $this->belongsToMany(Material::class, 'material_proyecto')
-            ->withPivot('cantidad_prevista')
-            ->withTimestamps();
+        return $this->belongsToMany(Material::class, 'material_proyecto')->withTimestamps();
     }
 }

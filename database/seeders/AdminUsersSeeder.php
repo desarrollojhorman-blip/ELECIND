@@ -33,7 +33,20 @@ class AdminUsersSeeder extends Seeder
             ]
         );
 
+        $trabajadorDemo = User::firstOrCreate(
+            ['username' => 'trabajador'],
+            [
+                'nombre' => 'Trabajador',
+                'apellidos' => 'Demo',
+                'email' => 'trabajador@elecind.local',
+                'tipo_usuario' => 'interno',
+                'activo' => true,
+                'password' => 'password',
+            ]
+        );
+
         $superadmin->assignRole('superadmin');
         $admin->assignRole('administrador');
+        $trabajadorDemo->assignRole('trabajador');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\TipoHora;
 use Database\Factories\AlbaranLineaPersonalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $albaran_id
  * @property int $trabajador_id
- * @property TipoHora $tipo_hora
  * @property string $horas
+ * @property string $horas_extra
  * @property string|null $observaciones
  */
 class AlbaranLineaPersonal extends Model
@@ -26,16 +25,16 @@ class AlbaranLineaPersonal extends Model
     protected $fillable = [
         'albaran_id',
         'trabajador_id',
-        'tipo_hora',
         'horas',
+        'horas_extra',
         'observaciones',
     ];
 
     protected function casts(): array
     {
         return [
-            'tipo_hora' => TipoHora::class,
             'horas' => 'decimal:2',
+            'horas_extra' => 'decimal:2',
         ];
     }
 

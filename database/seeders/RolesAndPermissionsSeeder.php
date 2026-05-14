@@ -135,13 +135,25 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'tipos_proyecto.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
             ['name' => 'tipos_proyecto.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
 
+            // ─────────────── Nº Pedido ───────────────
+            ['name' => 'pedidos.ver', 'ambito' => 'web', 'descripcion' => 'Ver números de pedido', 'categoria' => 'materiales'],
+            ['name' => 'pedidos.crear', 'ambito' => 'web', 'descripcion' => 'Crear números de pedido', 'categoria' => 'materiales'],
+            ['name' => 'pedidos.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar números de pedido', 'categoria' => 'materiales'],
+            ['name' => 'pedidos.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar números de pedido', 'categoria' => 'materiales'],
+
             // ─────────────── Materiales ───────────────
-            ['name' => 'materiales.ver', 'ambito' => 'web', 'descripcion' => 'Ver materiales y lotes', 'categoria' => 'materiales'],
+            ['name' => 'materiales.ver', 'ambito' => 'web', 'descripcion' => 'Ver materiales', 'categoria' => 'materiales'],
             ['name' => 'materiales.crear', 'ambito' => 'web', 'descripcion' => 'Crear materiales', 'categoria' => 'materiales'],
             ['name' => 'materiales.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar materiales', 'categoria' => 'materiales'],
             ['name' => 'materiales.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar materiales', 'categoria' => 'materiales'],
             ['name' => 'materiales.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar materiales a Excel', 'categoria' => 'materiales'],
             ['name' => 'materiales.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de materiales', 'categoria' => 'materiales'],
+
+            // ─────────────── Familias de material ───────────────
+            ['name' => 'materiales.familias.ver', 'ambito' => 'web', 'descripcion' => 'Ver familias de material', 'categoria' => 'materiales'],
+            ['name' => 'materiales.familias.crear', 'ambito' => 'web', 'descripcion' => 'Crear familias de material', 'categoria' => 'materiales'],
+            ['name' => 'materiales.familias.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar familias de material', 'categoria' => 'materiales'],
+            ['name' => 'materiales.familias.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar familias de material', 'categoria' => 'materiales'],
 
             // ─────────────── Conceptos ───────────────
             ['name' => 'conceptos.ver', 'ambito' => 'web', 'descripcion' => 'Ver conceptos', 'categoria' => 'conceptos'],

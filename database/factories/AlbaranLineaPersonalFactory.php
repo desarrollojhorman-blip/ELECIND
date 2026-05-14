@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\AlbaranLineaPersonal;
 use App\Models\User;
@@ -20,8 +19,8 @@ class AlbaranLineaPersonalFactory extends Factory
         return [
             'albaran_id' => Albaran::factory(),
             'trabajador_id' => User::factory()->trabajador(),
-            'tipo_hora' => fake()->randomElement(TipoHora::cases()),
             'horas' => fake()->randomFloat(2, 0.5, 10),
+            'horas_extra' => fake()->boolean(30) ? fake()->randomFloat(2, 0.5, 4) : 0,
             'observaciones' => fake()->boolean(20) ? fake()->sentence(5) : null,
         ];
     }

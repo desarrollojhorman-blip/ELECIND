@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\EstadoAlbaran;
+use App\Enums\TipoDia;
 use Database\Factories\AlbaranFactory;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,11 +19,17 @@ use Illuminate\Support\Carbon;
  * @property Carbon $fecha
  * @property int $cliente_id
  * @property int|null $proyecto_id
+ * @property int|null $concepto_id
  * @property int $creado_por
  * @property int|null $responsable_id
  * @property EstadoAlbaran $estado
+ * @property TipoDia $tipo_dia
  * @property string|null $observaciones
  * @property array<string, mixed>|null $snapshot_data
+ * @property-read EloquentCollection<int, AlbaranLineaPersonal> $lineasPersonal
+ * @property-read EloquentCollection<int, AlbaranLineaMaterial> $lineasMaterial
+ * @property-read EloquentCollection<int, AlbaranFirma> $firmas
+ * @property-read EloquentCollection<int, AlbaranTokenFirma> $tokensFirma
  */
 class Albaran extends Model
 {
@@ -35,9 +43,11 @@ class Albaran extends Model
         'fecha',
         'cliente_id',
         'proyecto_id',
+        'concepto_id',
         'creado_por',
         'responsable_id',
         'estado',
+        'tipo_dia',
         'observaciones',
         'snapshot_data',
     ];
@@ -47,6 +57,7 @@ class Albaran extends Model
         return [
             'fecha' => 'date',
             'estado' => EstadoAlbaran::class,
+            'tipo_dia' => TipoDia::class,
             'snapshot_data' => 'array',
         ];
     }
@@ -59,6 +70,11 @@ class Albaran extends Model
     public function proyecto(): BelongsTo
     {
         return $this->belongsTo(Proyecto::class);
+    }
+
+    public function concepto(): BelongsTo
+    {
+        return $this->belongsTo(Concepto::class);
     }
 
     public function creador(): BelongsTo

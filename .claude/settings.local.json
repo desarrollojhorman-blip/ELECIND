@@ -20,7 +20,25 @@
       "Bash(/c/xampp/php/php.exe vendor/bin/pint --test)",
       "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Roles/Index.php tests/Feature/Roles/IndexTest.php)",
       "Bash(rm app/Models/EmpresasCliente.php app/Models/ConfiguracionEmpresa.php app/Policies/EmpresasClientePolicy.php app/Policies/ConfiguracionEmpresaPolicy.php app/Livewire/Forms/EmpresasClienteForm.php app/Livewire/Forms/ConfiguracionEmpresaForm.php database/factories/EmpresasClienteFactory.php && rm -rf app/Livewire/ConfiguracionEmpresa resources/views/livewire/configuracion-empresa && rm -f storage/framework/views/*.php && echo \"OK\")",
-      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Usuarios/Index.php)"
+      "Bash(/c/xampp/php/php.exe vendor/bin/pint app/Livewire/Usuarios/Index.php)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test --filter=\"Mobile\" 2>&1)",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan tinker --execute=\"App\\\\Models\\\\User::role\\('trabajador'\\)->withCount\\('proyectos'\\)->get\\(['username','nombre','apellidos']\\)->each\\(function\\(`$u\\){ echo str_pad\\(`$u->username, 20\\) . ' | ' . str_pad\\(`$u->nombre.' '.`$u->apellidos, 30\\) . ' | ' . `$u->proyectos_count . ' proyectos' . PHP_EOL; }\\);\")",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan tinker --execute=\"`$u = App\\\\Models\\\\User::where\\('username', 'franciscojavier.gaytan'\\)->first\\(\\); if \\(`$u\\) { echo 'Username: '.`$u->username.PHP_EOL; echo 'Activo: '.\\(`$u->activo?'s�':'no'\\).PHP_EOL; echo 'Hash valida \\\\\"cV5NT04I8tunvP\\\\\": '.\\(Illuminate\\\\Support\\\\Facades\\\\Hash::check\\('cV5NT04I8tunvP', `$u->password\\)?'s�':'no'\\).PHP_EOL; echo 'Hash valida \\\\\"password\\\\\": '.\\(Illuminate\\\\Support\\\\Facades\\\\Hash::check\\('password', `$u->password\\)?'s�':'no'\\).PHP_EOL; } else { echo 'NO EXISTE franciscojavier.gaytan'.PHP_EOL; } App\\\\Models\\\\User::where\\('username', 'like', 'francisco%'\\)->orWhere\\('username', 'franciscojavier'\\)->get\\(['username']\\)->each\\(function\\(`$u\\){ echo 'Coincidencia: '.`$u->username.PHP_EOL; }\\);\")",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan tinker --execute=\"`$u = App\\\\Models\\\\User::where\\('username', 'franciscojavier'\\)->first\\(\\); if \\(`$u\\) { echo 'Existe s�.'.PHP_EOL; echo 'Activo: '.\\(`$u->activo?'s�':'no'\\).PHP_EOL; echo 'Roles: '.`$u->getRoleNames\\(\\)->implode\\(','\\).PHP_EOL; echo 'Hash valida \\\\\"cV5NT04I8tunvP\\\\\": '.\\(Illuminate\\\\Support\\\\Facades\\\\Hash::check\\('cV5NT04I8tunvP', `$u->password\\)?'s�':'no'\\).PHP_EOL; echo 'Hash valida \\\\\"password\\\\\": '.\\(Illuminate\\\\Support\\\\Facades\\\\Hash::check\\('password', `$u->password\\)?'s�':'no'\\).PHP_EOL; }\")",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan tinker --execute=\"App\\\\Models\\\\User::role\\('trabajador'\\)->withCount\\('proyectos'\\)->orderByDesc\\('proyectos_count'\\)->get\\(['username','nombre','apellidos']\\)->each\\(function\\(`$u\\){ echo str_pad\\(`$u->username, 25\\) . ' | ' . str_pad\\(trim\\(`$u->nombre.' '.`$u->apellidos\\), 28\\) . ' | ' . `$u->proyectos_count . ' proy' . PHP_EOL; }\\);\")",
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test --filter=\"Materiales\" 2>&1)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe artisan *)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan test --filter=Materiales)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan test 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"C:\\\\composer\\\\composer.phar\" exec pint -- --test 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"vendor\\\\bin\\\\phpstan\" analyse --memory-limit=2G 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"vendor\\\\bin\\\\phpstan\" analyse --memory-limit=2G --error-format=raw 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"vendor\\\\bin\\\\phpstan\" analyse --memory-limit=2G --no-progress; \"EXIT: $LASTEXITCODE\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"C:\\\\composer\\\\composer.phar\" exec pint -- 2>&1)",
+      "Bash(xargs grep -l \"permiso\\\\|Permiso\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate:fresh --env=testing --force 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate:fresh --seed --force 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan view:clear)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

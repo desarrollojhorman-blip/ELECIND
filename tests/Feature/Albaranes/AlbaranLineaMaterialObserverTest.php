@@ -5,7 +5,7 @@ namespace Tests\Feature\Albaranes;
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
 use App\Models\Cliente;
-use App\Models\MaterialLote;
+use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -36,151 +36,130 @@ class AlbaranLineaMaterialObserverTest extends TestCase
         ]);
     }
 
-    public function test_crear_linea_descuenta_stock_del_lote(): void
+    public function test_crear_linea_descuenta_stock_del_material(): void
     {
-        $lote = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
+        $material = Material::factory()->create(['stock' => 100]);
 
         AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $this->albaran()->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 15,
         ]);
 
-        $lote->refresh();
-        $this->assertEquals(85, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(85, $material->stock);
     }
 
     public function test_aumentar_cantidad_de_linea_resta_diff(): void
     {
-        $lote = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
+        $material = Material::factory()->create(['stock' => 100]);
 
         $linea = AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $this->albaran()->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 10,
         ]);
 
-        $lote->refresh();
-        $this->assertEquals(90, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(90, $material->stock);
 
         $linea->cantidad = 25;
         $linea->save();
 
-        $lote->refresh();
-        $this->assertEquals(75, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(75, $material->stock);
     }
 
     public function test_reducir_cantidad_de_linea_devuelve_diff(): void
     {
-        $lote = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
+        $material = Material::factory()->create(['stock' => 100]);
 
         $linea = AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $this->albaran()->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 30,
         ]);
 
-        $lote->refresh();
-        $this->assertEquals(70, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(70, $material->stock);
 
         $linea->cantidad = 10;
         $linea->save();
 
-        $lote->refresh();
-        $this->assertEquals(90, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(90, $material->stock);
     }
 
-    public function test_eliminar_linea_devuelve_stock_al_lote(): void
+    public function test_eliminar_linea_devuelve_stock_al_material(): void
     {
-        $lote = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
+        $material = Material::factory()->create(['stock' => 100]);
 
         $linea = AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $this->albaran()->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 20,
         ]);
 
-        $lote->refresh();
-        $this->assertEquals(80, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(80, $material->stock);
 
         $linea->delete();
 
-        $lote->refresh();
-        $this->assertEquals(100, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(100, $material->stock);
     }
 
-    public function test_cambiar_de_lote_devuelve_al_viejo_y_descuenta_del_nuevo(): void
+    public function test_cambiar_de_material_devuelve_al_viejo_y_descuenta_del_nuevo(): void
     {
-        $loteA = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
-        $loteB = MaterialLote::factory()->create([
-            'stock_inicial' => 50,
-            'stock_disponible' => 50,
-        ]);
+        $materialA = Material::factory()->create(['stock' => 100]);
+        $materialB = Material::factory()->create(['stock' => 50]);
 
         $linea = AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $this->albaran()->id,
-            'material_lote_id' => $loteA->id,
+            'material_id' => $materialA->id,
             'cantidad' => 30,
         ]);
 
-        $loteA->refresh();
-        $loteB->refresh();
-        $this->assertEquals(70, $loteA->stock_disponible);
-        $this->assertEquals(50, $loteB->stock_disponible);
+        $materialA->refresh();
+        $materialB->refresh();
+        $this->assertEquals(70, $materialA->stock);
+        $this->assertEquals(50, $materialB->stock);
 
-        $linea->material_lote_id = $loteB->id;
+        $linea->material_id = $materialB->id;
         $linea->cantidad = 10;
         $linea->save();
 
-        $loteA->refresh();
-        $loteB->refresh();
-        $this->assertEquals(100, $loteA->stock_disponible);
-        $this->assertEquals(40, $loteB->stock_disponible);
+        $materialA->refresh();
+        $materialB->refresh();
+        $this->assertEquals(100, $materialA->stock);
+        $this->assertEquals(40, $materialB->stock);
     }
 
-    public function test_eliminar_albaran_devuelve_todo_el_stock_al_lote(): void
+    public function test_eliminar_albaran_devuelve_todo_el_stock_al_material(): void
     {
-        $lote = MaterialLote::factory()->create([
-            'stock_inicial' => 100,
-            'stock_disponible' => 100,
-        ]);
+        $material = Material::factory()->create(['stock' => 100]);
 
         $albaran = $this->albaran();
 
         AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $albaran->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 25,
         ]);
         AlbaranLineaMaterial::factory()->create([
             'albaran_id' => $albaran->id,
-            'material_lote_id' => $lote->id,
+            'material_id' => $material->id,
             'cantidad' => 15,
         ]);
 
-        $lote->refresh();
-        $this->assertEquals(60, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(60, $material->stock);
 
         // Eliminamos las líneas (cascade desde albarán haría lo mismo, pero el
         // Observer solo se dispara con .delete() individual del modelo).
         $albaran->lineasMaterial()->each(fn ($l) => $l->delete());
 
-        $lote->refresh();
-        $this->assertEquals(100, $lote->stock_disponible);
+        $material->refresh();
+        $this->assertEquals(100, $material->stock);
     }
 }
