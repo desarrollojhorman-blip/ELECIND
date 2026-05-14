@@ -1,17 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ELECIND - Móvil</title>
-    @if (! app()->runningUnitTests())
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-</head>
-<body class="min-h-screen bg-white text-slate-900">
-    <main class="mx-auto max-w-md px-4 py-6">
-        <h1 class="text-xl font-semibold">Panel móvil ELECIND</h1>
-        <p class="mt-2 text-sm text-slate-600">Entrada inicial para rutas móviles.</p>
-    </main>
-</body>
-</html>
+<x-layouts.mobile>
+    <div class="space-y-3 px-4 py-5">
+        <x-mobile.menu-action href="{{ route('mobile.albaranes.nuevo') }}" variant="primary">
+            Parte de Trabajo
+        </x-mobile.menu-action>
+
+        <x-mobile.menu-action href="{{ route('mobile.albaranes.personalizado') }}" variant="primary">
+            Parte personalizado
+        </x-mobile.menu-action>
+
+        <x-mobile.menu-action
+            href="{{ route('mobile.albaranes.index') }}"
+            variant="outline"
+            icon="heroicon-o-document-text">
+            Gestión de Albaranes
+        </x-mobile.menu-action>
+
+        <x-mobile.menu-action
+            href="{{ route('mobile.ausencias.index') }}"
+            variant="outline"
+            icon="heroicon-o-calendar-days">
+            Faltas de Asistencia
+        </x-mobile.menu-action>
+
+        <x-mobile.menu-action
+            href="{{ route('mobile.resumen.index') }}"
+            variant="outline"
+            icon="heroicon-o-chart-bar">
+            Resumen mensual
+        </x-mobile.menu-action>
+    </div>
+</x-layouts.mobile>

@@ -3,70 +3,68 @@
 namespace App\Observers;
 
 use App\Models\AlbaranLineaMaterial;
-use App\Models\MaterialLote;
+use App\Models\Material;
 use Illuminate\Support\Facades\DB;
 
 class AlbaranLineaMaterialObserver
 {
     /**
-     * Al crear una línea de material, descontamos la cantidad del lote.
+     * Al crear una línea de material, descontamos la cantidad del stock del material.
      */
     public function created(AlbaranLineaMaterial $linea): void
     {
-        $this->ajustarStock($linea->material_lote_id, -(float) $linea->cantidad);
+        $this->ajustarStock($linea->material_id, -(float) $linea->cantidad);
     }
 
     /**
-     * Al actualizar una línea de material, ajustamos la diferencia (sumando lo que
-     * había antes y restando lo nuevo). Si cambió de lote, devolvemos al lote
-     * anterior y descontamos del nuevo.
+     * Al actualizar una línea de material, ajustamos la diferencia.
+     * Si cambió de material, devolvemos al anterior y descontamos del nuevo.
      */
     public function updated(AlbaranLineaMaterial $linea): void
     {
         $cantidadVieja = (float) $linea->getOriginal('cantidad');
-        $loteViejoId = (int) $linea->getOriginal('material_lote_id');
+        $materialViejoId = (int) $linea->getOriginal('material_id');
         $cantidadNueva = (float) $linea->cantidad;
-        $loteNuevoId = (int) $linea->material_lote_id;
+        $materialNuevoId = (int) $linea->material_id;
 
-        if ($loteViejoId === $loteNuevoId) {
-            // Mismo lote: ajustar el diff (positivo = devolver al lote, negativo = restar).
+        if ($materialViejoId === $materialNuevoId) {
             $diff = $cantidadVieja - $cantidadNueva;
             if ($diff !== 0.0) {
-                $this->ajustarStock($loteNuevoId, $diff);
+                $this->ajustarStock($materialNuevoId, $diff);
             }
 
             return;
         }
 
-        // Cambio de lote: devolver al viejo, descontar del nuevo.
-        $this->ajustarStock($loteViejoId, $cantidadVieja);
-        $this->ajustarStock($loteNuevoId, -$cantidadNueva);
+        // Cambio de material: devolver al viejo, descontar del nuevo.
+        $this->ajustarStock($materialViejoId, $cantidadVieja);
+        $this->ajustarStock($materialNuevoId, -$cantidadNueva);
     }
 
     /**
-     * Al eliminar una línea de material, devolvemos la cantidad al lote.
+     * Al eliminar una línea de material, devolvemos la cantidad al stock del material.
      */
     public function deleted(AlbaranLineaMaterial $linea): void
     {
-        $this->ajustarStock($linea->material_lote_id, (float) $linea->cantidad);
+        $this->ajustarStock($linea->material_id, (float) $linea->cantidad);
     }
 
-    private function ajustarStock(int $loteId, float $delta): void
+    private function ajustarStock(int $materialId, float $delta): void
     {
         if ($delta === 0.0) {
             return;
         }
 
-        DB::transaction(function () use ($loteId, $delta): void {
-            /** @var MaterialLote|null $lote */
-            $lote = MaterialLote::query()->lockForUpdate()->find($loteId);
+        DB::transaction(function () use ($materialId, $delta): void {
+            /** @var Material|null $material */
+            $material = Material::query()->lockForUpdate()->find($materialId);
 
-            if ($lote === null) {
+            if ($material === null) {
                 return;
             }
 
-            $lote->stock_disponible = (float) $lote->stock_disponible + $delta;
-            $lote->save();
+            $material->stock = (float) $material->stock + $delta;
+            $material->save();
         });
     }
 }

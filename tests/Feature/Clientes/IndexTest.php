@@ -4,6 +4,7 @@ namespace Tests\Feature\Clientes;
 
 use App\Livewire\Clientes\Index;
 use App\Models\Cliente;
+use App\Models\Proyecto;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,6 +98,26 @@ class IndexTest extends TestCase
         ]);
     }
 
+    public function test_usuario_con_solo_permiso_de_ver_no_puede_abrir_crear(): void
+    {
+        $rolSoloVer = Role::create([
+            'name' => 'clientes_solo_ver',
+            'guard_name' => 'web',
+            'nivel' => 10,
+            'acceso' => 'web',
+            'es_sistema' => false,
+        ]);
+        $rolSoloVer->givePermissionTo('clientes.ver');
+
+        $usuario = User::factory()->administrador()->create();
+        $usuario->assignRole($rolSoloVer);
+
+        Livewire::actingAs($usuario)
+            ->test(Index::class)
+            ->call('abrirCrear')
+            ->assertForbidden();
+    }
+
     public function test_al_abrir_crear_sugiere_el_siguiente_numero_cliente(): void
     {
         $admin = $this->admin();
@@ -153,6 +174,67 @@ class IndexTest extends TestCase
         ]);
     }
 
+    public function test_un_admin_puede_abrir_ver_en_modo_solo_lectura(): void
+    {
+        $admin = $this->admin();
+        $cliente = Cliente::factory()->create(['nombre' => 'Cliente para ver']);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirVer', $cliente->id)
+            ->assertSet('modalAbierto', true)
+            ->assertSet('modoSoloLectura', true)
+            ->assertSet('form.nombre', 'Cliente para ver');
+    }
+
+    public function test_en_editar_se_muestran_los_proyectos_vinculados_del_cliente(): void
+    {
+        $admin = $this->admin();
+        $cliente = Cliente::factory()->create();
+        $otroCliente = Cliente::factory()->create();
+
+        Proyecto::factory()->create([
+            'cliente_id' => $cliente->id,
+            'nombre' => 'Proyecto Alpha',
+        ]);
+        Proyecto::factory()->create([
+            'cliente_id' => $cliente->id,
+            'nombre' => 'Proyecto Beta',
+        ]);
+        Proyecto::factory()->create([
+            'cliente_id' => $otroCliente->id,
+            'nombre' => 'Proyecto Externo',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $cliente->id)
+            ->assertSee('Proyecto Alpha')
+            ->assertSee('Proyecto Beta')
+            ->assertDontSee('Proyecto Externo');
+    }
+
+    public function test_en_editar_se_muestran_los_usuarios_vinculados_de_cada_proyecto(): void
+    {
+        $admin = $this->admin();
+        $cliente = Cliente::factory()->create();
+        $proyecto = Proyecto::factory()->create([
+            'cliente_id' => $cliente->id,
+            'nombre' => 'Proyecto Usuarios',
+        ]);
+        $usuarioProyecto = User::factory()->administrador()->create([
+            'nombre' => 'Ana',
+            'apellidos' => 'Ruiz',
+        ]);
+
+        $proyecto->usuarios()->attach($usuarioProyecto->id, ['rol_en_proyecto' => 'tecnico']);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $cliente->id)
+            ->assertSee('Ana Ruiz');
+    }
+
     public function test_un_admin_puede_eliminar_y_restaurar_una_empresa(): void
     {
         $admin = $this->admin();
@@ -173,6 +255,61 @@ class IndexTest extends TestCase
             'id' => $empresa->id,
             'deleted_at' => null,
         ]);
+    }
+
+    public function test_usuario_sin_permiso_modificar_no_puede_editar_ni_restaurar(): void
+    {
+        $rolSoloVer = Role::create([
+            'name' => 'clientes_solo_ver_update',
+            'guard_name' => 'web',
+            'nivel' => 10,
+            'acceso' => 'web',
+            'es_sistema' => false,
+        ]);
+        $rolSoloVer->givePermissionTo('clientes.ver');
+
+        $usuario = User::factory()->administrador()->create();
+        $usuario->assignRole($rolSoloVer);
+
+        $cliente = Cliente::factory()->create(['nombre' => 'No editable']);
+        $cliente->delete();
+
+        Livewire::actingAs($usuario)
+            ->test(Index::class)
+            ->call('abrirEditar', $cliente->id)
+            ->assertForbidden();
+
+        Livewire::actingAs($usuario)
+            ->test(Index::class)
+            ->call('restaurar', $cliente->id)
+            ->assertForbidden();
+    }
+
+    public function test_usuario_sin_permiso_eliminar_no_puede_confirmar_ni_eliminar(): void
+    {
+        $rolSinEliminar = Role::create([
+            'name' => 'clientes_sin_eliminar',
+            'guard_name' => 'web',
+            'nivel' => 10,
+            'acceso' => 'web',
+            'es_sistema' => false,
+        ]);
+        $rolSinEliminar->givePermissionTo(['clientes.ver', 'clientes.modificar']);
+
+        $usuario = User::factory()->administrador()->create();
+        $usuario->assignRole($rolSinEliminar);
+
+        $cliente = Cliente::factory()->create(['nombre' => 'No eliminable']);
+
+        Livewire::actingAs($usuario)
+            ->test(Index::class)
+            ->call('confirmarEliminar', $cliente->id)
+            ->assertForbidden();
+
+        Livewire::actingAs($usuario)
+            ->test(Index::class)
+            ->call('eliminar', $cliente->id)
+            ->assertForbidden();
     }
 
     public function test_el_buscador_filtra_por_nombre_cif_email_y_poblacion(): void

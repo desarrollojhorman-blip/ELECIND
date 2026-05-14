@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,34 +15,32 @@ class Material extends Model
     protected $table = 'materiales';
 
     protected $fillable = [
-        'codigo',
-        'grupo',
-        'nombre',
+        'numero_pedido_id',
+        'familia_id',
         'descripcion',
         'unidad_medida',
-        'stock_minimo',
-        'notificar_stock_bajo',
-        'activo',
+        'stock',
     ];
 
     protected function casts(): array
     {
         return [
-            'stock_minimo' => 'decimal:2',
-            'notificar_stock_bajo' => 'boolean',
-            'activo' => 'boolean',
+            'stock' => 'decimal:2',
         ];
     }
 
-    public function lotes(): HasMany
+    public function numeroPedido(): BelongsTo
     {
-        return $this->hasMany(MaterialLote::class);
+        return $this->belongsTo(NumeroPedido::class);
     }
 
-    public function proyectos(): BelongsToMany
+    public function familia(): BelongsTo
     {
-        return $this->belongsToMany(Proyecto::class, 'material_proyecto')
-            ->withPivot('cantidad_prevista')
-            ->withTimestamps();
+        return $this->belongsTo(FamiliaMaterial::class, 'familia_id');
+    }
+
+    public function lineasAlbaran(): HasMany
+    {
+        return $this->hasMany(AlbaranLineaMaterial::class);
     }
 }

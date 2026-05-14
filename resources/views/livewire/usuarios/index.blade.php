@@ -113,7 +113,7 @@
                 </x-ui.sortable-header>
                 <x-ui.sortable-header>Rol</x-ui.sortable-header>
                 <x-ui.sortable-header column="email" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Email / DNI
+                    Email
                 </x-ui.sortable-header>
                 <x-ui.sortable-header column="tipo_usuario" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Tipo
@@ -150,9 +150,6 @@
                     </td>
                     <td class="px-4 py-3 text-slate-600">
                         <div class="text-sm">{{ $usuario->email ?? '—' }}</div>
-                        @if ($usuario->dni)
-                            <div class="text-xs text-slate-400">DNI: {{ $usuario->dni }}</div>
-                        @endif
                     </td>
                     <td class="px-4 py-3 text-slate-600">
                         <div>{{ ucfirst($usuario->tipo_usuario) }}</div>
@@ -180,6 +177,13 @@
                                         tooltip="Restaurar" />
                                 @endcan
                             @else
+                                @can('view', $usuario)
+                                    <x-ui.icon-button
+                                        wire:click="abrirVer({{ $usuario->id }})"
+                                        icon="heroicon-o-eye"
+                                        variant="neutral"
+                                        tooltip="Ver detalle" />
+                                @endcan
                                 @can('update', $usuario)
                                     <x-ui.icon-button
                                         wire:click="abrirEditar({{ $usuario->id }})"
@@ -206,10 +210,10 @@
         {{ $usuarios->links() }}
     </div>
 
-    {{-- Modal crear/editar --}}
+    {{-- Modal crear/editar/ver --}}
     <x-ui.modal
         :show="$modalAbierto"
-        :title="$form->id ? 'Editar usuario' : 'Nuevo usuario'"
+        :title="$modoSoloLectura ? 'Ver usuario' : ($form->id ? 'Editar usuario' : 'Nuevo usuario')"
         close-action="cerrarModal"
         size="lg">
 
@@ -219,7 +223,7 @@
                 <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Acceso y rol</h3>
                 <div class="grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Usuario" required :error="$errors->first('form.username')">
-                        <x-ui.input wire:model.live.debounce.500ms="form.username" autofocus />
+                        <x-ui.input wire:model.live.debounce.500ms="form.username" :disabled="$modoSoloLectura" autofocus />
                     </x-ui.field>
 
                     <x-ui.field label="Contraseña"
@@ -228,16 +232,18 @@
                         <div class="space-y-2">
                             <div class="flex items-stretch overflow-hidden rounded-md border border-slate-300 bg-white focus-within:border-primary-500">
                                 <div class="flex-1">
-                                    <x-ui.input wire:key="password-{{ $passwordRenderKey }}" :type="$mostrarPassword ? 'text' : 'password'" wire:model.live="form.password" class="rounded-none border-0 bg-transparent focus:border-0" />
+                                    <x-ui.input wire:key="password-{{ $passwordRenderKey }}" :type="$mostrarPassword ? 'text' : 'password'" wire:model.live="form.password" :disabled="$modoSoloLectura" class="rounded-none border-0 bg-transparent focus:border-0" />
                                 </div>
-                                <button
-                                    type="button"
-                                    wire:click.prevent="generarPasswordSegura"
-                                    class="inline-flex w-8 items-center justify-center self-stretch border-l border-slate-300 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
-                                    title="Generar contraseña segura"
-                                    aria-label="Generar contraseña segura">
-                                    <x-heroicon-o-arrow-path class="size-3.5" />
-                                </button>
+                                @if (!$modoSoloLectura)
+                                    <button
+                                        type="button"
+                                        wire:click.prevent="generarPasswordSegura"
+                                        class="inline-flex w-8 items-center justify-center self-stretch border-l border-slate-300 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
+                                        title="Generar contraseña segura"
+                                        aria-label="Generar contraseña segura">
+                                        <x-heroicon-o-arrow-path class="size-3.5" />
+                                    </button>
+                                @endif
                                 <button
                                     type="button"
                                     wire:click.prevent="toggleMostrarPassword"
@@ -254,7 +260,7 @@
                     </x-ui.field>
 
                     <x-ui.field label="Rol" required :error="$errors->first('form.rol')">
-                        <x-ui.select wire:model="form.rol">
+                        <x-ui.select wire:model="form.rol" :disabled="$modoSoloLectura">
                             @foreach ($this->rolesDisponibles as $rol)
                                 <option value="{{ $rol->name }}">{{ ucfirst($rol->name) }} (nivel {{ $rol->nivel }})</option>
                             @endforeach
@@ -263,7 +269,7 @@
                     </x-ui.field>
 
                     <x-ui.field label="Tipo usuario" required :error="$errors->first('form.tipo_usuario')">
-                        <x-ui.select wire:model.live="form.tipo_usuario">
+                        <x-ui.select wire:model.live="form.tipo_usuario" :disabled="$modoSoloLectura">
                             <option value="interno">Interno (Elecind)</option>
                             <option value="externo">Externo (cliente)</option>
                         </x-ui.select>
@@ -272,7 +278,7 @@
                     <x-ui.field label="Empresa cliente"
                                 :required="$form->tipo_usuario === 'externo'"
                                 :error="$errors->first('form.cliente_id')">
-                        <x-ui.select wire:model="form.cliente_id" :disabled="$form->tipo_usuario !== 'externo'">
+                        <x-ui.select wire:model="form.cliente_id" :disabled="$modoSoloLectura || $form->tipo_usuario !== 'externo'">
                             <option value="">— Ninguna —</option>
                             @foreach ($this->empresasDisponibles as $empresa)
                                 <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
@@ -288,27 +294,27 @@
                 <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Datos personales</h3>
                 <div class="grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                        <x-ui.input wire:model.blur="form.nombre" />
+                        <x-ui.input wire:model.blur="form.nombre" :disabled="$modoSoloLectura" />
                     </x-ui.field>
 
                     <x-ui.field label="Apellidos" :error="$errors->first('form.apellidos')">
-                        <x-ui.input wire:model.blur="form.apellidos" />
+                        <x-ui.input wire:model.blur="form.apellidos" :disabled="$modoSoloLectura" />
                     </x-ui.field>
 
                     <x-ui.field label="Email" :error="$errors->first('form.email')">
-                        <x-ui.input type="email" wire:model="form.email" />
+                        <x-ui.input type="email" wire:model="form.email" :disabled="$modoSoloLectura" />
                     </x-ui.field>
 
                     <x-ui.field label="Teléfono" :error="$errors->first('form.telefono')">
-                        <x-ui.input wire:model="form.telefono" />
+                        <x-ui.input wire:model="form.telefono" :disabled="$modoSoloLectura" />
                     </x-ui.field>
 
                     <x-ui.field label="DNI" :error="$errors->first('form.dni')">
-                        <x-ui.input wire:model="form.dni" />
+                        <x-ui.input wire:model="form.dni" :disabled="$modoSoloLectura" />
                     </x-ui.field>
 
                     <div class="md:col-span-2">
-                        <x-ui.checkbox wire:model="form.activo" label="Usuario activo" />
+                        <x-ui.checkbox wire:model="form.activo" label="Usuario activo" :disabled="$modoSoloLectura" />
                     </div>
                 </div>
             </div>
@@ -316,11 +322,13 @@
 
         <x-slot:footer>
             <x-ui.button variant="ghost" wire:click="cerrarModal">
-                Cancelar
+                {{ $modoSoloLectura ? 'Cerrar' : 'Cancelar' }}
             </x-ui.button>
-            <x-ui.button variant="success" type="submit" form="form-usuario" wire:loading.attr="disabled" icon="heroicon-o-check">
-                Guardar
-            </x-ui.button>
+            @if (!$modoSoloLectura)
+                <x-ui.button variant="success" type="submit" form="form-usuario" wire:loading.attr="disabled" icon="heroicon-o-check">
+                    Guardar
+                </x-ui.button>
+            @endif
         </x-slot:footer>
     </x-ui.modal>
 

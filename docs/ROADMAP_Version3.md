@@ -74,17 +74,17 @@ Desarrollo por fases. Cada fase = una rama desde `develop` → PR a `develop` cu
 ### Entregable
 ✅ Admin puede configurar toda la base de datos antes de empezar a crear albaranes.
 
-### Estado final *(actualizado 14/05/2026 — extensión + refactor)*
+### Estado final *(actualizado 14/05/2026 — extensión + refactor + familias)*
 - [x] Fase 0 cerrada y validada
-- [x] Base de datos completa: 11 tablas + pivots + `empresa` singleton (con migraciones de renombre incluidas)
-- [x] Seeders demo operativos (5 empresas · 6 tipos · 15 conceptos · 30 materiales · 42 lotes · 10-14 proyectos · 8 trabajadores · 5 responsables)
+- [x] Base de datos completa: 12 tablas + pivots + `empresa` singleton (con migraciones de renombre incluidas)
+- [x] Seeders demo operativos (5 clientes · 6 tipos · 15 conceptos · **6 pedidos · 4 familias · 34 materiales (~70% con familia)** · 12 proyectos · 8 trabajadores · 5 responsables · 1 trabajador demo estable `trabajador/password`)
 - [x] Sistema de diseño + 18 componentes Blade UI reutilizables
-- [x] **8 CRUDs operativos**: Clientes · Proyectos · Materiales · MaterialLotes · Usuarios · Conceptos · Empresa · **Roles y permisos**
-- [x] **9 Policies** registradas (incluida `RolePolicy` con jerarquía + protección de roles del sistema)
-- [x] **126 tests feature** · 447 assertions · Pint OK · Larastan 45/45 OK
-- [x] **Catálogo de 54 permisos** clasificados por ámbito (web/movil/ambos) y categoría con descripciones inequívocas
+- [x] **10 CRUDs operativos**: Clientes · Proyectos · **NúmerosPedido** · Materiales · **Familias de Material** · Usuarios · Conceptos · Empresa · **Roles y permisos** · *(MaterialLotes eliminado en refactor)*
+- [x] **10 Policies** registradas (incluida `FamiliaMaterialPolicy` y `NumeroPedidoPolicy` que sustituyen a `MaterialLotePolicy`)
+- [x] **201 tests feature** · 643 assertions · Pint OK · Larastan 0 errores
+- [x] **Catálogo de 62 permisos** clasificados por ámbito (web/movil/ambos) y categoría con descripciones inequívocas (incluidos los 4 nuevos `materiales.familias.*` y los 4 de `pedidos.*`)
 
-### Avance Fase 1: 100 % ✅ + extensión CRUD Roles
+### Avance Fase 1: 100 % ✅ + extensión CRUD Roles + refactor materiales + Familias
 
 Ver detalles en:
 - [`docs/resumen/120526_1500_avance_fase_1.md`](./resumen/120526_1500_avance_fase_1.md) (iter. 1: BD + seeders)
@@ -92,13 +92,40 @@ Ver detalles en:
 - [`docs/resumen/130526_0300_avance_fase_1.md`](./resumen/130526_0300_avance_fase_1.md) (iter. 3: Proyectos + Materiales)
 - [`docs/resumen/130526_2300_cierre_fase_1.md`](./resumen/130526_2300_cierre_fase_1.md) (iter. 4 — cierre Fase 1)
 - [`docs/resumen/140526_0100_extension_roles_y_refactor.md`](./resumen/140526_0100_extension_roles_y_refactor.md) (iter. 5 — **extensión post-cierre**: CRUD Roles + refactor de nombres)
+- [`docs/resumen/140526_2200_familias_y_estado_actual.md`](./resumen/140526_2200_familias_y_estado_actual.md) (**resumen consolidado**: refactor materiales, refactor horas, Familias, estado actual + pendientes)
+
+### 🔧 Extensiones post-cierre (mayo 2026)
+
+Cambios estructurales realizados después del cierre formal de Fase 1, mientras se trabajaba en Fase 2:
+
+- [x] **Refactor materiales/lotes → NumeroPedido + Material plano** *(2026-05-14)*
+  - Eliminadas tablas `material_lotes` y `movimientos_stock`.
+  - Materiales pasan a tener `stock` directo (sin lotes intermedios) y FK `numero_pedido_id`.
+  - Nueva tabla `numero_pedidos` (numero único, fecha, proveedor, descripción) con CRUD propio en `/materiales/pedidos`.
+  - `albaran_lineas_material.material_lote_id` → `material_id`.
+  - Observer `AlbaranLineaMaterialObserver` ajusta `material.stock` directamente.
+  - Pivot `material_proyecto` recreado tras eliminarse por error (sin `cantidad_prevista`).
+- [x] **Refactor horas en Albaran** *(2026-05-14)*
+  - Eliminado `tipo_hora` por línea (4 enums).
+  - `Albaran` gana `tipo_dia` (laborable/festivo) en cabecera.
+  - `AlbaranLineaPersonal.horas` se descompone en `horas` (normales) + `horas_extra` (extras).
+- [x] **CRUD Familias de Material** *(2026-05-14)*
+  - Tabla `familias_material` (nombre único + descripción + soft delete).
+  - FK `materiales.familia_id` nullable (nullOnDelete).
+  - CRUD propio en `/materiales/familias` con modal "Asignar materiales" (toggle huérfanos vs todos).
+  - 4 permisos `materiales.familias.{ver,crear,modificar,eliminar}`.
+  - Listado de materiales: nueva columna + filtro por familia (incl. opción "Sin familia").
+  - **⚠️ UX del modal "Asignar materiales" pendiente de rework** → ver [resumen](./resumen/140526_2200_familias_y_estado_actual.md): hay que sustituir el modal-dentro-de-modal por un select inline + botón "Añadir" desde el panel de materiales de la familia.
+- [x] **Login redirect por rol** *(2026-05-14)*
+  - Trabajadores intentando entrar en `/login` con rol móvil van directos al dashboard móvil.
+  - Admins/superadmins van al dashboard web.
 
 ---
 
 ## 🚧 Fase 2 — Albaranes core + firma (3 semanas)
 
 **Rama:** `fase-2-albaranes`
-**Estado:** 🚧 EN CURSO (Iter. 1 de 6 completada — ~17 %)
+**Estado:** 🚧 EN CURSO (Iter. 1, 2 y 3 de 6 completadas — ~50 %)
 **Orden estratégico:** móvil primero, web después (decisión 14/05/2026).
 
 ### Objetivos
@@ -119,17 +146,22 @@ Ver detalles en:
 - [x] 4 permisos nuevos: `albaranes.descargar_pdf` (ambos), `albaranes.solicitar_firma` (web), `albaranes.invalidar_firma` (web · solo superadmin), `albaranes.facturar` (web)
 - [x] 19 tests nuevos (7 EstadoAlbaran + 6 NumeracionService + 6 Observer) · 145 totales
 
-#### ⏳ Iter. 2 — Infraestructura móvil (siguiente)
-- [ ] Layout `mobile.blade.php` con header + nav inferior táctil
-- [ ] Rutas `/movil/...` con middleware `EnsureMobileAccess`
-- [ ] Dashboard del trabajador (lista "Mis albaranes recientes" + atajos)
-- [ ] Componentes Blade UI móviles mínimos (`<x-mobile.button>`, `<x-mobile.card>`, `<x-mobile.list-item>`, etc.)
+#### ✅ Iter. 2 — Infraestructura móvil (completada 14/05/2026)
+- [x] Layout `components.layouts.mobile` con header (logo + back + título) y sin nav inferior por ahora
+- [x] Rutas `/mobile/...` (sin segmento `/movil` para mantener consistencia ES/EN) con middleware `ensure.mobile.access`
+- [x] Dashboard móvil (`/mobile/dashboard`) con "Mis partes recientes" + atajo "Nuevo parte"
+- [x] Componentes Blade UI móviles (`<x-mobile.header>`, `<x-mobile.menu-action>`, `<x-mobile.button>`, etc.)
+- [x] Login redirect por rol: trabajador → `mobile.dashboard`; admin/superadmin → `web.dashboard`
 
-#### ⏳ Iter. 3 — CRUD albarán desde móvil
-- [ ] Pantalla "Nuevo Parte de Trabajo" optimizada táctil
-- [ ] Selects dependientes (proyecto → trabajadores del proyecto → materiales/lotes)
-- [ ] Líneas de personal y de material táctiles
-- [ ] Guardar como borrador / editar / eliminar borradores propios
+#### ✅ Iter. 3 — CRUD albarán desde móvil (completada 14/05/2026)
+- [x] Pantalla "Nuevo Parte de Trabajo" (`Mobile\Albaranes\Crear`) optimizada táctil
+- [x] Pantalla "Ver parte" (`Mobile\Albaranes\Ver`) con líneas de personal y material
+- [x] Selects dependientes (proyecto → conceptos del proyecto → usuarios del proyecto → materiales del proyecto)
+- [x] Líneas de personal: yo + compañeros, con `horas` + `horas_extra` (refactor post-iter)
+- [x] Líneas de material: select Material directo (sin lotes, post-refactor) + cantidad
+- [x] Cabecera: `tipo_dia` (laborable/festivo) en cabecera (refactor post-iter)
+- [x] Guardar como borrador (estado por defecto), editar borradores propios
+- [x] Permisos visibles para trabajadores: solo ven proyectos donde están asignados (o son responsable principal)
 
 #### ⏳ Iter. 4 — Firma + flujo legal
 - [ ] Componente firma Canvas + Alpine (PNG en storage)
@@ -157,20 +189,22 @@ Ver detalles en:
 ### Entregable
 - Trabajador crea albarán desde móvil → firma → email al responsable → responsable firma vía link → PDF generado.
 
-### Decisiones cerradas (9)
+### Decisiones cerradas (10)
 | # | Decisión |
 |---|---|
 | 1 | Móvil primero, web después |
-| 2 | 4 tipos de hora: `laborable_normal`, `laborable_extra`, `festivo_normal`, `festivo_extra` |
-| 3 | Stock descuenta al crear/editar la línea de material (Observer) |
+| 2 | ~~4 tipos de hora~~ → **revisado 14/05**: `tipo_dia` (laborable/festivo) en cabecera + `horas` + `horas_extra` por línea personal |
+| 3 | Stock descuenta al crear/editar la línea de material (Observer). **Ahora ajusta `material.stock` directo** (los lotes se eliminaron en refactor) |
 | 4 | Estados: borrador → pendiente_firma → firmado → facturado → archivado |
 | 5 | Token de firma: single-use + caducidad por tiempo |
 | 6 | 2 huecos de firma (trabajador + responsable). Cualquiera con token puede firmar (el token sabe a qué hueco va) |
 | 7 | Geolocalización opcional con prompt del navegador |
 | 8 | Modal "Solicitar firma" con selector (trabajador / responsable del proyecto / email custom) |
 | 9 | Sin pedir nombre/DNI en firma pública. Borrar firmas = borrar imagen + activity log |
+| 10 | **Materiales sin lotes**: stock directo en `materiales.stock` + agrupador opcional `familia_id` *(decisión post-cierre Fase 1)* |
 
-Ver detalle de iteración 1 en [`docs/resumen/140526_0300_iter1_fase2_nucleo_datos.md`](./resumen/140526_0300_iter1_fase2_nucleo_datos.md).
+Ver detalle de iteración 1 en [`docs/resumen/140526_1500_iter1_fase2_nucleo_datos.md`](./resumen/140526_1500_iter1_fase2_nucleo_datos.md).
+Ver estado consolidado tras Iter. 2-3 + extensiones en [`docs/resumen/140526_2200_familias_y_estado_actual.md`](./resumen/140526_2200_familias_y_estado_actual.md).
 
 ---
 

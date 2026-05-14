@@ -58,7 +58,9 @@ ELECIND/
 │   ├── Models/
 │   │   ├── User.php
 │   │   ├── Albaran.php
-│   │   ├── MaterialLote.php
+│   │   ├── Material.php
+│   │   ├── FamiliaMaterial.php
+│   │   ├── NumeroPedido.php
 │   │   └── ...
 │   ├── Services/
 │   ├── Policies/
@@ -192,27 +194,44 @@ conceptos                        ← catálogo único de toda la app
 - **En el albarán**: select filtrado solo con los conceptos del proyecto + opción "Otro" (texto libre).
 - **Soft delete**: si un concepto se elimina, los albaranes que lo usen mantienen snapshot del nombre.
 
-### 📦 Materiales y stock
+### 📦 Materiales y stock *(refactorizado 14/05/2026)*
+
+> ⚠️ **Refactor histórico**: el diseño original con `material_lotes` + `movimientos_stock` se eliminó por sobreingeniería para el caso real de Elecind. El stock vive **directamente en el material**. Para agrupar materiales que representan "el mismo artículo en distintos pedidos" se introdujo la tabla `familias_material` (opcional).
 
 ```
-materiales
-├── id, grupo, nombre, unidad_medida
-├── stock_minimo, notificar_stock_bajo
-
-material_lotes
-├── id, material_id
-├── proveedor, n_pedido
-├── stock_disponible, stock_inicial
-├── fecha_entrada, stock_minimo_lote
+numero_pedidos                      ← cabecera de pedidos al proveedor
+├── id
+├── numero (unique)
+├── descripcion (nullable)
+├── fecha
+├── proveedor (nullable)
 └── deleted_at
 
-movimientos_stock
-├── id, material_lote_id
-├── tipo (entrada/salida/ajuste)
-├── cantidad, motivo, usuario_id
-├── albaran_id (nullable)
-└── created_at
+familias_material                   ← agrupador opcional (extensión 14/05/2026)
+├── id
+├── nombre (unique)
+├── descripcion (nullable)
+└── deleted_at
+
+materiales                          ← catálogo plano con stock directo
+├── id
+├── numero_pedido_id (FK numero_pedidos, restrictOnDelete)
+├── familia_id (FK familias_material, nullable, nullOnDelete)
+├── descripcion
+├── unidad_medida
+├── stock (decimal 10,2)            ← se descuenta vía Observer al crear líneas
+└── deleted_at
+
+material_proyecto                   ← pivot: qué materiales puede usar cada proyecto
+├── material_id, proyecto_id
+└── (unique: material_id + proyecto_id)
 ```
+
+**Reglas de stock:**
+- `AlbaranLineaMaterialObserver` ajusta `materiales.stock` automáticamente con `lockForUpdate` + `DB::transaction` en `created` / `updated` / `deleted`.
+- El stock puede ser negativo si el albarán consume más material del registrado en el catálogo (decisión: no bloquear, dejar que el admin corrija a posteriori).
+- Eliminar una familia: los materiales asociados quedan con `familia_id = NULL` (no se borran).
+- Eliminar un pedido: bloqueado por `restrictOnDelete` mientras tenga materiales (forzar borrado primero los materiales, o reasignarlos).
 
 ### 📄 Albaranes (cabecera + líneas + firmas)
 
@@ -238,8 +257,9 @@ albaran_lineas_personal           ← líneas de trabajadores
 ├── es_creador
 
 albaran_lineas_material           ← líneas de materiales
-├── id, albaran_id, material_lote_id, cantidad
-├── descripcion_libre (si avanzado)
+├── id, albaran_id, material_id, cantidad
+├── observaciones (nullable)
+│   (anteriormente material_lote_id; refactorizado 14/05/2026)
 
 albaran_firmas                    ← evento legal auditable (aparte)
 ├── id, albaran_id, tipo (trabajador/responsable)

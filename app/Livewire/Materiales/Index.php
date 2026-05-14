@@ -3,7 +3,9 @@
 namespace App\Livewire\Materiales;
 
 use App\Livewire\Forms\MaterialForm;
+use App\Models\FamiliaMaterial;
 use App\Models\Material;
+use App\Models\NumeroPedido;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -15,7 +17,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.web', ['active' => 'materiales'])]
+#[Layout('components.layouts.web', ['active' => 'materiales_lista'])]
 #[Title('Materiales')]
 class Index extends Component
 {
@@ -26,22 +28,23 @@ class Index extends Component
     #[Url(as: 'q')]
     public string $buscar = '';
 
-    /** Estados: todos | activos | inactivos | papelera */
-    #[Url(as: 'estado')]
-    public string $filtroEstado = 'todos';
+    #[Url(as: 'pedido')]
+    public string $filtroPedido = '';
 
-    #[Url(as: 'grupo')]
-    public string $filtroGrupo = '';
+    #[Url(as: 'familia')]
+    public string $filtroFamilia = '';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'nombre';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
-    public string $ordenDireccion = 'asc';
+    public string $ordenDireccion = 'desc';
 
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
+
+    public bool $modoSoloLectura = false;
 
     public ?int $confirmarEliminarId = null;
 
@@ -57,12 +60,12 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatedFiltroEstado(): void
+    public function updatedFiltroPedido(): void
     {
         $this->resetPage();
     }
 
-    public function updatedFiltroGrupo(): void
+    public function updatedFiltroFamilia(): void
     {
         $this->resetPage();
     }
@@ -74,8 +77,8 @@ class Index extends Component
 
     public function limpiarFiltros(): void
     {
-        $this->filtroEstado = 'todos';
-        $this->filtroGrupo = '';
+        $this->filtroPedido = '';
+        $this->filtroFamilia = '';
         $this->buscar = '';
         $this->resetPage();
         $this->resetKey++;
@@ -88,24 +91,24 @@ class Index extends Component
         $this->resetKey++;
     }
 
-    public function quitarFiltroEstado(): void
+    public function quitarFiltroPedido(): void
     {
-        $this->filtroEstado = 'todos';
+        $this->filtroPedido = '';
         $this->resetPage();
         $this->resetKey++;
     }
 
-    public function quitarFiltroGrupo(): void
+    public function quitarFiltroFamilia(): void
     {
-        $this->filtroGrupo = '';
+        $this->filtroFamilia = '';
         $this->resetPage();
         $this->resetKey++;
     }
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['nombre', 'codigo', 'grupo', 'activo', 'created_at'];
-        if (! \in_array($columna, $columnasPermitidas, true)) {
+        $permitidas = ['id', 'descripcion', 'unidad_medida', 'stock', 'numero_pedido_id', 'familia_id'];
+        if (! \in_array($columna, $permitidas, true)) {
             return;
         }
 
@@ -123,32 +126,49 @@ class Index extends Component
 
         $this->form->reset();
         $this->form->unidad_medida = 'ud';
-        $this->form->notificar_stock_bajo = true;
-        $this->form->activo = true;
+
+        if ($this->filtroPedido !== '') {
+            $this->form->numero_pedido_id = (int) $this->filtroPedido;
+        }
+
         $this->resetErrorBag();
+        $this->modoSoloLectura = false;
+        $this->modalAbierto = true;
+    }
+
+    public function abrirVer(int $id): void
+    {
+        $material = Material::withTrashed()->findOrFail($id);
+        Gate::authorize('view', $material);
+
+        $this->form->fromModel($material);
+        $this->resetErrorBag();
+        $this->modoSoloLectura = true;
         $this->modalAbierto = true;
     }
 
     public function abrirEditar(int $id): void
     {
-        /** @var Material $material */
         $material = Material::withTrashed()->findOrFail($id);
-
         Gate::authorize('update', $material);
 
         $this->form->fromModel($material);
         $this->resetErrorBag();
+        $this->modoSoloLectura = false;
         $this->modalAbierto = true;
     }
 
     public function guardar(): void
     {
+        if ($this->modoSoloLectura) {
+            abort(403);
+        }
+
         $esNuevo = $this->form->id === null;
 
         if ($esNuevo) {
             Gate::authorize('create', Material::class);
         } else {
-            /** @var Material $existente */
             $existente = Material::withTrashed()->findOrFail($this->form->id);
             Gate::authorize('update', $existente);
         }
@@ -159,13 +179,14 @@ class Index extends Component
         $this->form->reset();
 
         session()->flash('status', $esNuevo
-            ? "Material «{$material->nombre}» creado correctamente."
-            : "Material «{$material->nombre}» actualizado correctamente.");
+            ? "Material «{$material->descripcion}» creado correctamente."
+            : "Material «{$material->descripcion}» actualizado correctamente.");
     }
 
     public function cerrarModal(): void
     {
         $this->modalAbierto = false;
+        $this->modoSoloLectura = false;
         $this->form->reset();
         $this->resetErrorBag();
     }
@@ -182,39 +203,29 @@ class Index extends Component
 
     public function eliminar(int $id): void
     {
-        /** @var Material $material */
         $material = Material::findOrFail($id);
         Gate::authorize('delete', $material);
 
         $material->delete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Material «{$material->nombre}» enviado a papelera.");
+        session()->flash('status', "Material «{$material->descripcion}» enviado a papelera.");
     }
 
     public function restaurar(int $id): void
     {
-        /** @var Material $material */
         $material = Material::withTrashed()->findOrFail($id);
         Gate::authorize('restore', $material);
 
         $material->restore();
 
-        session()->flash('status', "Material «{$material->nombre}» restaurado.");
+        session()->flash('status', "Material «{$material->descripcion}» restaurado.");
     }
 
     #[Computed]
     public function filtrosAplicados(): int
     {
-        $count = 0;
-        if ($this->filtroEstado !== 'todos') {
-            $count++;
-        }
-        if ($this->filtroGrupo !== '') {
-            $count++;
-        }
-
-        return $count;
+        return ($this->filtroPedido !== '' ? 1 : 0) + ($this->filtroFamilia !== '' ? 1 : 0);
     }
 
     #[Computed]
@@ -223,44 +234,46 @@ class Index extends Component
         return $this->filtrosAplicados() > 0 || trim($this->buscar) !== '';
     }
 
-    /**
-     * @return Collection<int, string>
-     */
     #[Computed]
-    public function gruposDisponibles(): Collection
+    public function pedidosDisponibles(): Collection
     {
-        return Material::query()
-            ->withTrashed()
-            ->whereNotNull('grupo')
-            ->where('grupo', '!=', '')
-            ->distinct()
-            ->orderBy('grupo')
-            ->pluck('grupo');
+        return NumeroPedido::query()
+            ->orderBy('fecha', 'desc')
+            ->orderBy('numero')
+            ->get(['id', 'numero', 'proveedor']);
+    }
+
+    #[Computed]
+    public function familiasDisponibles(): Collection
+    {
+        return FamiliaMaterial::query()
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
     }
 
     public function render(): View
     {
-        $query = Material::query()->withSum('lotes as stock_total', 'stock_disponible');
+        $query = Material::query()->with(['numeroPedido', 'familia']);
 
-        if ($this->filtroEstado === 'papelera') {
-            $query->onlyTrashed();
-        } elseif ($this->filtroEstado === 'activos') {
-            $query->where('activo', true);
-        } elseif ($this->filtroEstado === 'inactivos') {
-            $query->where('activo', false);
+        if ($this->filtroPedido !== '') {
+            $query->where('numero_pedido_id', $this->filtroPedido);
         }
 
-        if ($this->filtroGrupo !== '') {
-            $query->where('grupo', $this->filtroGrupo);
+        if ($this->filtroFamilia !== '') {
+            if ($this->filtroFamilia === 'sin_familia') {
+                $query->whereNull('familia_id');
+            } else {
+                $query->where('familia_id', $this->filtroFamilia);
+            }
         }
 
         if ($this->buscar !== '') {
             $termino = '%'.trim($this->buscar).'%';
             $query->where(function (Builder $q) use ($termino): void {
-                $q->where('nombre', 'like', $termino)
-                    ->orWhere('codigo', 'like', $termino)
-                    ->orWhere('descripcion', 'like', $termino)
-                    ->orWhere('grupo', 'like', $termino);
+                $q->where('descripcion', 'like', $termino)
+                    ->orWhere('unidad_medida', 'like', $termino)
+                    ->orWhereHas('numeroPedido', fn ($q2) => $q2->where('numero', 'like', $termino))
+                    ->orWhereHas('familia', fn ($q3) => $q3->where('nombre', 'like', $termino));
             });
         }
 

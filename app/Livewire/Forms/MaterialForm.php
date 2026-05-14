@@ -3,7 +3,6 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Material;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -12,28 +11,19 @@ class MaterialForm extends Form
     public ?int $id = null;
 
     #[Validate]
-    public ?string $codigo = null;
+    public ?int $numero_pedido_id = null;
 
     #[Validate]
-    public ?string $grupo = null;
+    public ?int $familia_id = null;
 
     #[Validate]
-    public string $nombre = '';
-
-    #[Validate]
-    public ?string $descripcion = null;
+    public string $descripcion = '';
 
     #[Validate]
     public string $unidad_medida = 'ud';
 
     #[Validate]
-    public float $stock_minimo = 0;
-
-    #[Validate]
-    public bool $notificar_stock_bajo = true;
-
-    #[Validate]
-    public bool $activo = true;
+    public float $stock = 0;
 
     /**
      * @return array<string, array<int, mixed>>
@@ -41,17 +31,11 @@ class MaterialForm extends Form
     public function rules(): array
     {
         return [
-            'codigo' => [
-                'nullable', 'string', 'max:255',
-                Rule::unique('materiales', 'codigo')->ignore($this->id)->whereNull('deleted_at'),
-            ],
-            'grupo' => ['nullable', 'string', 'max:255'],
-            'nombre' => ['required', 'string', 'max:255'],
-            'descripcion' => ['nullable', 'string', 'max:2000'],
+            'numero_pedido_id' => ['required', 'integer', 'exists:numero_pedidos,id'],
+            'familia_id' => ['nullable', 'integer', 'exists:familias_material,id'],
+            'descripcion' => ['required', 'string', 'max:500'],
             'unidad_medida' => ['required', 'string', 'max:20'],
-            'stock_minimo' => ['required', 'numeric', 'min:0'],
-            'notificar_stock_bajo' => ['boolean'],
-            'activo' => ['boolean'],
+            'stock' => ['required', 'numeric', 'min:0'],
         ];
     }
 
@@ -61,28 +45,22 @@ class MaterialForm extends Form
     public function validationAttributes(): array
     {
         return [
-            'codigo' => 'código',
-            'grupo' => 'grupo',
-            'nombre' => 'nombre',
+            'numero_pedido_id' => 'número de pedido',
+            'familia_id' => 'familia',
             'descripcion' => 'descripción',
             'unidad_medida' => 'unidad de medida',
-            'stock_minimo' => 'stock mínimo',
-            'notificar_stock_bajo' => 'notificar stock bajo',
-            'activo' => 'activo',
+            'stock' => 'stock',
         ];
     }
 
     public function fromModel(Material $material): void
     {
         $this->id = (int) $material->getKey();
-        $this->codigo = $material->codigo;
-        $this->grupo = $material->grupo;
-        $this->nombre = $material->nombre;
+        $this->numero_pedido_id = $material->numero_pedido_id;
+        $this->familia_id = $material->familia_id;
         $this->descripcion = $material->descripcion;
         $this->unidad_medida = $material->unidad_medida;
-        $this->stock_minimo = (float) $material->stock_minimo;
-        $this->notificar_stock_bajo = (bool) $material->notificar_stock_bajo;
-        $this->activo = (bool) $material->activo;
+        $this->stock = (float) $material->stock;
     }
 
     public function save(): Material

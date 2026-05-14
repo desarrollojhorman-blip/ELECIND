@@ -4,6 +4,8 @@ namespace App\Livewire\Clientes;
 
 use App\Livewire\Forms\ClienteForm;
 use App\Models\Cliente;
+use App\Models\Proyecto;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -44,6 +46,8 @@ class Index extends Component
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
+
+    public bool $modoSoloLectura = false;
 
     public ?int $confirmarEliminarId = null;
 
@@ -131,6 +135,20 @@ class Index extends Component
         $this->form->reset();
         $ultimoNumero = (int) (Cliente::withTrashed()->max('numero_cliente') ?? 0);
         $this->form->numero_cliente = $ultimoNumero + 1;
+        $this->modoSoloLectura = false;
+        $this->resetErrorBag();
+        $this->modalAbierto = true;
+    }
+
+    public function abrirVer(int $id): void
+    {
+        /** @var Cliente $cliente */
+        $cliente = Cliente::withTrashed()->findOrFail($id);
+
+        Gate::authorize('view', $cliente);
+
+        $this->form->fromModel($cliente);
+        $this->modoSoloLectura = true;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -143,12 +161,17 @@ class Index extends Component
         Gate::authorize('update', $cliente);
 
         $this->form->fromModel($cliente);
+        $this->modoSoloLectura = false;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
 
     public function guardar(): void
     {
+        if ($this->modoSoloLectura) {
+            abort(403);
+        }
+
         $esNuevo = $this->form->id === null;
 
         if ($esNuevo) {
@@ -172,12 +195,17 @@ class Index extends Component
     public function cerrarModal(): void
     {
         $this->modalAbierto = false;
+        $this->modoSoloLectura = false;
         $this->form->reset();
         $this->resetErrorBag();
     }
 
     public function confirmarEliminar(int $id): void
     {
+        /** @var Cliente $cliente */
+        $cliente = Cliente::findOrFail($id);
+        Gate::authorize('delete', $cliente);
+
         $this->confirmarEliminarId = $id;
     }
 
@@ -227,6 +255,36 @@ class Index extends Component
     public function tieneAlgoQueLimpiar(): bool
     {
         return $this->filtrosAplicados() > 0 || trim($this->buscar) !== '';
+    }
+
+    /**
+     * @return Collection<int, Proyecto>
+     */
+    #[Computed]
+    public function proyectosDelClienteActual(): Collection
+    {
+        if ($this->form->id === null) {
+            return collect();
+        }
+
+        return Proyecto::query()
+            ->where('cliente_id', $this->form->id)
+            ->with(['usuarios:id,nombre,apellidos'])
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'codigo', 'estado']);
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function usuariosDeLosProyectosDelClienteActual(): Collection
+    {
+        return $this->proyectosDelClienteActual()
+            ->flatMap(fn (Proyecto $proyecto) => $proyecto->usuarios)
+            ->unique('id')
+            ->sortBy(fn ($usuario) => trim($usuario->nombre.' '.$usuario->apellidos))
+            ->values();
     }
 
     /**

@@ -28,12 +28,31 @@ class LoginController
         if ($user && $user->activo && Hash::check($credentials['password'], $user->password)) {
             Auth::login($user, $request->boolean('remember'));
 
-            return redirect()->intended('/');
+            return redirect()->intended($this->rutaInicial($user));
         }
 
         return back()->withErrors([
             'username' => 'Las credenciales no son válidas.',
         ])->onlyInput('username');
+    }
+
+    /**
+     * Decide a qué panel mandar al usuario tras el login según su acceso.
+     *  - Si tiene acceso web (incluido "ambos"): panel web (/).
+     *  - Si solo tiene acceso móvil: panel móvil (/m).
+     *  - Si no tiene acceso a ninguno (caso raro): vuelve al login con mensaje.
+     */
+    private function rutaInicial(User $user): string
+    {
+        if ($user->tieneAccesoWeb()) {
+            return '/';
+        }
+
+        if ($user->tieneAccesoMovil()) {
+            return '/m';
+        }
+
+        return '/login';
     }
 
     public function logout(Request $request): RedirectResponse

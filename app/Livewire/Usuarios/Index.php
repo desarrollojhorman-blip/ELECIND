@@ -71,6 +71,8 @@ class Index extends Component
 
     public int $resetKey = 0;
 
+    public bool $modoSoloLectura = false;
+
     public function mount(): void
     {
         Gate::authorize('viewAny', User::class);
@@ -186,6 +188,24 @@ class Index extends Component
         $this->modalAbierto = true;
     }
 
+    public function abrirVer(int $id): void
+    {
+        /** @var User $usuario */
+        $usuario = User::withTrashed()->findOrFail($id);
+
+        Gate::authorize('view', $usuario);
+
+        $this->form->fromModel($usuario);
+        $this->usernameTocadoManual = true;
+        $this->mostrarPassword = false;
+        $this->passwordRenderKey++;
+        $this->bypassDuplicados = false;
+        $this->duplicadosEncontrados = [];
+        $this->modoSoloLectura = true;
+        $this->resetErrorBag();
+        $this->modalAbierto = true;
+    }
+
     public function abrirEditar(int $id): void
     {
         /** @var User $usuario */
@@ -199,6 +219,7 @@ class Index extends Component
         $this->passwordRenderKey++;
         $this->bypassDuplicados = false;
         $this->duplicadosEncontrados = [];
+        $this->modoSoloLectura = false;
         $this->resetErrorBag();
         $this->modalAbierto = true;
     }
@@ -257,6 +278,7 @@ class Index extends Component
         $this->form->reset();
         $this->usernameTocadoManual = false;
         $this->mostrarPassword = false;
+        $this->modoSoloLectura = false;
         $this->passwordRenderKey++;
         $this->resetErrorBag();
     }
@@ -342,6 +364,10 @@ class Index extends Component
 
     public function confirmarEliminar(int $id): void
     {
+        /** @var User $usuario */
+        $usuario = User::findOrFail($id);
+        Gate::authorize('delete', $usuario);
+
         $this->confirmarEliminarId = $id;
     }
 
@@ -458,7 +484,7 @@ class Index extends Component
         $nivelActual = $actual->nivelMaximo();
 
         $query = User::query()
-            ->with(['roles:id,name,nivel', 'cliente:id,nombre']);
+            ->with(['roles:id,name,nivel,acceso', 'cliente:id,nombre']);
 
         // Jerarquía: oculta usuarios con algún rol de nivel mayor al propio.
         $query->whereDoesntHave('roles', function (Builder $q) use ($nivelActual): void {

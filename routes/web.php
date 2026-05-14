@@ -4,8 +4,9 @@ use App\Http\Controllers\LoginController;
 use App\Livewire\Clientes\Index as ClientesIndex;
 use App\Livewire\Conceptos\Index as ConceptosIndex;
 use App\Livewire\Empresa\Edit as EmpresaEdit;
+use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
 use App\Livewire\Materiales\Index as MaterialesIndex;
-use App\Livewire\Materiales\Lotes as MaterialesLotes;
+use App\Livewire\Materiales\NumeroPedidos\Index as NumeroPedidosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
@@ -28,13 +29,17 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->middleware('can:proyectos.ver')
         ->name('proyectos.index');
 
+    Route::get('/materiales/pedidos', NumeroPedidosIndex::class)
+        ->middleware('can:pedidos.ver')
+        ->name('materiales.pedidos');
+
+    Route::get('/materiales/familias', FamiliasIndex::class)
+        ->middleware('can:materiales.familias.ver')
+        ->name('materiales.familias');
+
     Route::get('/materiales', MaterialesIndex::class)
         ->middleware('can:materiales.ver')
         ->name('materiales.index');
-
-    Route::get('/materiales/{material}/lotes', MaterialesLotes::class)
-        ->middleware('can:materiales.ver')
-        ->name('materiales.lotes');
 
     Route::get('/usuarios', UsuariosIndex::class)
         ->middleware('can:usuarios.ver_todos')

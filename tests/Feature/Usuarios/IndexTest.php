@@ -5,6 +5,7 @@ namespace Tests\Feature\Usuarios;
 use App\Livewire\Forms\UserForm;
 use App\Livewire\Usuarios\Index;
 use App\Models\Cliente;
+use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,6 +67,24 @@ class IndexTest extends TestCase
         $response->assertRedirect('/login');
     }
 
+    public function test_un_usuario_web_sin_permiso_usuarios_ver_todos_recibe_403(): void
+    {
+        $rolSinPermisos = Role::create([
+            'name' => 'usuarios_web_sin_permisos',
+            'guard_name' => 'web',
+            'nivel' => 20,
+            'acceso' => 'web',
+            'es_sistema' => false,
+        ]);
+
+        $usuario = User::factory()->administrador()->create();
+        $usuario->assignRole($rolSinPermisos);
+
+        $response = $this->actingAs($usuario)->get(route('usuarios.index'));
+
+        $response->assertForbidden();
+    }
+
     public function test_un_admin_no_ve_usuarios_de_nivel_superior(): void
     {
         $admin = $this->admin();
@@ -84,6 +103,17 @@ class IndexTest extends TestCase
         Livewire::actingAs($superadmin)
             ->test(Index::class)
             ->assertSee($admin->username);
+    }
+
+    public function test_el_listado_muestra_el_ambito_de_acceso_del_rol(): void
+    {
+        $superadmin = $this->superadmin();
+        $admin = $this->admin();
+
+        Livewire::actingAs($superadmin)
+            ->test(Index::class)
+            ->assertSee($admin->username)
+            ->assertSee('Acceso: Web');
     }
 
     public function test_un_superadmin_puede_crear_un_usuario_interno(): void
@@ -323,6 +353,55 @@ class IndexTest extends TestCase
         $this->assertDatabaseMissing('users', ['username' => 'intento']);
     }
 
+    public function test_un_admin_sin_permisos_de_creacion_no_puede_abrir_crear(): void
+    {
+        $admin = $this->admin();
+        Role::findByName('administrador', 'web')->syncPermissions([
+            'usuarios.ver_todos',
+            'usuarios.modificar',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirCrear')
+            ->assertForbidden();
+    }
+
+    public function test_un_admin_sin_usuarios_modificar_no_puede_editar(): void
+    {
+        $admin = $this->admin();
+        Role::findByName('administrador', 'web')->syncPermissions([
+            'usuarios.ver_todos',
+            'usuarios.crear_trabajador',
+        ]);
+
+        $objetivo = User::factory()->trabajador()->create();
+        $objetivo->assignRole('trabajador');
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirEditar', $objetivo->id)
+            ->assertForbidden();
+    }
+
+    public function test_un_admin_sin_usuarios_eliminar_no_puede_confirmar_eliminacion(): void
+    {
+        $admin = $this->admin();
+        Role::findByName('administrador', 'web')->syncPermissions([
+            'usuarios.ver_todos',
+            'usuarios.modificar',
+            'usuarios.crear_trabajador',
+        ]);
+
+        $objetivo = User::factory()->trabajador()->create();
+        $objetivo->assignRole('trabajador');
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmarEliminar', $objetivo->id)
+            ->assertForbidden();
+    }
+
     public function test_un_admin_puede_eliminar_y_un_superadmin_restaurar(): void
     {
         $admin = $this->admin();
@@ -412,5 +491,19 @@ class IndexTest extends TestCase
             ->assertSet('filtroTipo', null)
             ->assertSet('filtroRol', null)
             ->assertSet('resetKey', 1);
+    }
+
+    public function test_un_admin_puede_abrir_ver_en_modo_solo_lectura(): void
+    {
+        $admin = $this->admin();
+        $usuario = User::factory()->trabajador()->create();
+        $usuario->assignRole('trabajador');
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('abrirVer', $usuario->id)
+            ->assertSet('modalAbierto', true)
+            ->assertSet('modoSoloLectura', true)
+            ->assertSet('form.username', $usuario->username);
     }
 }
