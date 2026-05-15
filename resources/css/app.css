@@ -18,6 +18,9 @@
  | Cascada: cliente → ENIA (default) → texto/logo de fallback.
  */
 :root {
+    /* Texto en encabezados de tabla (configurable desde empresa) */
+    --c-table-header-text: #ffffff;
+
     /* Primary (rojo granate ELECIND) */
     --c-primary-50: #fdf4f4;
     --c-primary-100: #f9e2e2;
@@ -86,6 +89,8 @@
     --color-accent-50: var(--c-accent-50);
     --color-accent-100: var(--c-accent-100);
     --color-accent-200: var(--c-accent-200);
+
+    --color-table-header-text: var(--c-table-header-text);
 
     --color-dark: var(--c-dark);
     --color-dark-hover: var(--c-dark-hover);

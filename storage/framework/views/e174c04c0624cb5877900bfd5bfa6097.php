@@ -32,7 +32,7 @@ unset($__defined_vars, $__key, $__value); ?>
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($head)): ?>
-                <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text">
                     <?php echo e($head); ?>
 
                 </thead>

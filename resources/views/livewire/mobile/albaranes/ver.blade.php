@@ -106,33 +106,37 @@
             @endforelse
         </div>
 
-        @if ($puedeEditar || $puedeEliminar)
-            <div class="mt-6 flex gap-2">
-                @if ($puedeEditar)
-                    <a href="{{ route('mobile.albaranes.editar', ['albaran' => $albaran->getKey()]) }}"
-                       class="flex flex-1 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700">
-                        <x-heroicon-o-pencil-square class="size-4" />
-                        Editar
-                    </a>
-                @endif
-                @if ($puedeEliminar)
-                    <button type="button"
-                            wire:click="confirmarEliminar"
-                            class="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700">
-                        <x-heroicon-o-trash class="size-4" />
-                        Eliminar
-                    </button>
-                @endif
+        @if ($puedeEliminar)
+            <div class="mt-6">
+                <button type="button"
+                        wire:click="confirmarEliminar"
+                        class="flex w-full items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700">
+                    <x-heroicon-o-trash class="size-4" />
+                    Eliminar
+                </button>
             </div>
         @endif
 
+        {{-- Botón firmar (borrador) --}}
         @if ($albaran->estado->value === 'borrador')
-            <div class="mt-6 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                <p class="flex items-center gap-1.5">
-                    <x-heroicon-m-clock class="size-4" />
-                    Este parte está en <strong>borrador</strong>. La firma estará disponible en la próxima iteración.
-                </p>
-            </div>
+            @can('albaranes.crear_movil')
+                <a href="{{ route('mobile.albaranes.firmar', ['albaran' => $albaran->getKey()]) }}"
+                   class="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700">
+                    <x-heroicon-o-pencil class="size-4" />
+                    Iniciar proceso de firma
+                </a>
+            @endcan
+        @endif
+
+        {{-- Botón firmar (pendiente_firma) --}}
+        @if ($albaran->estado->value === 'pendiente_firma')
+            @can('albaranes.crear_movil')
+                <a href="{{ route('mobile.albaranes.firmar', ['albaran' => $albaran->getKey()]) }}"
+                   class="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-amber-600 px-4 py-3 text-sm font-medium text-white hover:bg-amber-700">
+                    <x-heroicon-o-pencil class="size-4" />
+                    Completar firma pendiente
+                </a>
+            @endcan
         @endif
     </div>
 

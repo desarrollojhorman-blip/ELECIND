@@ -1,3 +1,0 @@
-<svg x-show="open" x-bind:class="(isExpanded('proyectos') || true) ? 'rotate-90' : ''" class="size-4 shrink-0 text-slate-400 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-  <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
-</svg><?php /**PATH C:\xampp\htdocs\CLIENTES\ELECIND\storage\framework\views/1db77b5f393305947883d21e6e131c0d.blade.php ENDPATH**/ ?>

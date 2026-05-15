@@ -53,7 +53,7 @@ unset($__defined_vars, $__key, $__value); ?>
     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($column): ?>
         <button type="button"
                 wire:click="<?php echo e($action); ?>('<?php echo e($column); ?>')"
-                class="inline-flex w-full items-center gap-1 text-white/90 transition-colors hover:text-white <?php echo e($alignClass); ?>">
+                class="inline-flex w-full items-center gap-1 text-table-header-text/90 transition-colors hover:text-table-header-text <?php echo e($alignClass); ?>">
             <span><?php echo e($slot); ?></span>
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($active): ?>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($currentDirection === 'asc'): ?>

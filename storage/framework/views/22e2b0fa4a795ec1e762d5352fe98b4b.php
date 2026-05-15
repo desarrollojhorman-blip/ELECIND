@@ -68,9 +68,9 @@ unset($__defined_vars, $__key, $__value); ?>
         [
             'label' => 'Albaranes',
             'icon' => 'heroicon-o-document-text',
-            'route' => null,
+            'route' => 'albaranes.index',
             'key' => 'albaranes',
-            'permission' => null,
+            'permission' => 'albaranes.ver_todos',
         ],
         [
             'label' => 'Materiales',
@@ -141,6 +141,12 @@ unset($__defined_vars, $__key, $__value); ?>
                     'permission' => 'configuracion.empresa',
                 ],
                 [
+                    'label' => 'Ajustes',
+                    'route' => 'configuracion.ajustes',
+                    'key' => 'ajustes',
+                    'permission' => 'configuracion.empresa',
+                ],
+                [
                     'label' => 'Roles y permisos',
                     'route' => 'configuracion.roles',
                     'key' => 'roles',
@@ -157,20 +163,28 @@ unset($__defined_vars, $__key, $__value); ?>
     ];
 ?>
 
+
 <aside x-data="{
         open: $persist(true).as('sidebar-open'),
+        drawerOpen: false,
         menuOpen: false,
         expanded: $persist([]).as('sidebar-expanded'),
         isExpanded(key) { return this.expanded.includes(key); },
         toggleExpand(key) {
             this.expanded = this.isExpanded(key)
-                ? this.expanded.filter(i => i !== key)
-                : [...this.expanded, key];
+                ? []
+                : [key];
         }
        }"
-       @keydown.escape.window="menuOpen = false"
-       :class="open ? 'w-60' : 'w-16'"
-       class="hidden shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:flex">
+       @drawer:open.window="drawerOpen = true"
+       @drawer:close.window="drawerOpen = false"
+       @keydown.escape.window="menuOpen = false; $dispatch('drawer:close')"
+       :class="[
+           drawerOpen ? 'translate-x-0' : '-translate-x-full',
+           open ? 'md:w-60 md:translate-x-0' : 'md:w-16 md:translate-x-0',
+       ]"
+       class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:relative md:inset-auto md:z-auto">
+
     <?php
         $logoUrl = \App\Support\Branding::logoUrl();
         $marca = \App\Support\Branding::nombre();
@@ -178,57 +192,85 @@ unset($__defined_vars, $__key, $__value); ?>
         $logoZoom = \App\Support\Branding::logoZoom();
         $logoEsCuadrado = \App\Support\Branding::logoEsCuadrado();
     ?>
+
     <div class="flex h-16 items-center justify-between gap-2 border-b border-slate-200 px-3">
         <a href="<?php echo e(route('web.dashboard')); ?>"
            x-data="{ logoRoto: false }"
            class="flex min-w-0 flex-1 items-center justify-center overflow-hidden">
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($logoUrl): ?>
-                
-                <img x-show="open && ! logoRoto" x-transition.opacity src="<?php echo e($logoUrl); ?>"
+                <img x-show="(open || drawerOpen) && ! logoRoto" x-transition.opacity src="<?php echo e($logoUrl); ?>"
                      alt="<?php echo e($marca); ?>"
                      style="max-height: calc(2.25rem * <?php echo e($logoZoom / 100); ?>);"
                      class="w-auto" x-on:error="logoRoto = true">
 
-                
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($logoEsCuadrado): ?>
-                    <img x-show="! open && ! logoRoto" x-transition.opacity src="<?php echo e($logoUrl); ?>"
+                    <img x-show="! (open || drawerOpen) && ! logoRoto" x-transition.opacity src="<?php echo e($logoUrl); ?>"
                          alt="<?php echo e($marca); ?>" class="size-8 object-contain" x-on:error="logoRoto = true">
                 <?php else: ?>
-                    <span x-show="! open" x-transition.opacity
+                    <span x-show="! (open || drawerOpen)" x-transition.opacity
                           class="text-lg font-bold text-primary-700">
                         <?php echo e($abreviatura); ?>
 
                     </span>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                
-                <span x-show="open && logoRoto" x-cloak x-transition.opacity
+                <span x-show="(open || drawerOpen) && logoRoto" x-cloak x-transition.opacity
                       class="text-xs font-medium text-slate-500">
                     Imagen no disponible
                 </span>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($logoEsCuadrado): ?>
-                    <span x-show="! open && logoRoto" x-cloak x-transition.opacity
+                    <span x-show="! (open || drawerOpen) && logoRoto" x-cloak x-transition.opacity
                           class="text-xs font-bold text-slate-400">
                         <?php echo e($abreviatura); ?>
 
                     </span>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             <?php else: ?>
-                <span x-show="open" x-transition.opacity
+                <span x-show="open || drawerOpen" x-transition.opacity
                       class="text-lg font-bold tracking-wide text-primary-700">
                     <?php echo e($marca); ?>
 
                 </span>
-                <span x-show="! open" x-transition.opacity
+                <span x-show="! (open || drawerOpen)" x-transition.opacity
                       class="text-lg font-bold text-primary-700">
                     <?php echo e($abreviatura); ?>
 
                 </span>
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </a>
+
+        
+        <button type="button"
+                @click="$dispatch('drawer:close')"
+                class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 md:hidden">
+            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-x-mark'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-5']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+        </button>
+
+        
         <button type="button"
                 @click="open = ! open"
-                class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+                class="hidden shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 md:block"
                 :title="open ? 'Colapsar menú' : 'Expandir menú'">
             <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
@@ -288,7 +330,7 @@ unset($__defined_vars, $__key, $__value); ?>
                 <li>
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isToggle): ?>
                         <button type="button"
-                                @click="open ? toggleExpand('<?php echo e($item['key']); ?>') : (open = true, expanded = isExpanded('<?php echo e($item['key']); ?>') ? expanded : [...expanded, '<?php echo e($item['key']); ?>'])"
+                                @click="(open || drawerOpen) ? toggleExpand('<?php echo e($item['key']); ?>') : (open = true, expanded = isExpanded('<?php echo e($item['key']); ?>') ? expanded : [...expanded, '<?php echo e($item['key']); ?>'])"
                                 class="<?php echo \Illuminate\Support\Arr::toCssClasses($itemClasses); ?>">
                             <?php if (isset($component)) { $__componentOriginal511d4862ff04963c3c16115c05a86a9d = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal511d4862ff04963c3c16115c05a86a9d = $attributes; } ?>
@@ -312,7 +354,7 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginal511d4862ff04963c3c16115c05a86a9d; ?>
 <?php unset($__componentOriginal511d4862ff04963c3c16115c05a86a9d); ?>
 <?php endif; ?>
-                            <span x-show="open" x-transition.opacity class="flex-1 truncate text-left">
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 truncate text-left">
                                 <?php echo e($item['label']); ?>
 
                             </span>
@@ -325,7 +367,7 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['x-show' => 'open','x-bind:class' => '(isExpanded(\''.e($item['key']).'\') || '.e($isActive ? 'true' : 'false').') ? \'rotate-90\' : \'\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
+<?php $component->withAttributes(['x-show' => 'open || drawerOpen','x-bind:class' => '(isExpanded(\''.e($item['key']).'\') || '.e($isActive ? 'true' : 'false').') ? \'rotate-90\' : \'\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -365,7 +407,7 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginal511d4862ff04963c3c16115c05a86a9d; ?>
 <?php unset($__componentOriginal511d4862ff04963c3c16115c05a86a9d); ?>
 <?php endif; ?>
-                            <span x-show="open" x-transition.opacity class="flex-1 truncate text-left">
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 truncate text-left">
                                 <?php echo e($item['label']); ?>
 
                             </span>
@@ -373,7 +415,7 @@ unset($__defined_vars, $__key, $__value); ?>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasChildren): ?>
-                        <ul x-show="open && (isExpanded('<?php echo e($item['key']); ?>') || <?php echo e($isActive ? 'true' : 'false'); ?>)"
+                        <ul x-show="(open || drawerOpen) && (isExpanded('<?php echo e($item['key']); ?>') || <?php echo e($isActive ? 'true' : 'false'); ?>)"
                             x-cloak
                             x-transition:enter="transition ease-out duration-150"
                             x-transition:enter-start="opacity-0 -translate-y-1"
@@ -410,69 +452,21 @@ unset($__defined_vars, $__key, $__value); ?>
             $inicial = mb_strtoupper(mb_substr($nombreCompleto, 0, 1));
             $rolPrincipal = $user->getRoleNames()->first() ?? 'Sin rol';
         ?>
-        <div class="relative border-t border-slate-200 p-2"
-             @click.outside="menuOpen = false">
-            <button type="button"
-                    @click="menuOpen = ! menuOpen"
-                    :class="menuOpen ? 'bg-slate-100' : ''"
-                    class="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-slate-100">
-                <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
-                    <?php echo e($inicial); ?>
-
-                </div>
-                <div x-show="open" x-transition.opacity class="min-w-0 flex-1 text-left">
-                    <p class="truncate text-sm font-medium text-slate-800">
-                        <?php echo e($nombreCompleto); ?>
-
-                    </p>
-                    <p class="truncate text-xs capitalize text-slate-500">
-                        <?php echo e($rolPrincipal); ?>
-
-                    </p>
-                </div>
-                <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-m-chevron-up'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['x-show' => 'open','x-transition.opacity' => true,'x-bind:class' => 'menuOpen ? \'rotate-180\' : \'\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-            </button>
+        <div class="border-t border-slate-200">
 
             <div x-show="menuOpen"
                  x-cloak
                  x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 translate-y-1"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 :class="open ? 'bottom-full left-2 right-2 mb-1' : 'bottom-2 left-full ml-1 w-56'"
-                 class="absolute z-50 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg ring-1 ring-slate-900/5">
-                <div class="border-b border-slate-100 px-3 py-2.5">
-                    <p class="truncate text-sm font-medium text-slate-900"><?php echo e($nombreCompleto); ?></p>
-                    <p class="truncate text-xs capitalize text-slate-500"><?php echo e($rolPrincipal); ?></p>
-                </div>
-                <div class="py-1">
-                    <button type="button"
-                            disabled
-                            title="Próximamente"
-                            class="flex w-full cursor-not-allowed items-center gap-2.5 px-3 py-2 text-sm text-slate-400">
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-1"
+                 class="border-b border-slate-100">
+
+                <div class="px-2 py-1">
+                    <a href="<?php echo e(route('perfil.mi-perfil')); ?>"
+                       class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50">
                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -495,15 +489,42 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                        <span class="flex-1 text-left">Mi perfil</span>
-                        <span class="text-[10px] uppercase tracking-wide text-slate-400">Pronto</span>
-                    </button>
-                </div>
-                <div class="border-t border-slate-100 py-1">
+                        <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Mi perfil</span>
+                    </a>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($user->tieneAccesoMovil()): ?>
+                        <a href="<?php echo e(route('mobile.dashboard')); ?>"
+                           class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50">
+                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-device-phone-mobile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-4 shrink-0']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Versión móvil</span>
+                        </a>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
                     <form method="POST" action="<?php echo e(route('logout')); ?>">
                         <?php echo csrf_field(); ?>
                         <button type="submit"
-                                class="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+                                class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
                             <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -526,11 +547,50 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                            <span>Cerrar sesión</span>
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Cerrar sesión</span>
                         </button>
                     </form>
                 </div>
             </div>
+
+            <div class="p-2">
+                <button type="button"
+                        @click="menuOpen = ! menuOpen"
+                        :class="menuOpen ? 'bg-slate-100' : ''"
+                        class="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-slate-100">
+                    <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+                        <?php echo e($inicial); ?>
+
+                    </div>
+                    <div x-show="open || drawerOpen" x-transition.opacity class="min-w-0 flex-1 text-left">
+                        <p class="truncate text-sm font-medium text-slate-800"><?php echo e($nombreCompleto); ?></p>
+                        <p class="truncate text-xs capitalize text-slate-500"><?php echo e($rolPrincipal); ?></p>
+                    </div>
+                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-m-chevron-up'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['x-show' => 'open || drawerOpen','x-transition.opacity' => true,'x-bind:class' => 'menuOpen ? \'\' : \'rotate-180\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                </button>
+            </div>
+
         </div>
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 </aside>

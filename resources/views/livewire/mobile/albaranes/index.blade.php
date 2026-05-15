@@ -32,7 +32,7 @@
             @php
                 $estadoTone = $albaran->estado->tono();
             @endphp
-            <a href="{{ route('mobile.albaranes.ver', ['albaran' => $albaran->getKey()]) }}"
+            <a href="{{ route('mobile.albaranes.firmar', ['albaran' => $albaran->getKey()]) }}"
                wire:key="alb-{{ $albaran->id }}"
                class="mb-2 block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50/30 active:scale-[0.99] active:transition-transform">
                 <div class="flex items-start justify-between gap-2">

@@ -4,7 +4,7 @@
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             @isset ($head)
-                <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text">
                     {{ $head }}
                 </thead>
             @endisset

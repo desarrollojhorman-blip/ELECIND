@@ -5,12 +5,11 @@
 
         <div class="space-y-3">
             <x-mobile.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
-                <x-ui.select wire:model.live="form.proyecto_id">
-                    <option value="">— Selecciona proyecto —</option>
-                    @foreach ($this->proyectosDisponibles as $proyecto)
-                        <option value="{{ $proyecto->id }}">{{ $proyecto->nombre }}</option>
-                    @endforeach
-                </x-ui.select>
+                <x-ui.searchable-select
+                    wire-model="form.proyecto_id"
+                    :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->nombre])"
+                    placeholder="— Selecciona proyecto —"
+                />
             </x-mobile.field>
 
             @if ($form->cliente_id)
@@ -22,21 +21,23 @@
             @endif
 
             <x-mobile.field label="Concepto" :error="$errors->first('form.concepto_id')">
-                <x-ui.select wire:model="form.concepto_id" :disabled="$form->proyecto_id === null">
-                    <option value="">— Sin concepto —</option>
-                    @foreach ($this->conceptosDisponibles as $concepto)
-                        <option value="{{ $concepto->id }}">{{ $concepto->nombre }}</option>
-                    @endforeach
-                </x-ui.select>
+                <x-ui.searchable-select
+                    wire:key="concepto-sel-{{ $form->proyecto_id ?? 'none' }}"
+                    wire-model="form.concepto_id"
+                    :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
+                    placeholder="— Sin concepto —"
+                    :disabled="$form->proyecto_id === null"
+                />
             </x-mobile.field>
 
             <x-mobile.field label="Responsable del proyecto" :error="$errors->first('form.responsable_id')">
-                <x-ui.select wire:model="form.responsable_id" :disabled="$form->proyecto_id === null">
-                    <option value="">— Sin asignar —</option>
-                    @foreach ($this->usuariosProyecto as $usuario)
-                        <option value="{{ $usuario->id }}">{{ trim($usuario->nombre.' '.$usuario->apellidos) }}</option>
-                    @endforeach
-                </x-ui.select>
+                <x-ui.searchable-select
+                    wire:key="responsable-sel-{{ $form->proyecto_id ?? 'none' }}"
+                    wire-model="form.responsable_id"
+                    :options="$this->usuariosProyecto->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                    placeholder="— Sin asignar —"
+                    :disabled="$form->proyecto_id === null"
+                />
             </x-mobile.field>
 
             <div class="grid grid-cols-2 gap-3">
@@ -90,15 +91,13 @@
                     wire:key="comp-{{ $index }}">
                     <div class="space-y-3">
                         <x-mobile.field label="Trabajador" required :error="$errors->first('form.companeros.'.$index.'.trabajador_id')">
-                            <x-ui.select wire:model="form.companeros.{{ $index }}.trabajador_id"
-                                         :disabled="$form->proyecto_id === null">
-                                <option value="">— Selecciona —</option>
-                                @foreach ($this->usuariosProyecto as $usuario)
-                                    @if ($usuario->id !== auth()->id())
-                                        <option value="{{ $usuario->id }}">{{ trim($usuario->nombre.' '.$usuario->apellidos) }}</option>
-                                    @endif
-                                @endforeach
-                            </x-ui.select>
+                            <x-ui.searchable-select
+                                wire:key="comp-trab-{{ $index }}-{{ $form->proyecto_id ?? 'none' }}"
+                                wire-model="form.companeros.{{ $index }}.trabajador_id"
+                                :options="$this->usuariosProyecto->filter(fn($u) => $u->id !== auth()->id())->values()->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                placeholder="— Selecciona —"
+                                :disabled="$form->proyecto_id === null"
+                            />
                         </x-mobile.field>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -139,18 +138,13 @@
                     wire:key="mat-{{ $index }}">
                     <div class="space-y-3">
                         <x-mobile.field label="Material" required :error="$errors->first('form.materiales.'.$index.'.material_id')">
-                            <x-ui.select wire:model.live="form.materiales.{{ $index }}.material_id"
-                                         :disabled="$form->proyecto_id === null">
-                                <option value="">— Selecciona —</option>
-                                @foreach ($this->materialesProyecto as $mat)
-                                    @php
-                                        $stockFmt = rtrim(rtrim(number_format((float) $mat->stock, 2, ',', ''), '0'), ',');
-                                    @endphp
-                                    <option value="{{ $mat->id }}">
-                                        {{ $mat->descripcion }} | {{ $stockFmt }} {{ $mat->unidad_medida }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
+                            <x-ui.searchable-select
+                                wire:key="mat-sel-{{ $index }}-{{ $form->proyecto_id ?? 'none' }}"
+                                wire-model="form.materiales.{{ $index }}.material_id"
+                                :options="$this->materialesProyecto->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock, 2, ',', ''), '0'), ',').' '.$m->unidad_medida])"
+                                placeholder="— Selecciona —"
+                                :disabled="$form->proyecto_id === null"
+                            />
                         </x-mobile.field>
 
                         <x-mobile.field label="Cantidad" required :error="$errors->first('form.materiales.'.$index.'.cantidad')">
@@ -188,4 +182,61 @@
             <span wire:loading>Guardando…</span>
         </button>
     </x-mobile.bottom-bar>
+
+    {{-- Modal post-creación: ¿firmar ahora o luego? --}}
+    @if ($albaranCreadoId !== null)
+        <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-0 pb-0 sm:items-center sm:px-4 sm:pb-4"
+             x-data x-init="$el.scrollIntoView({ behavior: 'smooth' })">
+            <div class="w-full max-w-sm overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
+
+                {{-- Cabecera --}}
+                <div class="flex flex-col items-center gap-2 bg-slate-50 px-6 pt-6 pb-4 text-center">
+                    <div class="flex size-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                        <x-heroicon-o-document-check class="size-6" />
+                    </div>
+                    <h2 class="text-base font-semibold text-slate-900">Parte creado</h2>
+                    <p class="text-sm text-slate-500">
+                        ¿Quieres firma el parte ahora mismo o prefieres hacerlo después?
+                    </p>
+                </div>
+
+                {{-- Opciones --}}
+                <div class="space-y-3 px-6 py-5">
+                    {{-- Firmar ahora --}}
+                    <button
+                        type="button"
+                        wire:click="irAFirmar"
+                        wire:loading.attr="disabled"
+                        class="flex w-full items-center gap-4 rounded-xl border-2 border-primary-500 bg-primary-50 px-4 py-3.5 text-left transition hover:bg-primary-100 active:scale-[0.99]"
+                    >
+                        <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white">
+                            <x-heroicon-o-pencil class="size-5" />
+                        </span>
+                        <span>
+                            <span class="block text-sm font-semibold text-primary-800">Firmar ahora</span>
+                            <span class="block text-xs text-primary-600">El responsable puede firmar también en este momento.</span>
+                        </span>
+                    </button>
+
+                    {{-- Firmar después --}}
+                    <button
+                        type="button"
+                        wire:click="irAlDashboard"
+                        wire:loading.attr="disabled"
+                        class="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left transition hover:bg-slate-50 active:scale-[0.99]"
+                    >
+                        <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                            <x-heroicon-o-clock class="size-5" />
+                        </span>
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-700">Firmar más tarde</span>
+                            <span class="block text-xs text-slate-500">Vuelve al inicio. El parte queda guardado como borrador.</span>
+                        </span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    @endif
+
 </div>

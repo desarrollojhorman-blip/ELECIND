@@ -28,6 +28,7 @@ class Empresa extends Model
         'logo_albaran_zoom',
         'color_primario',
         'color_secundario',
+        'color_texto_encabezado',
         'plantilla_numeracion_albaran',
         'token_caducidad_dias',
         'plantilla_pdf_config',

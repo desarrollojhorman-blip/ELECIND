@@ -48,13 +48,62 @@ unset($__defined_vars, $__key, $__value); ?>
         :root {
             --c-primary-700: <?php echo e(\App\Support\Branding::colorPrimario()); ?>;
             --c-accent-100: <?php echo e(\App\Support\Branding::colorSecundario()); ?>;
+            --c-table-header-text: <?php echo e(\App\Support\Branding::colorTextoEncabezado()); ?>;
         }
     </style>
     <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles(); ?>
 
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
-    <div class="flex min-h-screen">
+<body class="flex h-screen flex-col overflow-hidden bg-slate-50 text-slate-900 antialiased">
+
+    
+    <header class="flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-4 md:hidden">
+        <button type="button"
+                x-data
+                @click="$dispatch('drawer:open')"
+                class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100">
+            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-bars-3'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'size-6']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+        </button>
+    </header>
+
+    
+    <div x-data="{ open: false }"
+         @drawer:open.window="open = true"
+         @drawer:close.window="open = false"
+         x-show="open"
+         x-cloak
+         @click="$dispatch('drawer:close')"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-30 bg-black/40 md:hidden">
+    </div>
+
+    <div class="flex min-h-0 flex-1 overflow-hidden">
         <?php if (isset($component)) { $__componentOriginal724cca1d6cfbd0d9b219a0d1bdb2d9a8 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal724cca1d6cfbd0d9b219a0d1bdb2d9a8 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.sidebar','data' => ['active' => $active]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>

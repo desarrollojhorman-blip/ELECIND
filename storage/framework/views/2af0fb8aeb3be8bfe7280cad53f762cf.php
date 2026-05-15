@@ -28,6 +28,12 @@ foreach ($attributes->all() as $__key => $__value) {
 
 unset($__defined_vars, $__key, $__value); ?>
 
+<?php $readonly = $attributes->has('readonly'); ?>
+
 <textarea rows="<?php echo e($rows); ?>"
-          <?php echo e($attributes->class('w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-none transition-colors placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-0 focus:shadow-none')); ?>><?php echo e($slot); ?></textarea>
+    <?php echo e($attributes->class([
+        'w-full appearance-none rounded-md border px-3 py-2 text-sm shadow-none transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-0 focus:shadow-none',
+        'border-slate-300 bg-white focus:border-primary-500' => !$readonly,
+        'border-slate-200 bg-slate-50 text-slate-500 cursor-default resize-none' => $readonly,
+    ])); ?>><?php echo e($slot); ?></textarea>
 <?php /**PATH D:\xampp\htdocs\CLIENTES\ELECIND\resources\views/components/ui/textarea.blade.php ENDPATH**/ ?>

@@ -1,3 +1,0 @@
-<svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
-</svg><?php /**PATH C:\xampp\htdocs\CLIENTES\ELECIND\storage\framework\views/ed1575d266154bc4c92b6882dc388b52.blade.php ENDPATH**/ ?>

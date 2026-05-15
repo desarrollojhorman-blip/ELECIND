@@ -19,7 +19,7 @@
     @if ($column)
         <button type="button"
                 wire:click="{{ $action }}('{{ $column }}')"
-                class="inline-flex w-full items-center gap-1 text-white/90 transition-colors hover:text-white {{ $alignClass }}">
+                class="inline-flex w-full items-center gap-1 text-table-header-text/90 transition-colors hover:text-table-header-text {{ $alignClass }}">
             <span>{{ $slot }}</span>
             @if ($active)
                 @if ($currentDirection === 'asc')
