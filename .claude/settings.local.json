@@ -45,7 +45,20 @@
       "Bash(php -l app/Livewire/Forms/EmpresaForm.php)",
       "Bash(php -l app/Support/Branding.php)",
       "Bash(php -l app/Models/Empresa.php)",
-      "Bash(php -l app/Livewire/Empresa/Edit.php)"
+      "Bash(php -l app/Livewire/Empresa/Edit.php)",
+      "PowerShell(New-Item -ItemType File -Path \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\\\\views\\\\components\\\\ui\\\\searchable-select.blade.php\" -Force)",
+      "PowerShell(New-Item -ItemType File -Path \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Mobile\\\\Albaranes\\\\Firmar.php\" -Force)",
+      "PowerShell(New-Item -ItemType File -Path \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\\\\views\\\\livewire\\\\mobile\\\\albaranes\\\\firmar.blade.php\" -Force)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Mobile\\\\Albaranes\\\\Firmar.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Mobile\\\\Albaranes\\\\Crear.php\")",
+      "Bash(grep -i -E \"readme|claude|\\\\.md$\")",
+      "Bash(grep -E \"\\\\.php$\")",
+      "PowerShell(cmd /c \"dir /AL d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\public\\\\ | findstr storage\")",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan view:clear)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" view:clear)",
+      "Bash(Get-Content -Path 'd:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\\\\web.php')",
+      "Bash(Select-String -Pattern 'albarane|Albarane' -Context 2)",
+      "Bash(Find \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\" -name \"*.php\" -type f)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

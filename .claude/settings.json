@@ -7,7 +7,14 @@
       "PowerShell($cmd = Get-Command composer -ErrorAction SilentlyContinue; if \\($cmd\\) { $cmd.Source } else { Get-ChildItem -Path 'C:\\\\','D:\\\\' -Filter 'composer.phar' -ErrorAction SilentlyContinue -Recurse -Depth 4 | Select-Object -First 5 FullName })",
       "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' lint 2>&1)",
       "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' 'C:\\\\composer\\\\composer.phar' analyse 2>&1)",
-      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test 2>&1)"
+      "PowerShell(& 'D:\\\\xampp\\\\php\\\\php.exe' artisan test 2>&1)",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(xargs -I {} basename \"{}\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" -Filter \"*proyecto*.php\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Proyectos\\\\Index.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Proyectos\\\\Index.php\")"
     ]
   }
 }

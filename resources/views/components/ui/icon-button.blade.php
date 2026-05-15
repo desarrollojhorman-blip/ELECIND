@@ -4,6 +4,7 @@
     'tooltip' => null,
     'type' => 'button',
     'size' => 'md',
+    'as' => 'button',
 ])
 
 @php
@@ -29,12 +30,23 @@
     $classes = trim('inline-flex items-center justify-center rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary-500 disabled:opacity-50 disabled:pointer-events-none '.($sizes[$size] ?? $sizes['md']).' '.($variants[$variant] ?? $variants['ghost']));
 @endphp
 
-<button type="{{ $type }}"
-        @if ($tooltip) title="{{ $tooltip }}" aria-label="{{ $tooltip }}" @endif
-        {{ $attributes->class($classes) }}>
-    @if ($icon)
-        <x-dynamic-component :component="$icon" />
-    @else
-        {{ $slot }}
-    @endif
-</button>
+@if ($as === 'a')
+    <a @if ($tooltip) title="{{ $tooltip }}" aria-label="{{ $tooltip }}" @endif
+       {{ $attributes->class($classes) }}>
+        @if ($icon)
+            <x-dynamic-component :component="$icon" />
+        @else
+            {{ $slot }}
+        @endif
+    </a>
+@else
+    <button type="{{ $type }}"
+            @if ($tooltip) title="{{ $tooltip }}" aria-label="{{ $tooltip }}" @endif
+            {{ $attributes->class($classes) }}>
+        @if ($icon)
+            <x-dynamic-component :component="$icon" />
+        @else
+            {{ $slot }}
+        @endif
+    </button>
+@endif

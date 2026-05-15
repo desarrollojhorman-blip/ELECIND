@@ -79,10 +79,7 @@ class EmpresaForm extends Form
     public string $color_secundario = '#f5e6e6';
 
     #[Validate]
-    public string $plantilla_numeracion_albaran = 'ALB-{YYYY}-{NNNN}';
-
-    #[Validate]
-    public int $token_caducidad_dias = 7;
+    public string $color_texto_encabezado = '#ffffff';
 
     /**
      * @return array<string, array<int, mixed>>
@@ -106,8 +103,7 @@ class EmpresaForm extends Form
             'logo_albaran_zoom' => ['required', 'integer', 'in:80,90,100,110,120,130'],
             'color_primario' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'color_secundario' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'plantilla_numeracion_albaran' => ['required', 'string', 'max:60'],
-            'token_caducidad_dias' => ['required', 'integer', 'min:1', 'max:90'],
+            'color_texto_encabezado' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ];
     }
 
@@ -133,8 +129,7 @@ class EmpresaForm extends Form
             'logo_albaran_zoom' => 'zoom del logo de albarán',
             'color_primario' => 'color primario',
             'color_secundario' => 'color secundario',
-            'plantilla_numeracion_albaran' => 'plantilla de numeración',
-            'token_caducidad_dias' => 'caducidad del token de firma',
+            'color_texto_encabezado' => 'color texto encabezado',
         ];
     }
 
@@ -166,8 +161,7 @@ class EmpresaForm extends Form
 
         $this->color_primario = $empresa->color_primario;
         $this->color_secundario = $empresa->color_secundario;
-        $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran;
-        $this->token_caducidad_dias = $empresa->token_caducidad_dias;
+        $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
     }
 
     public function save(): Empresa
@@ -229,8 +223,7 @@ class EmpresaForm extends Form
             'logo_albaran_zoom' => $this->logo_albaran_zoom,
             'color_primario' => $this->color_primario,
             'color_secundario' => $this->color_secundario,
-            'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
-            'token_caducidad_dias' => $this->token_caducidad_dias,
+            'color_texto_encabezado' => $this->color_texto_encabezado,
         ]);
 
         $empresa->save();

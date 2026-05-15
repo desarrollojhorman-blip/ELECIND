@@ -1,8 +1,10 @@
 <?php
 
 use App\Livewire\Mobile\Albaranes\Crear as AlbaranesCrear;
+use App\Livewire\Mobile\Albaranes\Firmar as AlbaranesFirmar;
 use App\Livewire\Mobile\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Mobile\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Mobile\Perfil\MiPerfil as PerfilMiPerfil;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'ensure.mobile.access'])
@@ -10,6 +12,8 @@ Route::middleware(['auth', 'ensure.mobile.access'])
     ->name('mobile.')
     ->group(function (): void {
         Route::view('/', 'mobile.dashboard')->name('dashboard');
+
+        Route::get('/perfil', PerfilMiPerfil::class)->name('perfil');
 
         // ─── Albaranes (Iter. 3 — CRUD móvil) ───────────────────────────────
         Route::get('/albaranes', AlbaranesIndex::class)
@@ -30,6 +34,10 @@ Route::middleware(['auth', 'ensure.mobile.access'])
         Route::get('/albaranes/{albaran}/editar', AlbaranesCrear::class)
             ->middleware('can:albaranes.crear_movil')
             ->name('albaranes.editar');
+
+        Route::get('/albaranes/{albaran}/firmar', AlbaranesFirmar::class)
+            ->middleware('can:albaranes.crear_movil')
+            ->name('albaranes.firmar');
 
         Route::get('/albaranes/{albaran}', AlbaranesVer::class)
             ->name('albaranes.ver');

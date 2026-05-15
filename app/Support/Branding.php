@@ -240,4 +240,9 @@ class Branding
     {
         return self::actual()?->color_secundario ?? '#f5e6e6';
     }
+
+    public static function colorTextoEncabezado(): string
+    {
+        return self::actual()?->color_texto_encabezado ?? '#ffffff';
+    }
 }

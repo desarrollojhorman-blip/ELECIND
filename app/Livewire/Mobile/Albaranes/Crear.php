@@ -22,6 +22,9 @@ class Crear extends Component
 
     public ?Albaran $albaran = null;
 
+    /** ID del albarán recién creado, mientras el modal de firma está visible */
+    public ?int $albaranCreadoId = null;
+
     public function mount(?Albaran $albaran = null): void
     {
         if ($albaran !== null && $albaran->exists) {
@@ -61,7 +64,9 @@ class Crear extends Component
 
     public function guardar(): void
     {
-        if ($this->albaran !== null) {
+        $esNuevo = $this->albaran === null;
+
+        if (! $esNuevo) {
             Gate::authorize('update', $this->albaran);
         } else {
             Gate::authorize('create', Albaran::class);
@@ -69,11 +74,29 @@ class Crear extends Component
 
         $albaran = $this->form->save();
 
-        session()->flash('status', $this->albaran === null
-            ? "Parte «{$albaran->numero}» creado correctamente."
-            : "Parte «{$albaran->numero}» actualizado correctamente.");
+        if ($esNuevo) {
+            // Mostrar modal "¿firmar ahora o luego?" en lugar de redirigir
+            $this->albaranCreadoId = $albaran->getKey();
 
+            return;
+        }
+
+        session()->flash('status', "Parte «{$albaran->numero}» actualizado correctamente.");
         $this->redirectRoute('mobile.albaranes.ver', ['albaran' => $albaran->getKey()], navigate: false);
+    }
+
+    public function irAFirmar(): void
+    {
+        if ($this->albaranCreadoId === null) {
+            return;
+        }
+
+        $this->redirectRoute('mobile.albaranes.firmar', ['albaran' => $this->albaranCreadoId], navigate: false);
+    }
+
+    public function irAlDashboard(): void
+    {
+        $this->redirectRoute('mobile.dashboard', navigate: false);
     }
 
     /**

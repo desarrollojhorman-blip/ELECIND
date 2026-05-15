@@ -40,9 +40,9 @@
         [
             'label' => 'Albaranes',
             'icon' => 'heroicon-o-document-text',
-            'route' => null,
+            'route' => 'albaranes.index',
             'key' => 'albaranes',
-            'permission' => null,
+            'permission' => 'albaranes.ver_todos',
         ],
         [
             'label' => 'Materiales',
@@ -113,6 +113,12 @@
                     'permission' => 'configuracion.empresa',
                 ],
                 [
+                    'label' => 'Ajustes',
+                    'route' => 'configuracion.ajustes',
+                    'key' => 'ajustes',
+                    'permission' => 'configuracion.empresa',
+                ],
+                [
                     'label' => 'Roles y permisos',
                     'route' => 'configuracion.roles',
                     'key' => 'roles',
@@ -129,20 +135,31 @@
     ];
 @endphp
 
+{{--
+    En escritorio (≥ md): posición relative, ancho colapsable (w-60 / w-16).
+    En móvil (< md):      posición fixed, siempre w-64, entra/sale con translate.
+--}}
 <aside x-data="{
         open: $persist(true).as('sidebar-open'),
+        drawerOpen: false,
         menuOpen: false,
         expanded: $persist([]).as('sidebar-expanded'),
         isExpanded(key) { return this.expanded.includes(key); },
         toggleExpand(key) {
             this.expanded = this.isExpanded(key)
-                ? this.expanded.filter(i => i !== key)
-                : [...this.expanded, key];
+                ? []
+                : [key];
         }
        }"
-       @keydown.escape.window="menuOpen = false"
-       :class="open ? 'w-60' : 'w-16'"
-       class="hidden shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:flex">
+       @drawer:open.window="drawerOpen = true"
+       @drawer:close.window="drawerOpen = false"
+       @keydown.escape.window="menuOpen = false; $dispatch('drawer:close')"
+       :class="[
+           drawerOpen ? 'translate-x-0' : '-translate-x-full',
+           open ? 'md:w-60 md:translate-x-0' : 'md:w-16 md:translate-x-0',
+       ]"
+       class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:relative md:inset-auto md:z-auto">
+
     @php
         $logoUrl = \App\Support\Branding::logoUrl();
         $marca = \App\Support\Branding::nombre();
@@ -150,53 +167,60 @@
         $logoZoom = \App\Support\Branding::logoZoom();
         $logoEsCuadrado = \App\Support\Branding::logoEsCuadrado();
     @endphp
+
     <div class="flex h-16 items-center justify-between gap-2 border-b border-slate-200 px-3">
         <a href="{{ route('web.dashboard') }}"
            x-data="{ logoRoto: false }"
            class="flex min-w-0 flex-1 items-center justify-center overflow-hidden">
             @if ($logoUrl)
-                {{-- Expandido: siempre se muestra el logo --}}
-                <img x-show="open && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
+                <img x-show="(open || drawerOpen) && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
                      alt="{{ $marca }}"
                      style="max-height: calc(2.25rem * {{ $logoZoom / 100 }});"
                      class="w-auto" x-on:error="logoRoto = true">
 
-                {{-- Colapsado: si el logo es cuadrado lo mostramos; si es rectangular, la abreviatura --}}
                 @if ($logoEsCuadrado)
-                    <img x-show="! open && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
+                    <img x-show="! (open || drawerOpen) && ! logoRoto" x-transition.opacity src="{{ $logoUrl }}"
                          alt="{{ $marca }}" class="size-8 object-contain" x-on:error="logoRoto = true">
                 @else
-                    <span x-show="! open" x-transition.opacity
+                    <span x-show="! (open || drawerOpen)" x-transition.opacity
                           class="text-lg font-bold text-primary-700">
                         {{ $abreviatura }}
                     </span>
                 @endif
 
-                {{-- Fallback si la imagen no carga --}}
-                <span x-show="open && logoRoto" x-cloak x-transition.opacity
+                <span x-show="(open || drawerOpen) && logoRoto" x-cloak x-transition.opacity
                       class="text-xs font-medium text-slate-500">
                     Imagen no disponible
                 </span>
                 @if ($logoEsCuadrado)
-                    <span x-show="! open && logoRoto" x-cloak x-transition.opacity
+                    <span x-show="! (open || drawerOpen) && logoRoto" x-cloak x-transition.opacity
                           class="text-xs font-bold text-slate-400">
                         {{ $abreviatura }}
                     </span>
                 @endif
             @else
-                <span x-show="open" x-transition.opacity
+                <span x-show="open || drawerOpen" x-transition.opacity
                       class="text-lg font-bold tracking-wide text-primary-700">
                     {{ $marca }}
                 </span>
-                <span x-show="! open" x-transition.opacity
+                <span x-show="! (open || drawerOpen)" x-transition.opacity
                       class="text-lg font-bold text-primary-700">
                     {{ $abreviatura }}
                 </span>
             @endif
         </a>
+
+        {{-- Cerrar drawer (solo móvil) --}}
+        <button type="button"
+                @click="$dispatch('drawer:close')"
+                class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 md:hidden">
+            <x-heroicon-o-x-mark class="size-5" />
+        </button>
+
+        {{-- Colapsar/expandir sidebar (solo escritorio) --}}
         <button type="button"
                 @click="open = ! open"
-                class="shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+                class="hidden shrink-0 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 md:block"
                 :title="open ? 'Colapsar menú' : 'Expandir menú'">
             <x-heroicon-o-bars-3 class="size-5" />
         </button>
@@ -235,14 +259,14 @@
                 <li>
                     @if ($isToggle)
                         <button type="button"
-                                @click="open ? toggleExpand('{{ $item['key'] }}') : (open = true, expanded = isExpanded('{{ $item['key'] }}') ? expanded : [...expanded, '{{ $item['key'] }}'])"
+                                @click="(open || drawerOpen) ? toggleExpand('{{ $item['key'] }}') : (open = true, expanded = isExpanded('{{ $item['key'] }}') ? expanded : [...expanded, '{{ $item['key'] }}'])"
                                 @class($itemClasses)>
                             <x-dynamic-component :component="$item['icon']" class="size-5 shrink-0" />
-                            <span x-show="open" x-transition.opacity class="flex-1 truncate text-left">
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 truncate text-left">
                                 {{ $item['label'] }}
                             </span>
                             <x-heroicon-m-chevron-right
-                                x-show="open"
+                                x-show="open || drawerOpen"
                                 x-bind:class="(isExpanded('{{ $item['key'] }}') || {{ $isActive ? 'true' : 'false' }}) ? 'rotate-90' : ''"
                                 class="size-4 shrink-0 text-slate-400 transition-transform" />
                         </button>
@@ -251,14 +275,14 @@
                            @if ($disabled) aria-disabled="true" @endif
                            @class($itemClasses)>
                             <x-dynamic-component :component="$item['icon']" class="size-5 shrink-0" />
-                            <span x-show="open" x-transition.opacity class="flex-1 truncate text-left">
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 truncate text-left">
                                 {{ $item['label'] }}
                             </span>
                         </a>
                     @endif
 
                     @if ($hasChildren)
-                        <ul x-show="open && (isExpanded('{{ $item['key'] }}') || {{ $isActive ? 'true' : 'false' }})"
+                        <ul x-show="(open || drawerOpen) && (isExpanded('{{ $item['key'] }}') || {{ $isActive ? 'true' : 'false' }})"
                             x-cloak
                             x-transition:enter="transition ease-out duration-150"
                             x-transition:enter-start="opacity-0 -translate-y-1"
@@ -294,65 +318,64 @@
             $inicial = mb_strtoupper(mb_substr($nombreCompleto, 0, 1));
             $rolPrincipal = $user->getRoleNames()->first() ?? 'Sin rol';
         @endphp
-        <div class="relative border-t border-slate-200 p-2"
-             @click.outside="menuOpen = false">
-            <button type="button"
-                    @click="menuOpen = ! menuOpen"
-                    :class="menuOpen ? 'bg-slate-100' : ''"
-                    class="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-slate-100">
-                <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
-                    {{ $inicial }}
-                </div>
-                <div x-show="open" x-transition.opacity class="min-w-0 flex-1 text-left">
-                    <p class="truncate text-sm font-medium text-slate-800">
-                        {{ $nombreCompleto }}
-                    </p>
-                    <p class="truncate text-xs capitalize text-slate-500">
-                        {{ $rolPrincipal }}
-                    </p>
-                </div>
-                <x-heroicon-m-chevron-up
-                    x-show="open"
-                    x-transition.opacity
-                    x-bind:class="menuOpen ? 'rotate-180' : ''"
-                    class="size-4 shrink-0 text-slate-400 transition-transform" />
-            </button>
+        <div class="border-t border-slate-200">
 
             <div x-show="menuOpen"
                  x-cloak
                  x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 translate-y-1"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
                  x-transition:enter-end="opacity-100 translate-y-0"
                  x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 :class="open ? 'bottom-full left-2 right-2 mb-1' : 'bottom-2 left-full ml-1 w-56'"
-                 class="absolute z-50 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg ring-1 ring-slate-900/5">
-                <div class="border-b border-slate-100 px-3 py-2.5">
-                    <p class="truncate text-sm font-medium text-slate-900">{{ $nombreCompleto }}</p>
-                    <p class="truncate text-xs capitalize text-slate-500">{{ $rolPrincipal }}</p>
-                </div>
-                <div class="py-1">
-                    <button type="button"
-                            disabled
-                            title="Próximamente"
-                            class="flex w-full cursor-not-allowed items-center gap-2.5 px-3 py-2 text-sm text-slate-400">
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-1"
+                 class="border-b border-slate-100">
+
+                <div class="px-2 py-1">
+                    <a href="{{ route('perfil.mi-perfil') }}"
+                       class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50">
                         <x-heroicon-o-user-circle class="size-4 shrink-0" />
-                        <span class="flex-1 text-left">Mi perfil</span>
-                        <span class="text-[10px] uppercase tracking-wide text-slate-400">Pronto</span>
-                    </button>
-                </div>
-                <div class="border-t border-slate-100 py-1">
+                        <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Mi perfil</span>
+                    </a>
+
+                    @if ($user->tieneAccesoMovil())
+                        <a href="{{ route('mobile.dashboard') }}"
+                           class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50">
+                            <x-heroicon-o-device-phone-mobile class="size-4 shrink-0" />
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Versión móvil</span>
+                        </a>
+                    @endif
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
-                                class="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+                                class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
                             <x-heroicon-o-arrow-right-on-rectangle class="size-4 shrink-0" />
-                            <span>Cerrar sesión</span>
+                            <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 text-left">Cerrar sesión</span>
                         </button>
                     </form>
                 </div>
             </div>
+
+            <div class="p-2">
+                <button type="button"
+                        @click="menuOpen = ! menuOpen"
+                        :class="menuOpen ? 'bg-slate-100' : ''"
+                        class="flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-slate-100">
+                    <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+                        {{ $inicial }}
+                    </div>
+                    <div x-show="open || drawerOpen" x-transition.opacity class="min-w-0 flex-1 text-left">
+                        <p class="truncate text-sm font-medium text-slate-800">{{ $nombreCompleto }}</p>
+                        <p class="truncate text-xs capitalize text-slate-500">{{ $rolPrincipal }}</p>
+                    </div>
+                    <x-heroicon-m-chevron-up
+                        x-show="open || drawerOpen"
+                        x-transition.opacity
+                        x-bind:class="menuOpen ? '' : 'rotate-180'"
+                        class="size-4 shrink-0 text-slate-400 transition-transform" />
+                </button>
+            </div>
+
         </div>
     @endauth
 </aside>
