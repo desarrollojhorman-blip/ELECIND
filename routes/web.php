@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ProyectoOpcionesController;
 use App\Http\Controllers\LoginController;
 use App\Livewire\Clientes\Editar as ClientesEditar;
 use App\Livewire\Clientes\Index as ClientesIndex;
@@ -21,6 +22,12 @@ use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
 use Illuminate\Support\Facades\Route;
+
+// API ligera — accesible desde móvil y web (solo necesita auth)
+Route::middleware('auth')->group(function (): void {
+    Route::get('/api/proyecto/{proyecto}/opciones', ProyectoOpcionesController::class)
+        ->name('api.proyecto.opciones');
+});
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');

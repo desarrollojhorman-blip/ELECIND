@@ -280,14 +280,14 @@
 
                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wireModel' => 'form.concepto_id','options' => $this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre]),'placeholder' => '— Sin concepto —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wireModel' => 'form.concepto_id','options' => $this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre]),'placeholder' => ''.e($form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —').'','disabled' => $form->proyecto_id === null]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wire-model' => 'form.concepto_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])),'placeholder' => '— Sin concepto —']); ?>
+<?php $component->withAttributes(['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wire-model' => 'form.concepto_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])),'placeholder' => ''.e($form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —').'','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null)]); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -325,14 +325,14 @@
 
                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'responsable-select','wireModel' => 'form.responsable_id','options' => $this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => '— Sin responsable —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wireModel' => 'form.responsable_id','options' => $this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => ''.e($form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —').'','disabled' => $form->proyecto_id === null]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'responsable-select','wire-model' => 'form.responsable_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => '— Sin responsable —']); ?>
+<?php $component->withAttributes(['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wire-model' => 'form.responsable_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => ''.e($form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —').'','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null)]); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -401,127 +401,38 @@
 <?php unset($__componentOriginald816e58425c8bb369623a9433739178c); ?>
 <?php endif; ?>
             </div>
+
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($form->proyecto_id === null): ?>
+                <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    Selecciona un proyecto para poder añadir trabajadores y materiales.
+                </p>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
     </form>
-
-    
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-sm font-semibold text-slate-900">Mis horas</h2>
-        <div class="grid gap-4 md:grid-cols-2">
-            <?php if (isset($component)) { $__componentOriginald816e58425c8bb369623a9433739178c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginald816e58425c8bb369623a9433739178c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Horas normales','required' => true,'error' => $errors->first('form.mi_horas')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.field'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['label' => 'Horas normales','required' => true,'error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->first('form.mi_horas'))]); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-                <?php if (isset($component)) { $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.input','data' => ['type' => 'number','min' => '0','max' => '24','step' => '0.25','wire:model' => 'form.mi_horas']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.input'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['type' => 'number','min' => '0','max' => '24','step' => '0.25','wire:model' => 'form.mi_horas']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
-<?php $attributes = $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
-<?php unset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
-<?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
-<?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
-<?php endif; ?>
-             <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginald816e58425c8bb369623a9433739178c)): ?>
-<?php $attributes = $__attributesOriginald816e58425c8bb369623a9433739178c; ?>
-<?php unset($__attributesOriginald816e58425c8bb369623a9433739178c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginald816e58425c8bb369623a9433739178c)): ?>
-<?php $component = $__componentOriginald816e58425c8bb369623a9433739178c; ?>
-<?php unset($__componentOriginald816e58425c8bb369623a9433739178c); ?>
-<?php endif; ?>
-            <?php if (isset($component)) { $__componentOriginald816e58425c8bb369623a9433739178c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginald816e58425c8bb369623a9433739178c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Horas extra','error' => $errors->first('form.mi_horas_extra')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.field'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['label' => 'Horas extra','error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->first('form.mi_horas_extra'))]); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-                <?php if (isset($component)) { $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.input','data' => ['type' => 'number','min' => '0','max' => '24','step' => '0.25','wire:model' => 'form.mi_horas_extra']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('ui.input'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['type' => 'number','min' => '0','max' => '24','step' => '0.25','wire:model' => 'form.mi_horas_extra']); ?>
-<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
-
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
-<?php $attributes = $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
-<?php unset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
-<?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
-<?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
-<?php endif; ?>
-             <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginald816e58425c8bb369623a9433739178c)): ?>
-<?php $attributes = $__attributesOriginald816e58425c8bb369623a9433739178c; ?>
-<?php unset($__attributesOriginald816e58425c8bb369623a9433739178c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginald816e58425c8bb369623a9433739178c)): ?>
-<?php $component = $__componentOriginald816e58425c8bb369623a9433739178c; ?>
-<?php unset($__componentOriginald816e58425c8bb369623a9433739178c); ?>
-<?php endif; ?>
-        </div>
-    </div>
 
     
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="flex items-center justify-between px-6 py-4">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-slate-900">Compañeros</span>
+                    <span class="text-sm font-semibold text-slate-900">Trabajadores</span>
                     <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"><?php echo e(count($form->companeros)); ?></span>
                 </div>
-                <p class="mt-0.5 text-xs text-slate-400">Otros trabajadores que participaron en este parte</p>
+                <p class="mt-0.5 text-xs text-slate-400">Trabajadores vinculados al proyecto que participan en este parte</p>
             </div>
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarCompanero','icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarTrabajador','disabled' => $form->proyecto_id === null,'icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarCompanero','icon' => 'heroicon-o-plus']); ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarTrabajador','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null),'icon' => 'heroicon-o-plus']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                Añadir compañero
+                Añadir trabajador
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
@@ -546,19 +457,19 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $form->companeros; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $companero): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
-                            <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'companero-'.e($i).''; ?>wire:key="companero-<?php echo e($i); ?>">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $form->companeros; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $trabajador): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'trabajador-'.e($i).''; ?>wire:key="trabajador-<?php echo e($i); ?>">
                                 <td class="px-6 py-3">
                                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'companero-sel-'.e($companeroSelectKey).'-'.e($i).'','wireModel' => 'form.companeros.'.e($i).'.trabajador_id','options' => $this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => '— Selecciona —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'trab-sel-'.e($trabajadorSelectKey).'-'.e($i).'','wireModel' => 'form.companeros.'.e($i).'.trabajador_id','options' => $this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => '— Selecciona trabajador —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'companero-sel-'.e($companeroSelectKey).'-'.e($i).'','wire-model' => 'form.companeros.'.e($i).'.trabajador_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => '— Selecciona —']); ?>
+<?php $component->withAttributes(['wire:key' => 'trab-sel-'.e($trabajadorSelectKey).'-'.e($i).'','wire-model' => 'form.companeros.'.e($i).'.trabajador_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => '— Selecciona trabajador —']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -605,6 +516,16 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
 <?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
 <?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
 <?php endif; ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ["form.companeros.{$i}.horas"];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <p class="mt-1 text-xs text-red-600"><?php echo e($message); ?></p>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 </td>
                                 <td class="px-4 py-3">
                                     <?php if (isset($component)) { $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46 = $component; } ?>
@@ -633,14 +554,14 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                 <td class="px-4 py-3 text-right">
                                     <?php if (isset($component)) { $__componentOriginal0b13408463faa13a13ad37dce6dd70f7 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal0b13408463faa13a13ad37dce6dd70f7 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.icon-button','data' => ['wire:click' => 'quitarCompanero('.e($i).')','icon' => 'heroicon-o-x-mark','variant' => 'danger','tooltip' => 'Quitar']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.icon-button','data' => ['wire:click' => 'quitarTrabajador('.e($i).')','icon' => 'heroicon-o-x-mark','variant' => 'danger','tooltip' => 'Quitar']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.icon-button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'quitarCompanero('.e($i).')','icon' => 'heroicon-o-x-mark','variant' => 'danger','tooltip' => 'Quitar']); ?>
+<?php $component->withAttributes(['wire:click' => 'quitarTrabajador('.e($i).')','icon' => 'heroicon-o-x-mark','variant' => 'danger','tooltip' => 'Quitar']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -670,18 +591,18 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                     <span class="text-sm font-semibold text-slate-900">Materiales</span>
                     <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"><?php echo e(count($form->materiales)); ?></span>
                 </div>
-                <p class="mt-0.5 text-xs text-slate-400">Materiales utilizados en este parte</p>
+                <p class="mt-0.5 text-xs text-slate-400">Materiales del proyecto utilizados en este parte</p>
             </div>
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','disabled' => $form->proyecto_id === null,'icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','icon' => 'heroicon-o-plus']); ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null),'icon' => 'heroicon-o-plus']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
                 Añadir material
@@ -704,23 +625,27 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                         <tr>
                             <th class="px-6 py-2.5">Material</th>
                             <th class="px-4 py-2.5 w-36">Cantidad</th>
+                            <th class="px-4 py-2.5 w-24">Unidad</th>
                             <th class="px-4 py-2.5 text-right w-20">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $form->materiales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $linea): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <?php
+                                $matSel = $this->materialesDisponibles->firstWhere('id', $linea['material_id'] ?? null);
+                            ?>
                             <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'material-'.e($i).''; ?>wire:key="material-<?php echo e($i); ?>">
                                 <td class="px-6 py-3">
                                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'material-sel-'.e($materialSelectKey).'-'.e($i).'','wireModel' => 'form.materiales.'.e($i).'.material_id','options' => $this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->stock.' '.$m->unidad_medida]),'placeholder' => '— Selecciona —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'mat-sel-'.e($materialSelectKey).'-'.e($i).'','wireModel' => 'form.materiales.'.e($i).'.material_id','options' => $this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->stock.' '.$m->unidad_medida]),'placeholder' => '— Selecciona material —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'material-sel-'.e($materialSelectKey).'-'.e($i).'','wire-model' => 'form.materiales.'.e($i).'.material_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->stock.' '.$m->unidad_medida])),'placeholder' => '— Selecciona —']); ?>
+<?php $component->withAttributes(['wire:key' => 'mat-sel-'.e($materialSelectKey).'-'.e($i).'','wire-model' => 'form.materiales.'.e($i).'.material_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->stock.' '.$m->unidad_medida])),'placeholder' => '— Selecciona material —']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -767,6 +692,10 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
 <?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
 <?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
 <?php endif; ?>
+                                </td>
+                                <td class="px-4 py-3 text-slate-500 text-xs">
+                                    <?php echo e($matSel?->unidad_medida ?? '—'); ?>
+
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <?php if (isset($component)) { $__componentOriginal0b13408463faa13a13ad37dce6dd70f7 = $component; } ?>

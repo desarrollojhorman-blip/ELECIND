@@ -49,14 +49,21 @@ class AlbaranForm extends Form
 
     public ?string $observaciones = null;
 
-    /* ───── Mis horas (línea personal del creador) ──────────────────── */
+    /* ───── Mis horas (línea personal del creador — solo móvil) ────────
+     * En modo web ($omitirLineaCreador = true) estos campos se ignoran
+     * y todas las líneas de personal van en $companeros.
+     * ──────────────────────────────────────────────────────────────── */
+
+    public bool $omitirLineaCreador = false;
 
     public string $mi_horas = '8.00';
 
     public string $mi_horas_extra = '0.00';
 
     /**
-     * Líneas de personal de los compañeros (sin contar al creador).
+     * Líneas de personal.
+     * - Móvil: compañeros (excluye al creador, que tiene mi_horas/mi_horas_extra).
+     * - Web:   todos los trabajadores del parte (ninguno es "el creador" automático).
      *
      * @var array<int, array{trabajador_id: ?int, horas: string, horas_extra: string}>
      */
@@ -82,14 +89,14 @@ class AlbaranForm extends Form
             'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
             'observaciones' => ['nullable', 'string', 'max:2000'],
 
-            'mi_horas' => ['required', 'numeric', 'min:0', 'max:24'],
-            'mi_horas_extra' => ['required', 'numeric', 'min:0', 'max:24'],
+            'mi_horas' => $this->omitirLineaCreador ? ['nullable'] : ['required', 'numeric', 'min:0', 'max:24'],
+            'mi_horas_extra' => $this->omitirLineaCreador ? ['nullable'] : ['required', 'numeric', 'min:0', 'max:24'],
 
             'companeros' => ['array'],
-            'companeros.*.trabajador_id' => [
+            'companeros.*.trabajador_id' => array_filter([
                 'required', 'integer', 'exists:users,id',
-                Rule::notIn([(int) Auth::id()]),
-            ],
+                $this->omitirLineaCreador ? null : Rule::notIn([(int) Auth::id()]),
+            ]),
             'companeros.*.horas' => ['required', 'numeric', 'min:0', 'max:24'],
             'companeros.*.horas_extra' => ['required', 'numeric', 'min:0', 'max:24'],
 
@@ -130,21 +137,35 @@ class AlbaranForm extends Form
         $this->observaciones = $albaran->observaciones;
 
         $miId = (int) Auth::id();
-        $miLinea = $albaran->lineasPersonal->firstWhere('trabajador_id', $miId);
-        if ($miLinea !== null) {
-            $this->mi_horas = (string) $miLinea->horas;
-            $this->mi_horas_extra = (string) $miLinea->horas_extra;
-        }
 
-        $this->companeros = $albaran->lineasPersonal
-            ->where('trabajador_id', '!=', $miId)
-            ->map(fn (AlbaranLineaPersonal $linea): array => [
-                'trabajador_id' => $linea->trabajador_id,
-                'horas' => (string) $linea->horas,
-                'horas_extra' => (string) $linea->horas_extra,
-            ])
-            ->values()
-            ->all();
+        if ($this->omitirLineaCreador) {
+            // Web: todas las líneas van como companeros, sin distinción de creador.
+            $this->companeros = $albaran->lineasPersonal
+                ->map(fn (AlbaranLineaPersonal $linea): array => [
+                    'trabajador_id' => $linea->trabajador_id,
+                    'horas' => (string) $linea->horas,
+                    'horas_extra' => (string) $linea->horas_extra,
+                ])
+                ->values()
+                ->all();
+        } else {
+            // Móvil: la línea del creador va en mi_horas; el resto en companeros.
+            $miLinea = $albaran->lineasPersonal->firstWhere('trabajador_id', $miId);
+            if ($miLinea !== null) {
+                $this->mi_horas = (string) $miLinea->horas;
+                $this->mi_horas_extra = (string) $miLinea->horas_extra;
+            }
+
+            $this->companeros = $albaran->lineasPersonal
+                ->where('trabajador_id', '!=', $miId)
+                ->map(fn (AlbaranLineaPersonal $linea): array => [
+                    'trabajador_id' => $linea->trabajador_id,
+                    'horas' => (string) $linea->horas,
+                    'horas_extra' => (string) $linea->horas_extra,
+                ])
+                ->values()
+                ->all();
+        }
 
         $this->materiales = $albaran->lineasMaterial
             ->map(fn (AlbaranLineaMaterial $linea): array => [
@@ -243,11 +264,14 @@ class AlbaranForm extends Form
             // El Observer no actúa sobre lineas personal, así que es seguro.
             $albaran->lineasPersonal()->delete();
 
-            $albaran->lineasPersonal()->create([
-                'trabajador_id' => Auth::id(),
-                'horas' => $this->mi_horas,
-                'horas_extra' => $this->mi_horas_extra,
-            ]);
+            if (! $this->omitirLineaCreador) {
+                // Móvil: la línea del creador va siempre en primera posición.
+                $albaran->lineasPersonal()->create([
+                    'trabajador_id' => Auth::id(),
+                    'horas' => $this->mi_horas,
+                    'horas_extra' => $this->mi_horas_extra,
+                ]);
+            }
 
             foreach ($this->companeros as $companero) {
                 $albaran->lineasPersonal()->create([

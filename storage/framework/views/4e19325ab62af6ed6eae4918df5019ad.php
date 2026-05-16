@@ -7,6 +7,7 @@ $__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
     'options'     => [],
     'placeholder' => '— Selecciona —',
     'disabled'    => false,
+    'entangle'    => null,
 ]));
 
 foreach ($attributes->all() as $__key => $__value) {
@@ -27,6 +28,7 @@ foreach (array_filter(([
     'options'     => [],
     'placeholder' => '— Selecciona —',
     'disabled'    => false,
+    'entangle'    => null,
 ]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
     $$__key = $$__key ?? $__value;
 }
@@ -51,28 +53,38 @@ unset($__defined_vars, $__key, $__value); ?>
 ?>
 
 <div
+    <?php echo e($attributes->only('wire:key')); ?>
+
     x-data="{
         open:     false,
         search:   '',
         selected: null,
-        options:  <?php echo e($optionsJson); ?>,
+        disabled: <?php echo e($disabledJs); ?>,
+        options: <?php echo e($optionsJson); ?>,
         get filtered() {
             if (!this.search.trim()) return this.options;
             const q = this.search.toLowerCase();
             return this.options.filter(o => o.label.toLowerCase().includes(q));
         },
         select(opt) {
+            if (this.disabled) return;
             this.selected = opt;
             this.open     = false;
             this.search   = '';
-            $wire.set('<?php echo e($wireModel); ?>', opt.value);
+            this.$refs.hiddenInput.value = opt.value;
+            this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
         },
         clear() {
             this.selected = null;
             this.search   = '';
-            $wire.set('<?php echo e($wireModel); ?>', null);
+            this.$refs.hiddenInput.value = '';
+            this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
         },
         init() {
+            const v = this.$refs.hiddenInput?.value;
+            if (v) {
+                this.selected = this.options.find(o => String(o.value) === String(v)) ?? null;
+            }
             this.$watch('open', val => {
                 if (val) this.$nextTick(() => this.$refs.searchInput?.focus());
             });
@@ -81,13 +93,18 @@ unset($__defined_vars, $__key, $__value); ?>
     x-on:click.outside="open = false"
     class="relative"
 >
+    <input type="hidden" wire:model.live="<?php echo e($wireModel); ?>" x-ref="hiddenInput" />
+
     
     <button
         type="button"
-        x-on:click="<?php echo e($disabled ? '' : 'open = !open'); ?>"
-        :class="{ 'border-primary-500 ring-1 ring-primary-200': open }"
-        class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm transition-colors
-               <?php echo e($disabled ? 'cursor-not-allowed bg-slate-50 text-slate-500 pointer-events-none' : 'cursor-pointer hover:border-slate-400'); ?>"
+        x-on:click="if (!disabled) open = !open"
+        :class="{
+            'border-primary-500 ring-1 ring-primary-200': open,
+            'cursor-not-allowed bg-slate-50 text-slate-500 pointer-events-none': disabled,
+            'cursor-pointer hover:border-slate-400': !disabled
+        }"
+        class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm transition-colors"
     >
         <span
             x-text="selected ? selected.label : '<?php echo e(addslashes($placeholder)); ?>'"
@@ -96,7 +113,7 @@ unset($__defined_vars, $__key, $__value); ?>
         ></span>
         <span class="ml-2 flex shrink-0 items-center gap-1">
             <span
-                x-show="selected && !<?php echo e($disabledJs); ?>"
+                x-show="selected && !disabled"
                 x-on:click.stop="clear()"
                 class="flex size-4 cursor-pointer items-center justify-center rounded text-slate-400 hover:text-slate-700"
                 title="Limpiar selección"

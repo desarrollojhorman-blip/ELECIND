@@ -11,7 +11,6 @@ use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -28,12 +27,15 @@ class Editar extends Component
 
     public ?int $confirmarEliminarId = null;
 
-    public int $companeroSelectKey = 0;
+    public int $trabajadorSelectKey = 0;
 
     public int $materialSelectKey = 0;
 
     public function mount(?Albaran $albaran = null): void
     {
+        // Modo web: todas las líneas de personal son iguales, sin línea fija del creador.
+        $this->form->omitirLineaCreador = true;
+
         if ($albaran !== null && $albaran->exists) {
             Gate::authorize('update', $albaran);
             $this->albaran = $albaran;
@@ -48,15 +50,21 @@ class Editar extends Component
     public function updatedFormProyectoId(): void
     {
         $this->form->sincronizarClienteDesdeProyecto();
+        // Al cambiar proyecto se limpian las líneas de personal y material
+        // porque los disponibles cambian completamente.
+        $this->form->companeros = [];
+        $this->form->materiales = [];
+        $this->trabajadorSelectKey++;
+        $this->materialSelectKey++;
     }
 
-    public function agregarCompanero(): void
+    public function agregarTrabajador(): void
     {
         $this->form->addCompanero();
-        $this->companeroSelectKey++;
+        $this->trabajadorSelectKey++;
     }
 
-    public function quitarCompanero(int $index): void
+    public function quitarTrabajador(int $index): void
     {
         $this->form->removeCompanero($index);
     }
@@ -137,9 +145,10 @@ class Editar extends Component
     public function conceptosDisponibles(): Collection
     {
         if ($this->form->proyecto_id === null) {
-            return Concepto::query()->orderBy('nombre')->get(['id', 'nombre']);
+            return collect();
         }
 
+        /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()
             ->with('conceptos:id,nombre')
             ->find($this->form->proyecto_id);
@@ -155,8 +164,13 @@ class Editar extends Component
     #[Computed]
     public function responsablesDisponibles(): Collection
     {
+        if ($this->form->proyecto_id === null) {
+            return collect();
+        }
+
         return User::query()
             ->where('activo', true)
+            ->whereHas('proyectos', fn ($q) => $q->where('proyectos.id', $this->form->proyecto_id))
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get(['id', 'nombre', 'apellidos']);
@@ -166,17 +180,15 @@ class Editar extends Component
     #[Computed]
     public function trabajadoresDisponibles(): Collection
     {
-        $miId = (int) Auth::id();
-        $yaAsignados = collect($this->form->companeros)
-            ->pluck('trabajador_id')
-            ->filter()
-            ->push($miId)
-            ->all();
+        if ($this->form->proyecto_id === null) {
+            return collect();
+        }
 
         return User::query()
-            ->where('tipo_usuario', 'interno')
             ->where('activo', true)
-            ->whereNotIn('id', $yaAsignados)
+            ->whereHas('proyectos', fn ($q) => $q
+                ->where('proyectos.id', $this->form->proyecto_id)
+                ->where('proyecto_usuario.rol_en_proyecto', 'trabajador'))
             ->orderBy('nombre')
             ->orderBy('apellidos')
             ->get(['id', 'nombre', 'apellidos']);
@@ -187,9 +199,10 @@ class Editar extends Component
     public function materialesDisponibles(): Collection
     {
         if ($this->form->proyecto_id === null) {
-            return Material::query()->orderBy('descripcion')->get(['id', 'descripcion', 'unidad_medida', 'stock']);
+            return collect();
         }
 
+        /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()
             ->with('materiales:id,descripcion,unidad_medida,stock')
             ->find($this->form->proyecto_id);
@@ -199,23 +212,6 @@ class Editar extends Component
         }
 
         return $proyecto->materiales->toBase();
-    }
-
-    /** @return Collection<int, User> */
-    #[Computed]
-    public function nombresUsuarios(): Collection
-    {
-        return User::query()
-            ->where('tipo_usuario', 'interno')
-            ->orderBy('nombre')
-            ->get(['id', 'nombre', 'apellidos']);
-    }
-
-    /** @return Collection<int, Material> */
-    #[Computed]
-    public function nombresMateriales(): Collection
-    {
-        return Material::query()->orderBy('descripcion')->get(['id', 'descripcion', 'unidad_medida']);
     }
 
     public function render(): View

@@ -54,16 +54,18 @@
                         wire:key="concepto-select-{{ $form->proyecto_id }}"
                         wire-model="form.concepto_id"
                         :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
-                        placeholder="— Sin concepto —"
+                        placeholder="{{ $form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —' }}"
+                        :disabled="$form->proyecto_id === null"
                     />
                 </x-ui.field>
 
                 <x-ui.field label="Responsable" :error="$errors->first('form.responsable_id')">
                     <x-ui.searchable-select
-                        wire:key="responsable-select"
+                        wire:key="responsable-select-{{ $form->proyecto_id }}"
                         wire-model="form.responsable_id"
                         :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                        placeholder="— Sin responsable —"
+                        placeholder="{{ $form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —' }}"
+                        :disabled="$form->proyecto_id === null"
                     />
                 </x-ui.field>
 
@@ -71,34 +73,29 @@
                     <x-ui.textarea wire:model="form.observaciones" rows="3" placeholder="Notas adicionales del parte…" />
                 </x-ui.field>
             </div>
+
+            @if ($form->proyecto_id === null)
+                <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    Selecciona un proyecto para poder añadir trabajadores y materiales.
+                </p>
+            @endif
         </div>
     </form>
 
-    {{-- Mis horas --}}
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 text-sm font-semibold text-slate-900">Mis horas</h2>
-        <div class="grid gap-4 md:grid-cols-2">
-            <x-ui.field label="Horas normales" required :error="$errors->first('form.mi_horas')">
-                <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="form.mi_horas" />
-            </x-ui.field>
-            <x-ui.field label="Horas extra" :error="$errors->first('form.mi_horas_extra')">
-                <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="form.mi_horas_extra" />
-            </x-ui.field>
-        </div>
-    </div>
-
-    {{-- Compañeros --}}
+    {{-- Trabajadores --}}
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="flex items-center justify-between px-6 py-4">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-slate-900">Compañeros</span>
+                    <span class="text-sm font-semibold text-slate-900">Trabajadores</span>
                     <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ count($form->companeros) }}</span>
                 </div>
-                <p class="mt-0.5 text-xs text-slate-400">Otros trabajadores que participaron en este parte</p>
+                <p class="mt-0.5 text-xs text-slate-400">Trabajadores vinculados al proyecto que participan en este parte</p>
             </div>
-            <x-ui.button type="button" variant="info" wire:click="agregarCompanero" icon="heroicon-o-plus">
-                Añadir compañero
+            <x-ui.button type="button" variant="info" wire:click="agregarTrabajador"
+                         :disabled="$form->proyecto_id === null"
+                         icon="heroicon-o-plus">
+                Añadir trabajador
             </x-ui.button>
         </div>
 
@@ -114,14 +111,14 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @foreach ($form->companeros as $i => $companero)
-                            <tr wire:key="companero-{{ $i }}">
+                        @foreach ($form->companeros as $i => $trabajador)
+                            <tr wire:key="trabajador-{{ $i }}">
                                 <td class="px-6 py-3">
                                     <x-ui.searchable-select
-                                        wire:key="companero-sel-{{ $companeroSelectKey }}-{{ $i }}"
+                                        wire:key="trab-sel-{{ $trabajadorSelectKey }}-{{ $i }}"
                                         wire-model="form.companeros.{{ $i }}.trabajador_id"
                                         :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                                        placeholder="— Selecciona —"
+                                        placeholder="— Selecciona trabajador —"
                                     />
                                     @error("form.companeros.{$i}.trabajador_id")
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -130,6 +127,9 @@
                                 <td class="px-4 py-3">
                                     <x-ui.input type="number" min="0" max="24" step="0.25"
                                                 wire:model="form.companeros.{{ $i }}.horas" />
+                                    @error("form.companeros.{$i}.horas")
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
                                 </td>
                                 <td class="px-4 py-3">
                                     <x-ui.input type="number" min="0" max="24" step="0.25"
@@ -137,7 +137,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <x-ui.icon-button
-                                        wire:click="quitarCompanero({{ $i }})"
+                                        wire:click="quitarTrabajador({{ $i }})"
                                         icon="heroicon-o-x-mark"
                                         variant="danger"
                                         tooltip="Quitar" />
@@ -158,9 +158,11 @@
                     <span class="text-sm font-semibold text-slate-900">Materiales</span>
                     <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ count($form->materiales) }}</span>
                 </div>
-                <p class="mt-0.5 text-xs text-slate-400">Materiales utilizados en este parte</p>
+                <p class="mt-0.5 text-xs text-slate-400">Materiales del proyecto utilizados en este parte</p>
             </div>
-            <x-ui.button type="button" variant="info" wire:click="agregarMaterial" icon="heroicon-o-plus">
+            <x-ui.button type="button" variant="info" wire:click="agregarMaterial"
+                         :disabled="$form->proyecto_id === null"
+                         icon="heroicon-o-plus">
                 Añadir material
             </x-ui.button>
         </div>
@@ -172,18 +174,22 @@
                         <tr>
                             <th class="px-6 py-2.5">Material</th>
                             <th class="px-4 py-2.5 w-36">Cantidad</th>
+                            <th class="px-4 py-2.5 w-24">Unidad</th>
                             <th class="px-4 py-2.5 text-right w-20">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($form->materiales as $i => $linea)
+                            @php
+                                $matSel = $this->materialesDisponibles->firstWhere('id', $linea['material_id'] ?? null);
+                            @endphp
                             <tr wire:key="material-{{ $i }}">
                                 <td class="px-6 py-3">
                                     <x-ui.searchable-select
-                                        wire:key="material-sel-{{ $materialSelectKey }}-{{ $i }}"
+                                        wire:key="mat-sel-{{ $materialSelectKey }}-{{ $i }}"
                                         wire-model="form.materiales.{{ $i }}.material_id"
                                         :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->stock.' '.$m->unidad_medida])"
-                                        placeholder="— Selecciona —"
+                                        placeholder="— Selecciona material —"
                                     />
                                     @error("form.materiales.{$i}.material_id")
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -192,6 +198,9 @@
                                 <td class="px-4 py-3">
                                     <x-ui.input type="number" min="0.01" step="0.01"
                                                 wire:model="form.materiales.{{ $i }}.cantidad" />
+                                </td>
+                                <td class="px-4 py-3 text-slate-500 text-xs">
+                                    {{ $matSel?->unidad_medida ?? '—' }}
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <x-ui.icon-button

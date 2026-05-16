@@ -25,6 +25,8 @@ class Crear extends Component
     /** ID del albarán recién creado, mientras el modal de firma está visible */
     public ?int $albaranCreadoId = null;
 
+    public int $selectKey = 0;
+
     public function mount(?Albaran $albaran = null): void
     {
         if ($albaran !== null && $albaran->exists) {
@@ -40,6 +42,7 @@ class Crear extends Component
     public function updatedFormProyectoId(): void
     {
         $this->form->sincronizarClienteDesdeProyecto();
+        $this->selectKey++;
     }
 
     public function addCompanero(): void
@@ -75,7 +78,6 @@ class Crear extends Component
         $albaran = $this->form->save();
 
         if ($esNuevo) {
-            // Mostrar modal "¿firmar ahora o luego?" en lugar de redirigir
             $this->albaranCreadoId = $albaran->getKey();
 
             return;
@@ -100,9 +102,7 @@ class Crear extends Component
     }
 
     /**
-     * Proyectos disponibles para el usuario actual:
-     *  - Admin/superadmin (con `albaranes.ver_todos`) ven todos los proyectos.
-     *  - Trabajadores ven sólo aquellos en los que participan o son responsable principal.
+     * Proyectos disponibles para el usuario actual.
      *
      * @return Collection<int, Proyecto>
      */
@@ -112,7 +112,9 @@ class Crear extends Component
         $userId = (int) Auth::id();
         $puedeVerTodos = Auth::user()?->can('albaranes.ver_todos') ?? false;
 
-        $query = Proyecto::query()->orderBy('nombre');
+        $query = Proyecto::query()
+            ->where('estado', 'activo')
+            ->orderBy('nombre');
 
         if (! $puedeVerTodos) {
             $query->where(function ($q) use ($userId): void {
@@ -124,11 +126,7 @@ class Crear extends Component
         return $query->get(['id', 'nombre', 'cliente_id', 'responsable_principal_id']);
     }
 
-    /**
-     * Conceptos asignados al proyecto seleccionado.
-     *
-     * @return Collection<int, Concepto>
-     */
+    /** @return Collection<int, Concepto> */
     #[Computed]
     public function conceptosDisponibles(): Collection
     {
@@ -136,40 +134,39 @@ class Crear extends Component
             return collect();
         }
 
-        /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()->find($this->form->proyecto_id);
 
-        if ($proyecto === null) {
-            return collect();
-        }
-
-        return $proyecto->conceptos()->orderBy('nombre')->get(['conceptos.id', 'conceptos.nombre']);
+        return $proyecto
+            ? $proyecto->conceptos()->orderBy('nombre')->get(['conceptos.id', 'conceptos.nombre'])
+            : collect();
     }
 
-    /**
-     * Usuarios asignados al proyecto seleccionado (para responsable + compañeros).
-     *
-     * @return Collection<int, User>
-     */
+    /** @return Collection<int, User> */
     #[Computed]
-    public function usuariosProyecto(): Collection
+    public function responsablesDisponibles(): Collection
     {
         if ($this->form->proyecto_id === null) {
             return collect();
         }
 
-        /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()->find($this->form->proyecto_id);
 
-        if ($proyecto === null) {
-            return collect();
-        }
+        return $proyecto
+            ? $proyecto->usuarios()->where('users.activo', true)->orderBy('nombre')->get(['users.id', 'users.nombre', 'users.apellidos'])
+            : collect();
+    }
 
-        return $proyecto->usuarios()->orderBy('nombre')->get(['users.id', 'users.nombre', 'users.apellidos']);
+    /** @return Collection<int, User> */
+    #[Computed]
+    public function companerosDisponibles(): Collection
+    {
+        $myId = (int) Auth::id();
+
+        return $this->responsablesDisponibles->filter(fn ($u) => $u->id !== $myId)->values();
     }
 
     /**
-     * Materiales asignados al proyecto seleccionado.
+     * Materiales del proyecto seleccionado — opciones para el select + badge de unidad.
      *
      * @return Collection<int, Material>
      */
@@ -180,7 +177,6 @@ class Crear extends Component
             return collect();
         }
 
-        /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()->find($this->form->proyecto_id);
 
         if ($proyecto === null) {

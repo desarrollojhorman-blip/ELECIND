@@ -58,7 +58,8 @@
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" view:clear)",
       "Bash(Get-Content -Path 'd:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\\\\web.php')",
       "Bash(Select-String -Pattern 'albarane|Albarane' -Context 2)",
-      "Bash(Find \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\" -name \"*.php\" -type f)"
+      "Bash(Find \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\" -name \"*.php\" -type f)",
+      "Bash(D:/xampp/php/php.exe artisan tinker '--execute= *)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"
