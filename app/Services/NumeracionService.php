@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Albaran;
 use App\Models\Cliente;
 use App\Models\Empresa;
+use App\Models\NumeroPedido;
+use App\Models\Proyecto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +27,10 @@ class NumeracionService
     public const PLANTILLA_DEFECTO = 'ALB-{YYYY}-{NNNN}';
 
     public const PLANTILLA_DEFECTO_CLIENTE = 'CLI-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_PEDIDO = 'PED-{YYYY}-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_PROYECTO = 'PROY-{NNNN}';
 
     public function siguienteNumeroAlbaran(?Carbon $fecha = null): string
     {
@@ -105,6 +111,62 @@ class NumeracionService
 
         return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
     }
+
+    // ── Nº Pedido ────────────────────────────────────────────────────────────
+
+    public function siguienteNumeroPedido(?Carbon $fecha = null): string
+    {
+        $fecha = $fecha ?? Carbon::now();
+        $plantilla = $this->plantillaPedido();
+
+        return DB::transaction(function () use ($fecha, $plantilla): string {
+            $secuencial = NumeroPedido::query()
+                ->withTrashed()
+                ->whereYear('fecha', $fecha->year)
+                ->lockForUpdate()
+                ->count() + 1;
+
+            return $this->aplicarPlantilla($plantilla, $fecha, $secuencial);
+        });
+    }
+
+    public function plantillaPedido(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_pedido;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_PEDIDO;
+    }
+
+    // ── Código Proyecto ───────────────────────────────────────────────────────
+
+    public function siguienteNumeroProyecto(): string
+    {
+        $plantilla = $this->plantillaProyecto();
+
+        return DB::transaction(function () use ($plantilla): string {
+            $secuencial = Proyecto::query()
+                ->withTrashed()
+                ->lockForUpdate()
+                ->count() + 1;
+
+            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+        });
+    }
+
+    public function plantillaProyecto(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_proyecto;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_PROYECTO;
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
 
     public function aplicarPlantilla(string $plantilla, Carbon $fecha, int $secuencial): string
     {

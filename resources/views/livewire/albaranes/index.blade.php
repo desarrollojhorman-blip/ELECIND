@@ -16,8 +16,8 @@
 
             <x-slot:leftActions>
                 @can('create', App\Models\Albaran::class)
-                    <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="info" icon="heroicon-o-plus">
-                        Nuevo albarán
+                    <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
+                        Nuevo
                     </x-ui.button>
                 @endcan
                 <x-ui.actions-menu label="Acciones" icon="heroicon-o-bars-3">

@@ -59,8 +59,7 @@
                         wire:key="concepto-select-{{ $form->proyecto_id }}"
                         wire-model="form.concepto_id"
                         :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
-                        placeholder="{{ $form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —' }}"
-                        :disabled="$form->proyecto_id === null"
+                        placeholder="— Sin concepto —"
                     />
                 </x-ui.field>
 
@@ -69,8 +68,7 @@
                         wire:key="responsable-select-{{ $form->proyecto_id }}"
                         wire-model="form.responsable_id"
                         :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                        placeholder="{{ $form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —' }}"
-                        :disabled="$form->proyecto_id === null"
+                        placeholder="— Sin responsable —"
                     />
                 </x-ui.field>
 
@@ -98,7 +96,6 @@
                 <p class="mt-0.5 text-xs text-slate-400">Trabajadores vinculados al proyecto que participan en este parte</p>
             </div>
             <x-ui.button type="button" variant="success" wire:click="agregarTrabajador"
-                         :disabled="$form->proyecto_id === null"
                          icon="heroicon-o-plus">
                 Añadir trabajador
             </x-ui.button>
@@ -166,7 +163,6 @@
                 <p class="mt-0.5 text-xs text-slate-400">Materiales del proyecto utilizados en este parte</p>
             </div>
             <x-ui.button type="button" variant="success" wire:click="agregarMaterial"
-                         :disabled="$form->proyecto_id === null"
                          icon="heroicon-o-plus">
                 Añadir material
             </x-ui.button>

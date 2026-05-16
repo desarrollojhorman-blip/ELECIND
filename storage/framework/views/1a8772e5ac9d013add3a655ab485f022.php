@@ -11,22 +11,21 @@
 <?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($titulo),'subtitle' => 'Cabecera y líneas del albarán.']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-         <?php $__env->slot('actions', null, []); ?> 
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($albaran): ?>
-                <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+         <?php $__env->slot('actionsLeft', null, []); ?> 
+            <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'ghost','icon' => 'heroicon-o-arrow-left']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'neutral','icon' => 'heroicon-o-list-bullet']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'ghost','icon' => 'heroicon-o-arrow-left']); ?>
+<?php $component->withAttributes(['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'neutral','icon' => 'heroicon-o-list-bullet']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                    Albaranes
-                 <?php echo $__env->renderComponent(); ?>
+                Todos
+             <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
 <?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
@@ -36,21 +35,22 @@
 <?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
 <?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
 <?php endif; ?>
-            <?php else: ?>
-                <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($albaran): ?>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('albaranes.crear_web')): ?>
+                    <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'ghost','icon' => 'heroicon-o-x-mark']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['as' => 'a','href' => ''.e(route('albaranes.crear')).'','wire:navigate' => true,'variant' => 'success','icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['as' => 'a','href' => ''.e(route('albaranes.index')).'','wire:navigate' => true,'variant' => 'ghost','icon' => 'heroicon-o-x-mark']); ?>
+<?php $component->withAttributes(['as' => 'a','href' => ''.e(route('albaranes.crear')).'','wire:navigate' => true,'variant' => 'success','icon' => 'heroicon-o-plus']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                    Cancelar
-                 <?php echo $__env->renderComponent(); ?>
+                        Nuevo
+                     <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
 <?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
@@ -60,8 +60,7 @@
 <?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
 <?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
 <?php endif; ?>
-            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($albaran): ?>
+                <?php endif; ?>
                 <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete', $albaran)): ?>
                     <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
@@ -88,16 +87,42 @@
 <?php endif; ?>
                 <?php endif; ?>
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+         <?php $__env->endSlot(); ?>
+
+         <?php $__env->slot('actionsRight', null, []); ?> 
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'success','type' => 'submit','form' => 'form-albaran','wire:loading.attr' => 'disabled','icon' => 'heroicon-o-check']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'neutral','wire:click' => 'deshacer','icon' => 'heroicon-o-arrow-uturn-left']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['variant' => 'success','type' => 'submit','form' => 'form-albaran','wire:loading.attr' => 'disabled','icon' => 'heroicon-o-check']); ?>
+<?php $component->withAttributes(['variant' => 'neutral','wire:click' => 'deshacer','icon' => 'heroicon-o-arrow-uturn-left']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                Deshacer
+             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'info','type' => 'submit','form' => 'form-albaran','wire:loading.attr' => 'disabled','icon' => 'heroicon-o-check']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'info','type' => 'submit','form' => 'form-albaran','wire:loading.attr' => 'disabled','icon' => 'heroicon-o-check']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
@@ -280,14 +305,14 @@
 
                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wireModel' => 'form.concepto_id','options' => $this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre]),'placeholder' => ''.e($form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —').'','disabled' => $form->proyecto_id === null]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wireModel' => 'form.concepto_id','options' => $this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre]),'placeholder' => '— Sin concepto —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wire-model' => 'form.concepto_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])),'placeholder' => ''.e($form->proyecto_id ? '— Sin concepto —' : '— Selecciona proyecto primero —').'','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null)]); ?>
+<?php $component->withAttributes(['wire:key' => 'concepto-select-'.e($form->proyecto_id).'','wire-model' => 'form.concepto_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])),'placeholder' => '— Sin concepto —']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -325,14 +350,14 @@
 
                     <?php if (isset($component)) { $__componentOriginala8477b4ecee8eec802e9913415383e3a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8477b4ecee8eec802e9913415383e3a = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wireModel' => 'form.responsable_id','options' => $this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => ''.e($form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —').'','disabled' => $form->proyecto_id === null]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.searchable-select','data' => ['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wireModel' => 'form.responsable_id','options' => $this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)]),'placeholder' => '— Sin responsable —']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.searchable-select'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wire-model' => 'form.responsable_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => ''.e($form->proyecto_id ? '— Sin responsable —' : '— Selecciona proyecto primero —').'','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null)]); ?>
+<?php $component->withAttributes(['wire:key' => 'responsable-select-'.e($form->proyecto_id).'','wire-model' => 'form.responsable_id','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])),'placeholder' => '— Sin responsable —']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -422,14 +447,14 @@
             </div>
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarTrabajador','disabled' => $form->proyecto_id === null,'icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'success','wire:click' => 'agregarTrabajador','icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarTrabajador','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null),'icon' => 'heroicon-o-plus']); ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'success','wire:click' => 'agregarTrabajador','icon' => 'heroicon-o-plus']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
                 Añadir trabajador
@@ -595,14 +620,14 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
             </div>
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','disabled' => $form->proyecto_id === null,'icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['type' => 'button','variant' => 'success','wire:click' => 'agregarMaterial','icon' => 'heroicon-o-plus']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'button','variant' => 'info','wire:click' => 'agregarMaterial','disabled' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($form->proyecto_id === null),'icon' => 'heroicon-o-plus']); ?>
+<?php $component->withAttributes(['type' => 'button','variant' => 'success','wire:click' => 'agregarMaterial','icon' => 'heroicon-o-plus']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
                 Añadir material
@@ -781,14 +806,14 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
          <?php $__env->slot('footer', null, []); ?> 
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'ghost','wire:click' => 'cancelarEliminar']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'neutral','wire:click' => 'cancelarEliminar']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['variant' => 'ghost','wire:click' => 'cancelarEliminar']); ?>
+<?php $component->withAttributes(['variant' => 'neutral','wire:click' => 'cancelarEliminar']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 Cancelar <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
