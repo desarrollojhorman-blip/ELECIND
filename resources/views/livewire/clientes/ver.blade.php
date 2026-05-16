@@ -5,6 +5,11 @@
             <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
                 Clientes
             </x-ui.button>
+            @can('clientes.ver')
+                <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                    Nuevo
+                </x-ui.button>
+            @endcan
             @can('update', $cliente)
                 <x-ui.button as="a" href="{{ route('clientes.editar', $cliente) }}" wire:navigate.fresh variant="info" icon="heroicon-o-pencil-square">
                     Editar
@@ -21,8 +26,8 @@
     {{-- Datos del cliente (solo lectura) --}}
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="grid gap-4 md:grid-cols-2">
-            <x-ui.field label="Nº cliente">
-                <x-ui.input type="number" :value="$cliente->numero_cliente" readonly />
+            <x-ui.field label="Código cliente">
+                <x-ui.input :value="$cliente->codigo_cliente" readonly class="font-mono" />
             </x-ui.field>
 
             <x-ui.field label="Nombre">

@@ -411,17 +411,17 @@
             <tr>
                 <?php if (isset($component)) { $__componentOriginal9c82416d97bef2ffca845759bdd7c679 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal9c82416d97bef2ffca845759bdd7c679 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.sortable-header','data' => ['column' => 'numero_cliente','currentColumn' => $ordenColumna,'currentDirection' => $ordenDireccion]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.sortable-header','data' => ['column' => 'codigo_cliente','currentColumn' => $ordenColumna,'currentDirection' => $ordenDireccion]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.sortable-header'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['column' => 'numero_cliente','current-column' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($ordenColumna),'current-direction' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($ordenDireccion)]); ?>
+<?php $component->withAttributes(['column' => 'codigo_cliente','current-column' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($ordenColumna),'current-direction' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($ordenDireccion)]); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                    Nº cliente
+                    Código cliente
                  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal9c82416d97bef2ffca845759bdd7c679)): ?>
@@ -597,7 +597,7 @@ Acciones <?php echo $__env->renderComponent(); ?>
          <?php $__env->slot('rows', null, []); ?> 
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $clientes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cliente): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
                 <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'cliente-'.e($cliente->id).''; ?>wire:key="cliente-<?php echo e($cliente->id); ?>" class="transition-colors hover:bg-slate-50">
-                    <td class="px-4 py-3 text-slate-700"><?php echo e($cliente->numero_cliente); ?></td>
+                    <td class="px-4 py-3 font-mono text-slate-700"><?php echo e($cliente->codigo_cliente); ?></td>
                     <td class="px-4 py-3">
                         <div class="font-medium text-slate-900"><?php echo e($cliente->nombre); ?></div>
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($cliente->nombre_comercial): ?>

@@ -17,6 +17,9 @@ class Ajustes extends Component
     #[Validate(['required', 'string', 'max:60'])]
     public string $plantilla_numeracion_albaran = 'ALB-{YYYY}-{NNNN}';
 
+    #[Validate(['required', 'string', 'max:60'])]
+    public string $plantilla_numeracion_cliente = 'CLI-{NNNN}';
+
     #[Validate(['required', 'integer', 'min:1', 'max:90'])]
     public int $token_caducidad_dias = 7;
 
@@ -26,6 +29,7 @@ class Ajustes extends Component
 
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
+        $this->plantilla_numeracion_cliente = $empresa->plantilla_numeracion_cliente ?? 'CLI-{NNNN}';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
     }
 
@@ -37,6 +41,7 @@ class Ajustes extends Component
 
         Empresa::actual()->update([
             'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
+            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
             'token_caducidad_dias' => $this->token_caducidad_dias,
         ]);
 

@@ -6,6 +6,7 @@ use App\Livewire\Forms\ClienteForm;
 use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\User;
+use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -29,7 +30,7 @@ class Editar extends Component
         } else {
             Gate::authorize('create', Cliente::class);
             $this->form->activo = true;
-            $this->form->numero_cliente = (int) (Cliente::withTrashed()->max('numero_cliente') ?? 0) + 1;
+            $this->form->codigo_cliente = app(NumeracionService::class)->siguienteNumeroCliente();
         }
     }
 

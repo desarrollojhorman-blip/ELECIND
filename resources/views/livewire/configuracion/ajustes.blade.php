@@ -1,23 +1,36 @@
 <div>
     <x-ui.page-header
         title="Ajustes"
-        subtitle="Configuración operativa de albaranes y firma digital." />
+        subtitle="Configuración operativa de albaranes, clientes y firma digital." />
 
     <form wire:submit="guardar" class="space-y-5">
 
         <x-ui.card>
-            <h3 class="mb-3 text-sm font-semibold text-slate-900">Albaranes</h3>
+            <h3 class="mb-3 text-sm font-semibold text-slate-900">Plantillas de numeración</h3>
+            <p class="mb-4 text-xs text-slate-500">
+                Variables disponibles: <code>{YYYY}</code> (año 4 dígitos), <code>{YY}</code> (año 2 dígitos),
+                <code>{MM}</code> (mes), <code>{NNNN}</code> / <code>{NNN}</code> / <code>{NN}</code> (secuencial con ceros).
+            </p>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <x-ui.field label="Plantilla de numeración"
+                <x-ui.field label="Código cliente"
+                            required
+                            :error="$errors->first('plantilla_numeracion_cliente')">
+                    <x-ui.input wire:model="plantilla_numeracion_cliente" class="font-mono" />
+                </x-ui.field>
+
+                <x-ui.field label="Número de albarán"
                             required
                             :error="$errors->first('plantilla_numeracion_albaran')">
                     <x-ui.input wire:model="plantilla_numeracion_albaran" class="font-mono" />
-                    <p class="mt-1 text-xs text-slate-500">
-                        Variables: <code>{YYYY}</code> (año), <code>{MM}</code> (mes), <code>{NNNN}</code> (secuencial).
-                    </p>
                 </x-ui.field>
+            </div>
+        </x-ui.card>
 
+        <x-ui.card>
+            <h3 class="mb-3 text-sm font-semibold text-slate-900">Firma digital</h3>
+
+            <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Caducidad del token de firma (días)"
                             required
                             :error="$errors->first('token_caducidad_dias')">

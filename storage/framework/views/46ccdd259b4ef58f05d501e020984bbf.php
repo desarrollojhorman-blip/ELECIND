@@ -1,14 +1,14 @@
 <div>
     <?php if (isset($component)) { $__componentOriginal91a231a9270579fa1ae9246bd51fb785 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal91a231a9270579fa1ae9246bd51fb785 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.page-header','data' => ['title' => 'Ajustes','subtitle' => 'Configuración operativa de albaranes y firma digital.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.page-header','data' => ['title' => 'Ajustes','subtitle' => 'Configuración operativa de albaranes, clientes y firma digital.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.page-header'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'Ajustes','subtitle' => 'Configuración operativa de albaranes y firma digital.']); ?>
+<?php $component->withAttributes(['title' => 'Ajustes','subtitle' => 'Configuración operativa de albaranes, clientes y firma digital.']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>
@@ -36,19 +36,68 @@
 <?php $component->withAttributes([]); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-            <h3 class="mb-3 text-sm font-semibold text-slate-900">Albaranes</h3>
+            <h3 class="mb-3 text-sm font-semibold text-slate-900">Plantillas de numeración</h3>
+            <p class="mb-4 text-xs text-slate-500">
+                Variables disponibles: <code>{YYYY}</code> (año 4 dígitos), <code>{YY}</code> (año 2 dígitos),
+                <code>{MM}</code> (mes), <code>{NNNN}</code> / <code>{NNN}</code> / <code>{NN}</code> (secuencial con ceros).
+            </p>
 
             <div class="grid gap-4 md:grid-cols-2">
                 <?php if (isset($component)) { $__componentOriginald816e58425c8bb369623a9433739178c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginald816e58425c8bb369623a9433739178c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Plantilla de numeración','required' => true,'error' => $errors->first('plantilla_numeracion_albaran')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Código cliente','required' => true,'error' => $errors->first('plantilla_numeracion_cliente')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.field'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['label' => 'Plantilla de numeración','required' => true,'error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->first('plantilla_numeracion_albaran'))]); ?>
+<?php $component->withAttributes(['label' => 'Código cliente','required' => true,'error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->first('plantilla_numeracion_cliente'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                    <?php if (isset($component)) { $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.input','data' => ['wire:model' => 'plantilla_numeracion_cliente','class' => 'font-mono']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:model' => 'plantilla_numeracion_cliente','class' => 'font-mono']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
+<?php $attributes = $__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
+<?php unset($__attributesOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46)): ?>
+<?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
+<?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
+<?php endif; ?>
+                 <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald816e58425c8bb369623a9433739178c)): ?>
+<?php $attributes = $__attributesOriginald816e58425c8bb369623a9433739178c; ?>
+<?php unset($__attributesOriginald816e58425c8bb369623a9433739178c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald816e58425c8bb369623a9433739178c)): ?>
+<?php $component = $__componentOriginald816e58425c8bb369623a9433739178c; ?>
+<?php unset($__componentOriginald816e58425c8bb369623a9433739178c); ?>
+<?php endif; ?>
+
+                <?php if (isset($component)) { $__componentOriginald816e58425c8bb369623a9433739178c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald816e58425c8bb369623a9433739178c = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Número de albarán','required' => true,'error' => $errors->first('plantilla_numeracion_albaran')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.field'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => 'Número de albarán','required' => true,'error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($errors->first('plantilla_numeracion_albaran'))]); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
                     <?php if (isset($component)) { $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46 = $component; } ?>
@@ -73,9 +122,6 @@
 <?php $component = $__componentOriginal65bd7e7dbd93cec773ad6501ce127e46; ?>
 <?php unset($__componentOriginal65bd7e7dbd93cec773ad6501ce127e46); ?>
 <?php endif; ?>
-                    <p class="mt-1 text-xs text-slate-500">
-                        Variables: <code>{YYYY}</code> (año), <code>{MM}</code> (mes), <code>{NNNN}</code> (secuencial).
-                    </p>
                  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginald816e58425c8bb369623a9433739178c)): ?>
@@ -86,7 +132,33 @@
 <?php $component = $__componentOriginald816e58425c8bb369623a9433739178c; ?>
 <?php unset($__componentOriginald816e58425c8bb369623a9433739178c); ?>
 <?php endif; ?>
+            </div>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $attributes = $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93)): ?>
+<?php $component = $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93; ?>
+<?php unset($__componentOriginaldae4cd48acb67888a4631e1ba48f2f93); ?>
+<?php endif; ?>
 
+        <?php if (isset($component)) { $__componentOriginaldae4cd48acb67888a4631e1ba48f2f93 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginaldae4cd48acb67888a4631e1ba48f2f93 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.card','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+            <h3 class="mb-3 text-sm font-semibold text-slate-900">Firma digital</h3>
+
+            <div class="grid gap-4 md:grid-cols-2">
                 <?php if (isset($component)) { $__componentOriginald816e58425c8bb369623a9433739178c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginald816e58425c8bb369623a9433739178c = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.field','data' => ['label' => 'Caducidad del token de firma (días)','required' => true,'error' => $errors->first('token_caducidad_dias')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>

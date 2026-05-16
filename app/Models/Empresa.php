@@ -30,6 +30,7 @@ class Empresa extends Model
         'color_secundario',
         'color_texto_encabezado',
         'plantilla_numeracion_albaran',
+        'plantilla_numeracion_cliente',
         'token_caducidad_dias',
         'plantilla_pdf_config',
     ];

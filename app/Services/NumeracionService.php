@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Albaran;
+use App\Models\Cliente;
 use App\Models\Empresa;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\DB;
 class NumeracionService
 {
     public const PLANTILLA_DEFECTO = 'ALB-{YYYY}-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_CLIENTE = 'CLI-{NNNN}';
 
     public function siguienteNumeroAlbaran(?Carbon $fecha = null): string
     {
@@ -61,6 +64,46 @@ class NumeracionService
             ->count();
 
         return $existentes + 1;
+    }
+
+    public function siguienteNumeroCliente(): string
+    {
+        $plantilla = $this->plantillaCliente();
+
+        return DB::transaction(function () use ($plantilla): string {
+            $secuencial = $this->siguienteSecuencialCliente();
+
+            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+        });
+    }
+
+    public function plantillaCliente(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_cliente;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_CLIENTE;
+    }
+
+    private function siguienteSecuencialCliente(): int
+    {
+        return Cliente::query()
+            ->withTrashed()
+            ->lockForUpdate()
+            ->count() + 1;
+    }
+
+    private function aplicarPlantillaCliente(string $plantilla, int $secuencial): string
+    {
+        $reemplazos = [
+            '{NNNN}' => str_pad((string) $secuencial, 4, '0', STR_PAD_LEFT),
+            '{NNN}'  => str_pad((string) $secuencial, 3, '0', STR_PAD_LEFT),
+            '{NN}'   => str_pad((string) $secuencial, 2, '0', STR_PAD_LEFT),
+        ];
+
+        return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
     }
 
     public function aplicarPlantilla(string $plantilla, Carbon $fecha, int $secuencial): string

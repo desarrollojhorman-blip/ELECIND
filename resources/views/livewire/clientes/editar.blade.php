@@ -5,6 +5,11 @@
                 <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
                     Clientes
                 </x-ui.button>
+                @can('clientes.ver')
+                    <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                        Nuevo
+                    </x-ui.button>
+                @endcan
                 @can('delete', $cliente)
                     <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                         Eliminar
@@ -25,8 +30,8 @@
     <form wire:submit="guardar" id="form-cliente" autocomplete="off">
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
-                <x-ui.field label="Nº cliente" required :error="$errors->first('form.numero_cliente')">
-                    <x-ui.input type="number" min="1" step="1" wire:model="form.numero_cliente" autofocus />
+                <x-ui.field label="Código cliente" required :error="$errors->first('form.codigo_cliente')">
+                    <x-ui.input wire:model="form.codigo_cliente" class="font-mono" autofocus />
                 </x-ui.field>
 
                 <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">

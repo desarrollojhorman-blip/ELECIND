@@ -5,6 +5,11 @@
                 <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
                     Proyectos
                 </x-ui.button>
+                @can('proyectos.ver')
+                    <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                        Nuevo
+                    </x-ui.button>
+                @endcan
             @else
                 <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="ghost" icon="heroicon-o-x-mark">
                     Cancelar

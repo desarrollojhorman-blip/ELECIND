@@ -5,6 +5,11 @@
                 <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
                     Albaranes
                 </x-ui.button>
+                @can('albaranes.crear_web')
+                    <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                        Nuevo
+                    </x-ui.button>
+                @endcan
             @else
                 <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-x-mark">
                     Cancelar

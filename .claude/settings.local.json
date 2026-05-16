@@ -59,7 +59,12 @@
       "Bash(Get-Content -Path 'd:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\\\\web.php')",
       "Bash(Select-String -Pattern 'albarane|Albarane' -Context 2)",
       "Bash(Find \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\routes\" -name \"*.php\" -type f)",
-      "Bash(D:/xampp/php/php.exe artisan tinker '--execute= *)"
+      "Bash(D:/xampp/php/php.exe artisan tinker '--execute= *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" -Filter \"*clientes*\")",
+      "Bash(Select-Object Name)",
+      "Bash(dir \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" /B /O:N)",
+      "Bash(findstr /V \"^$\")",
+      "Bash(D:/xampp/php/php.exe artisan *)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"
