@@ -23,6 +23,7 @@
         'success' => 'bg-emerald-600 text-white hover:bg-emerald-700',
         'info' => 'bg-blue-600 text-white hover:bg-blue-700',
         'warning' => 'bg-amber-500 text-white hover:bg-amber-600',
+        'neutral' => 'bg-slate-600 text-white hover:bg-slate-700',
         'ghost' => 'bg-transparent text-slate-700 hover:bg-slate-100',
         'outline' => 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
         'link' => 'text-primary-600 hover:text-primary-700 hover:underline px-0 py-0',

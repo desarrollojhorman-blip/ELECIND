@@ -1,32 +1,32 @@
 <div class="space-y-4">
     <x-ui.page-header :title="$titulo" subtitle="Cabecera y líneas del albarán.">
-        <x-slot:actions>
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
+            </x-ui.button>
             @if ($albaran)
-                <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                    Albaranes
-                </x-ui.button>
                 @can('albaranes.crear_web')
-                    <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                    <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
                 @endcan
-            @else
-                <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-x-mark">
-                    Cancelar
-                </x-ui.button>
-            @endif
-            @if ($albaran)
                 @can('delete', $albaran)
                     <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                         Eliminar
                     </x-ui.button>
                 @endcan
             @endif
-            <x-ui.button variant="success" type="submit" form="form-albaran" wire:loading.attr="disabled" icon="heroicon-o-check">
+        </x-slot:actionsLeft>
+
+        <x-slot:actionsRight>
+            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
+                Deshacer
+            </x-ui.button>
+            <x-ui.button variant="info" type="submit" form="form-albaran" wire:loading.attr="disabled" icon="heroicon-o-check">
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
-        </x-slot:actions>
+        </x-slot:actionsRight>
     </x-ui.page-header>
 
     {{-- Cabecera --}}
@@ -97,7 +97,7 @@
                 </div>
                 <p class="mt-0.5 text-xs text-slate-400">Trabajadores vinculados al proyecto que participan en este parte</p>
             </div>
-            <x-ui.button type="button" variant="info" wire:click="agregarTrabajador"
+            <x-ui.button type="button" variant="success" wire:click="agregarTrabajador"
                          :disabled="$form->proyecto_id === null"
                          icon="heroicon-o-plus">
                 Añadir trabajador
@@ -165,7 +165,7 @@
                 </div>
                 <p class="mt-0.5 text-xs text-slate-400">Materiales del proyecto utilizados en este parte</p>
             </div>
-            <x-ui.button type="button" variant="info" wire:click="agregarMaterial"
+            <x-ui.button type="button" variant="success" wire:click="agregarMaterial"
                          :disabled="$form->proyecto_id === null"
                          icon="heroicon-o-plus">
                 Añadir material
@@ -244,7 +244,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

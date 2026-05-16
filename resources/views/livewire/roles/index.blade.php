@@ -17,7 +17,7 @@
             <x-slot:leftActions>
                 @can('create', App\Models\Role::class)
                     <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
-                        Nuevo rol
+                        Nuevo
                     </x-ui.button>
                 @endcan
             </x-slot:leftActions>
@@ -236,10 +236,10 @@
         </form>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cerrarModal">
+            <x-ui.button variant="neutral" wire:click="cerrarModal">
                 Cancelar
             </x-ui.button>
-            <x-ui.button variant="success" type="submit" form="form-rol" wire:loading.attr="disabled" icon="heroicon-o-check">
+            <x-ui.button variant="info" type="submit" form="form-rol" wire:loading.attr="disabled" icon="heroicon-o-check">
                 Guardar
             </x-ui.button>
         </x-slot:footer>
@@ -268,7 +268,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarCambioAmbito">
+            <x-ui.button variant="neutral" wire:click="cancelarCambioAmbito">
                 Cancelar
             </x-ui.button>
             <x-ui.button variant="warning" wire:click="confirmarCambioAmbito" icon="heroicon-o-arrow-path">
@@ -299,7 +299,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">
                 Cancelar
             </x-ui.button>
             <x-ui.button variant="danger"

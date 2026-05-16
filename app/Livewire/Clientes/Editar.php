@@ -34,6 +34,17 @@ class Editar extends Component
         }
     }
 
+    public function deshacer(): void
+    {
+        if ($this->cliente !== null) {
+            $this->form->fromModel($this->cliente);
+        } else {
+            $this->form->reset();
+            $this->form->activo = true;
+            $this->form->codigo_cliente = app(NumeracionService::class)->siguienteNumeroCliente();
+        }
+    }
+
     public function guardar(): void
     {
         $esNuevo = $this->cliente === null;

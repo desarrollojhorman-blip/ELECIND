@@ -16,7 +16,7 @@
             <x-slot:leftActions>
                 @can('create', App\Models\NumeroPedido::class)
                     <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
-                        Nuevo pedido
+                        Nuevo
                     </x-ui.button>
                 @endcan
             </x-slot:leftActions>
@@ -147,7 +147,7 @@
                             </x-ui.field>
                         </div>
                         <div class="col-span-2">
-                            <x-ui.button variant="primary" wire:click="agregarMaterialPendiente" icon="heroicon-o-plus" class="w-full">
+                            <x-ui.button variant="success" wire:click="agregarMaterialPendiente" icon="heroicon-o-plus" class="w-full">
                                 Añadir
                             </x-ui.button>
                         </div>
@@ -265,11 +265,9 @@
         </div>
 
         <x-slot:footer>
-            @if ($modoSoloLectura)
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cerrar</x-ui.button>
-            @else
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="success" type="submit" form="form-pedido"
+            @if (!$modoSoloLectura)
+                <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
+                <x-ui.button variant="info" type="submit" form="form-pedido"
                              wire:loading.attr="disabled" icon="heroicon-o-check">
                     Guardar
                 </x-ui.button>
@@ -298,7 +296,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

@@ -47,6 +47,20 @@ class Editar extends Component
         }
     }
 
+    public function deshacer(): void
+    {
+        if ($this->albaran !== null) {
+            $this->albaran->loadMissing(['lineasPersonal', 'lineasMaterial']);
+            $this->form->fromModel($this->albaran);
+        } else {
+            $this->form->reset();
+            $this->form->omitirLineaCreador = true;
+            $this->form->fecha = now()->format('Y-m-d');
+        }
+        $this->trabajadorSelectKey++;
+        $this->materialSelectKey++;
+    }
+
     public function updatedFormProyectoId(): void
     {
         $this->form->sincronizarClienteDesdeProyecto();

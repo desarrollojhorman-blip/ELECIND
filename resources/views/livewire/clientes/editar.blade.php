@@ -1,12 +1,12 @@
 <div class="space-y-4">
     <x-ui.page-header :title="$titulo" subtitle="Datos fiscales y de contacto del cliente.">
-        <x-slot:actions>
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
+            </x-ui.button>
             @if ($cliente)
-                <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                    Clientes
-                </x-ui.button>
                 @can('clientes.ver')
-                    <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                    <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
                 @endcan
@@ -15,16 +15,18 @@
                         Eliminar
                     </x-ui.button>
                 @endcan
-            @else
-                <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-x-mark">
-                    Cancelar
-                </x-ui.button>
             @endif
-            <x-ui.button variant="success" type="submit" form="form-cliente" wire:loading.attr="disabled" icon="heroicon-o-check">
+        </x-slot:actionsLeft>
+
+        <x-slot:actionsRight>
+            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
+                Deshacer
+            </x-ui.button>
+            <x-ui.button variant="info" type="submit" form="form-cliente" wire:loading.attr="disabled" icon="heroicon-o-check">
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
-        </x-slot:actions>
+        </x-slot:actionsRight>
     </x-ui.page-header>
 
     <form wire:submit="guardar" id="form-cliente" autocomplete="off">
@@ -202,7 +204,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

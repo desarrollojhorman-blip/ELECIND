@@ -64,7 +64,8 @@
       "Bash(Select-Object Name)",
       "Bash(dir \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" /B /O:N)",
       "Bash(findstr /V \"^$\")",
-      "Bash(D:/xampp/php/php.exe artisan *)"
+      "Bash(D:/xampp/php/php.exe artisan *)",
+      "Bash(Get-ChildItem \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\\\\views\\\\livewire\\\\clientes\\\\index.blade.php\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

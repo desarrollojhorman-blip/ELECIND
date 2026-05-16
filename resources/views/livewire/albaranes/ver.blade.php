@@ -1,17 +1,17 @@
 <div class="space-y-4">
     <x-ui.page-header title="Albarán {{ $albaran->numero }}" subtitle="Detalle del parte de trabajo.">
-        <x-slot:actions>
-            <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                Albaranes
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
             </x-ui.button>
-            @can('albaranes.crear_web')
-                <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
-                    Nuevo
+            @can('update', $albaran)
+                <x-ui.button as="a" href="{{ route('albaranes.editar', $albaran) }}" wire:navigate.fresh variant="neutral" icon="heroicon-o-pencil-square">
+                    Editar
                 </x-ui.button>
             @endcan
-            @can('update', $albaran)
-                <x-ui.button as="a" href="{{ route('albaranes.editar', $albaran) }}" wire:navigate.fresh variant="info" icon="heroicon-o-pencil-square">
-                    Editar
+            @can('albaranes.crear_web')
+                <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
+                    Nuevo
                 </x-ui.button>
             @endcan
             @can('delete', $albaran)
@@ -19,7 +19,7 @@
                     Eliminar
                 </x-ui.button>
             @endcan
-        </x-slot:actions>
+        </x-slot:actionsLeft>
     </x-ui.page-header>
 
     {{-- Cabecera (readonly) --}}
@@ -180,7 +180,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

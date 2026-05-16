@@ -213,7 +213,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">
                 Cancelar
             </x-ui.button>
             <x-ui.button variant="danger"

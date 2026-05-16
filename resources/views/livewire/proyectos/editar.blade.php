@@ -1,32 +1,32 @@
 <div class="space-y-4">
     <x-ui.page-header :title="$titulo" subtitle="Datos del proyecto.">
-        <x-slot:actions>
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
+            </x-ui.button>
             @if ($proyecto)
-                <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                    Proyectos
-                </x-ui.button>
                 @can('proyectos.ver')
-                    <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="ghost" icon="heroicon-o-plus">
+                    <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
                 @endcan
-            @else
-                <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="ghost" icon="heroicon-o-x-mark">
-                    Cancelar
-                </x-ui.button>
-            @endif
-            @if ($proyecto)
                 @can('delete', $proyecto)
                     <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                         Eliminar
                     </x-ui.button>
                 @endcan
             @endif
-            <x-ui.button variant="success" type="submit" form="form-proyecto" wire:loading.attr="disabled" icon="heroicon-o-check">
+        </x-slot:actionsLeft>
+
+        <x-slot:actionsRight>
+            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
+                Deshacer
+            </x-ui.button>
+            <x-ui.button variant="info" type="submit" form="form-proyecto" wire:loading.attr="disabled" icon="heroicon-o-check">
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
-        </x-slot:actions>
+        </x-slot:actionsRight>
     </x-ui.page-header>
 
     <form wire:submit="guardar" id="form-proyecto" autocomplete="off">
@@ -134,7 +134,7 @@
                             placeholder="— Selecciona trabajador —"
                         />
                     </div>
-                    <x-ui.button type="button" variant="info" wire:click="agregarTrabajador" icon="heroicon-o-plus">
+                    <x-ui.button type="button" variant="success" wire:click="agregarTrabajador" icon="heroicon-o-plus">
                         Añadir
                     </x-ui.button>
                 </div>
@@ -196,7 +196,7 @@
                             placeholder="— Selecciona responsable —"
                         />
                     </div>
-                    <x-ui.button type="button" variant="info" wire:click="agregarResponsableProyecto" icon="heroicon-o-plus">
+                    <x-ui.button type="button" variant="success" wire:click="agregarResponsableProyecto" icon="heroicon-o-plus">
                         Añadir
                     </x-ui.button>
                 </div>
@@ -258,7 +258,7 @@
                             placeholder="— Selecciona concepto —"
                         />
                     </div>
-                    <x-ui.button type="button" variant="info" wire:click="agregarConceptoProyecto" icon="heroicon-o-plus">
+                    <x-ui.button type="button" variant="success" wire:click="agregarConceptoProyecto" icon="heroicon-o-plus">
                         Añadir
                     </x-ui.button>
                 </div>
@@ -320,7 +320,7 @@
                             placeholder="— Selecciona material —"
                         />
                     </div>
-                    <x-ui.button type="button" variant="info" wire:click="agregarMaterialProyecto" icon="heroicon-o-plus">
+                    <x-ui.button type="button" variant="success" wire:click="agregarMaterialProyecto" icon="heroicon-o-plus">
                         Añadir
                     </x-ui.button>
                 </div>
@@ -382,7 +382,7 @@
         </form>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cerrarModalTipo">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cerrarModalTipo">Cancelar</x-ui.button>
             <x-ui.button variant="success" type="submit" form="form-tipo-rapido"
                          wire:loading.attr="disabled" icon="heroicon-o-check">
                 Crear tipo
