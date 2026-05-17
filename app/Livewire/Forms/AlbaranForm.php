@@ -47,6 +47,8 @@ class AlbaranForm extends Form
 
     public string $tipo_hora = 'laboral';
 
+    public string $estado = 'borrador';
+
     public ?string $observaciones = null;
 
     /* ───── Mis horas (línea personal del creador — solo móvil) ────────
@@ -87,6 +89,7 @@ class AlbaranForm extends Form
             'responsable_id' => ['nullable', 'integer', 'exists:users,id'],
             'fecha' => ['required', 'date'],
             'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
+            'estado'    => ['required', Rule::in(array_column(EstadoAlbaran::cases(), 'value'))],
             'observaciones' => ['nullable', 'string', 'max:2000'],
 
             'mi_horas' => $this->omitirLineaCreador ? ['nullable'] : ['required', 'numeric', 'min:0', 'max:24'],
@@ -134,6 +137,7 @@ class AlbaranForm extends Form
         $this->responsable_id = $albaran->responsable_id;
         $this->fecha = Carbon::parse($albaran->fecha)->format('Y-m-d');
         $this->tipo_hora = $albaran->tipo_hora->value;
+        $this->estado = $albaran->estado->value;
         $this->observaciones = $albaran->observaciones;
 
         $miId = (int) Auth::id();
@@ -257,6 +261,7 @@ class AlbaranForm extends Form
             $albaran->concepto_id = $this->concepto_id;
             $albaran->responsable_id = $this->responsable_id;
             $albaran->tipo_hora = TipoHora::from($this->tipo_hora);
+            $albaran->estado = EstadoAlbaran::from($this->estado);
             $albaran->observaciones = $this->observaciones;
             $albaran->save();
 

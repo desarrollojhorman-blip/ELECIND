@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Albaranes;
 
+use App\Enums\EstadoAlbaran;
 use App\Enums\TipoHora;
 use App\Livewire\Forms\AlbaranForm;
 use App\Models\Albaran;
@@ -232,7 +233,8 @@ class Editar extends Component
     {
         $titulo = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
         $tiposHora = TipoHora::cases();
+        $estados = EstadoAlbaran::cases();
 
-        return view('livewire.albaranes.editar', compact('titulo', 'tiposHora'));
+        return view('livewire.albaranes.editar', compact('titulo', 'tiposHora', 'estados'));
     }
 }
