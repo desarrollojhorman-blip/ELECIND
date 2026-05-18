@@ -37,14 +37,28 @@ class Edit extends Component
 
     public function guardar(): void
     {
+        \Log::info('[EMPRESA DEBUG] guardar() iniciado');
+
         $empresa = Empresa::actual();
         Gate::authorize('update', $empresa);
 
-        $this->form->save();
+        try {
+            $this->form->save();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('[EMPRESA DEBUG] Validación fallida', ['errors' => $e->errors()]);
+            throw $e;
+        } catch (\Throwable $e) {
+            \Log::error('[EMPRESA DEBUG] Error inesperado en save()', ['error' => $e->getMessage()]);
+            throw $e;
+        }
 
         Branding::limpiarCache();
 
-        session()->flash('status', 'Configuración de empresa actualizada correctamente.');
+        \Log::info('[EMPRESA DEBUG] Guardado OK, redirigiendo');
+
+        session()->flash('status', 'Empresa actualizada correctamente.');
+
+        $this->redirect(route('configuracion.empresa'), navigate: true);
     }
 
     public function quitarLogo(): void

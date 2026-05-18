@@ -1,9 +1,20 @@
-﻿<div>
-    <x-ui.page-header
-        title="Empresa"
-        subtitle="Datos fiscales y logos para documentos (albaranes y PDF)." />
+<div>
+    <h2 class="text-xl font-semibold text-slate-900">Empresa</h2>
+    <p class="mb-4 text-sm text-slate-500">Datos fiscales y logos para documentos (albaranes y PDF).</p>
 
-    <form wire:submit="guardar" class="space-y-5">
+    {{-- Overlay bloqueante mientras se guarda --}}
+    <div wire:loading.flex wire:target="guardar"
+         class="fixed inset-0 z-[9999] items-center justify-center bg-black/50">
+        <div class="flex flex-col items-center gap-3 rounded-xl bg-white px-8 py-6 shadow-xl">
+            <svg class="size-8 animate-spin text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            <span class="text-sm font-medium text-slate-700">Guardando…</span>
+        </div>
+    </div>
+
+    <div class="space-y-5">
 
         {{-- ─── Datos fiscales y de contacto ─── --}}
         <x-ui.card>
@@ -11,43 +22,43 @@
 
             <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                    <x-ui.input wire:model="form.nombre" />
+                    <x-ui.input wire:model="form.nombre" maxlength="150" />
                 </x-ui.field>
 
                 <x-ui.field label="Nombre comercial" :error="$errors->first('form.nombre_comercial')">
-                    <x-ui.input wire:model="form.nombre_comercial" />
+                    <x-ui.input wire:model="form.nombre_comercial" maxlength="150" />
                 </x-ui.field>
 
                 <x-ui.field label="CIF" :error="$errors->first('form.cif')">
-                    <x-ui.input wire:model="form.cif" />
+                    <x-ui.input wire:model="form.cif" maxlength="20" />
                 </x-ui.field>
 
                 <x-ui.field label="Teléfono" :error="$errors->first('form.telefono')">
-                    <x-ui.input wire:model="form.telefono" />
+                    <x-ui.input wire:model="form.telefono" maxlength="30" inputmode="tel" />
                 </x-ui.field>
 
                 <x-ui.field label="Dirección" class="md:col-span-2" :error="$errors->first('form.direccion')">
-                    <x-ui.input wire:model="form.direccion" />
+                    <x-ui.input wire:model="form.direccion" maxlength="255" />
                 </x-ui.field>
 
                 <x-ui.field label="Código postal" :error="$errors->first('form.codigo_postal')">
-                    <x-ui.input wire:model="form.codigo_postal" />
+                    <x-ui.input wire:model="form.codigo_postal" maxlength="10" />
                 </x-ui.field>
 
                 <x-ui.field label="Población" :error="$errors->first('form.poblacion')">
-                    <x-ui.input wire:model="form.poblacion" />
+                    <x-ui.input wire:model="form.poblacion" maxlength="100" />
                 </x-ui.field>
 
                 <x-ui.field label="Provincia" :error="$errors->first('form.provincia')">
-                    <x-ui.input wire:model="form.provincia" />
+                    <x-ui.input wire:model="form.provincia" maxlength="100" />
                 </x-ui.field>
 
                 <x-ui.field label="Email de contacto" :error="$errors->first('form.email_contacto')">
-                    <x-ui.input type="email" wire:model="form.email_contacto" />
+                    <x-ui.input type="email" wire:model="form.email_contacto" maxlength="150" inputmode="email" />
                 </x-ui.field>
 
                 <x-ui.field label="Email para notificaciones" class="md:col-span-2" :error="$errors->first('form.email_notificaciones')">
-                    <x-ui.input type="email" wire:model="form.email_notificaciones" />
+                    <x-ui.input type="email" wire:model="form.email_notificaciones" maxlength="150" inputmode="email" />
                 </x-ui.field>
             </div>
         </x-ui.card>
@@ -156,10 +167,10 @@
         {{-- Acciones --}}
         <div class="flex justify-end gap-2 pt-2">
             <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left" type="button">Deshacer</x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" wire:loading.attr="disabled">
+            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="button" wire:click="guardar" wire:loading.attr="disabled" wire:target="guardar">
                 Guardar
             </x-ui.button>
         </div>
 
-    </form>
+    </div>
 </div>

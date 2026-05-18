@@ -3,6 +3,7 @@
 namespace App\Livewire\Configuracion;
 
 use App\Models\Empresa;
+use App\Support\AjustesFields;
 use App\Support\Branding;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -32,15 +33,12 @@ class Ajustes extends Component
 
     public string $plantilla_numeracion_proyecto = 'PROY-{NNNN}';
 
-    #[Validate(['required', 'integer', 'min:1', 'max:90'])]
     public int $token_caducidad_dias = 7;
 
     // ── Límites de archivos adjuntos ─────────────────────────────────────────
 
-    #[Validate(['required', 'integer', 'in:2,5,10,20,50'])]
     public int $archivo_tamano_max_mb = 10;
 
-    #[Validate(['required', 'integer', 'min:1', 'max:100'])]
     public int $archivo_cantidad_max = 20;
 
     // ── Logo de la aplicación (prioridad absoluta en UI) ─────────────────────
@@ -63,13 +61,10 @@ class Ajustes extends Component
     public const COLOR_SECUNDARIO_DEFAULT      = '#f1f5f9';
     public const COLOR_TEXTO_ENCABEZADO_DEFAULT = '#ffffff';
 
-    #[Validate(['required', 'string', 'max:20'])]
     public string $color_primario = self::COLOR_PRIMARIO_DEFAULT;
 
-    #[Validate(['required', 'string', 'max:20'])]
     public string $color_secundario = self::COLOR_SECUNDARIO_DEFAULT;
 
-    #[Validate(['required', 'string', 'max:20'])]
     public string $color_texto_encabezado = self::COLOR_TEXTO_ENCABEZADO_DEFAULT;
 
     public ?array $debug_guardar = null;
@@ -96,6 +91,51 @@ class Ajustes extends Component
         $this->color_primario = $empresa->color_primario ?? '#334155';
         $this->color_secundario = $empresa->color_secundario ?? '#f1f5f9';
         $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
+    }
+
+    /**
+     * Retorna las reglas de validación desde AjustesFields.
+     *
+     * Centraliza todas las reglas en App\Support\AjustesFields para facilitar
+     * mantenimiento y reutilización.
+     */
+    #[\Livewire\Attributes\Validate]
+    public function rules(): array
+    {
+        return AjustesFields::getValidationRules();
+    }
+
+    public function messages(): array
+    {
+        return [
+            'required' => 'El campo :attribute es obligatorio.',
+            'integer' => 'El campo :attribute debe ser un numero entero.',
+            'min' => 'El campo :attribute debe ser al menos :min.',
+            'max' => 'El campo :attribute no puede superar :max.',
+            'in' => 'El valor seleccionado para :attribute no es valido.',
+            'regex' => 'El formato de :attribute no es valido.',
+            'nuevoLogoApp.image' => 'El logo debe ser una imagen valida.',
+            'nuevoLogoApp.max' => 'El logo no puede superar 2 MB.',
+            'nuevoLogoApp.mimes' => 'El logo debe ser de tipo: png, jpg, jpeg, svg o webp.',
+        ];
+    }
+
+    public function validationAttributes(): array
+    {
+        return [
+            'plantilla_numeracion_albaran' => 'Numero de albaran',
+            'plantilla_numeracion_cliente' => 'Codigo cliente',
+            'plantilla_numeracion_pedido' => 'Numero de pedido',
+            'plantilla_numeracion_proyecto' => 'Codigo de proyecto',
+            'token_caducidad_dias' => 'Caducidad del token de firma',
+            'archivo_tamano_max_mb' => 'Tamano maximo por archivo',
+            'archivo_cantidad_max' => 'Cantidad maxima de archivos por albaran',
+            'logo_app_zoom' => 'Zoom del logo',
+            'nuevoLogoApp' => 'Logo de la aplicacion',
+            'color_primario' => 'Color primario',
+            'color_secundario' => 'Color secundario',
+            'color_texto_encabezado' => 'Color de texto del encabezado',
+        ];
     }
 
     public function quitarLogoApp(): void
@@ -136,6 +176,17 @@ class Ajustes extends Component
 
     public function guardar(): void
     {
+        // ─ Aplicar valores por defecto si los colores están vacíos
+        if (empty($this->color_primario)) {
+            $this->color_primario = self::COLOR_PRIMARIO_DEFAULT;
+        }
+        if (empty($this->color_secundario)) {
+            $this->color_secundario = self::COLOR_SECUNDARIO_DEFAULT;
+        }
+        if (empty($this->color_texto_encabezado)) {
+            $this->color_texto_encabezado = self::COLOR_TEXTO_ENCABEZADO_DEFAULT;
+        }
+
         $this->debug_guardar = [
             'momento' => now()->format('Y-m-d H:i:s'),
             'fase' => 'invocado',
@@ -234,6 +285,7 @@ class Ajustes extends Component
         Branding::limpiarCache();
 
         session()->flash('status', 'Ajustes guardados correctamente. [' . now()->format('H:i:s') . ']');
+        $this->redirectRoute('configuracion.ajustes');
     }
 
     public function render(): View
@@ -248,6 +300,7 @@ class Ajustes extends Component
         }
         return view('livewire.configuracion.ajustes', [
             'laravel_log' => $logLines,
+            'fieldsConfig' => AjustesFields::class,  // Pasar la clase para usarla en Blade
         ]);
     }
 }

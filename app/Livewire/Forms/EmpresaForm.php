@@ -83,6 +83,33 @@ class EmpresaForm extends Form
     /**
      * @return array<string, string>
      */
+    public function messages(): array
+    {
+        return [
+            'nombre.required'              => 'El nombre es obligatorio.',
+            'nombre.max'                   => 'El nombre no puede superar 150 caracteres.',
+            'nombre_comercial.max'         => 'El nombre comercial no puede superar 150 caracteres.',
+            'cif.max'                      => 'El CIF no puede superar 20 caracteres.',
+            'direccion.max'                => 'La dirección no puede superar 255 caracteres.',
+            'codigo_postal.max'            => 'El código postal no puede superar 10 caracteres.',
+            'poblacion.max'                => 'La población no puede superar 100 caracteres.',
+            'provincia.max'                => 'La provincia no puede superar 100 caracteres.',
+            'telefono.max'                 => 'El teléfono no puede superar 30 caracteres.',
+            'email_contacto.email'         => 'El email de contacto no tiene un formato válido.',
+            'email_contacto.max'           => 'El email de contacto no puede superar 150 caracteres.',
+            'email_notificaciones.email'   => 'El email de notificaciones no tiene un formato válido.',
+            'email_notificaciones.max'     => 'El email de notificaciones no puede superar 150 caracteres.',
+            'nuevoLogo.image'              => 'El logo debe ser una imagen.',
+            'nuevoLogo.max'                => 'El logo no puede superar 2 MB.',
+            'nuevoLogo.mimes'              => 'El logo debe ser PNG, JPG, SVG o WebP.',
+            'logo_zoom.required'           => 'El zoom del logo es obligatorio.',
+            'logo_zoom.in'                 => 'El zoom debe ser uno de los valores permitidos.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function validationAttributes(): array
     {
         return [

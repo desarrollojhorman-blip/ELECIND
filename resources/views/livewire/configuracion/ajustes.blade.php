@@ -6,7 +6,7 @@
     <div class="space-y-6">
         <div x-data="{ tab: 'identidad' }">
             {{-- Tabs (solo navegación con Alpine) --}}
-            <div class="flex items-end overflow-x-auto border-b border-slate-200 px-2 pt-1.5">
+            <div class="flex items-end border-b border-slate-200 px-2 pt-1.5">
                 @foreach ([
                     ['key' => 'identidad',   'label' => 'Identidad visual'],
                     ['key' => 'numeracion',  'label' => 'Numeración'],
@@ -99,6 +99,12 @@
                     <h3 class="mb-1 text-sm font-semibold text-slate-800">Colores de la aplicación</h3>
                     <p class="mb-4 text-xs text-slate-500">Afectan a botones, encabezados de tablas y elementos de marca.</p>
 
+                    @php
+                        $colorPrimarioConfig = \App\Support\AjustesFields::getField('color_primario');
+                        $colorSecundarioConfig = \App\Support\AjustesFields::getField('color_secundario');
+                        $colorTextoEncabezadoConfig = \App\Support\AjustesFields::getField('color_texto_encabezado');
+                    @endphp
+
                     <div class="grid gap-4 md:grid-cols-2">
                         <x-ui.field label="Color primario" for="color_primario" required :error="$errors->first('color_primario')">
                             <div class="flex items-center gap-2">
@@ -108,7 +114,7 @@
                                 <x-ui.input id="color_primario"
                                             name="color_primario"
                                             wire:model.live="color_primario"
-                                            placeholder="#334155" class="font-mono" />
+                                            placeholder="#334155" class="font-mono" maxlength="{{ $colorPrimarioConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_primario', '#334155')"
                                         title="Restablecer"
@@ -116,6 +122,7 @@
                                     <x-heroicon-o-arrow-path class="size-4" />
                                 </button>
                             </div>
+                            <p class="mt-1 text-xs text-slate-500">{{ $colorPrimarioConfig['help'] ?? '' }}</p>
                         </x-ui.field>
 
                         <x-ui.field label="Color secundario" for="color_secundario" required :error="$errors->first('color_secundario')">
@@ -126,7 +133,7 @@
                                 <x-ui.input id="color_secundario"
                                             name="color_secundario"
                                             wire:model.live="color_secundario"
-                                            placeholder="#f1f5f9" class="font-mono" />
+                                            placeholder="#f1f5f9" class="font-mono" maxlength="{{ $colorSecundarioConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_secundario', '#f1f5f9')"
                                         title="Restablecer"
@@ -134,6 +141,7 @@
                                     <x-heroicon-o-arrow-path class="size-4" />
                                 </button>
                             </div>
+                            <p class="mt-1 text-xs text-slate-500">{{ $colorSecundarioConfig['help'] ?? '' }}</p>
                         </x-ui.field>
 
                         <x-ui.field label="Color texto encabezado tabla" for="color_texto_encabezado" required :error="$errors->first('color_texto_encabezado')">
@@ -144,7 +152,7 @@
                                 <x-ui.input id="color_texto_encabezado"
                                             name="color_texto_encabezado"
                                             wire:model.live="color_texto_encabezado"
-                                            placeholder="#ffffff" class="font-mono" />
+                                            placeholder="#ffffff" class="font-mono" maxlength="{{ $colorTextoEncabezadoConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_texto_encabezado', '#ffffff')"
                                         title="Restablecer"
@@ -152,7 +160,7 @@
                                     <x-heroicon-o-arrow-path class="size-4" />
                                 </button>
                             </div>
-                            <p class="mt-1 text-xs text-slate-500">Color de las letras en los encabezados de las tablas.</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ $colorTextoEncabezadoConfig['help'] ?? '' }}</p>
                         </x-ui.field>
 
                         <div class="flex items-center justify-center rounded-md border border-slate-200 p-4"
@@ -182,21 +190,28 @@
                 </ul>
                 <p class="mb-4 text-xs text-amber-700">💡 Puedes poner lo que quieras. Si es incorrecto, lo verás al crear el primer registro.</p>
 
+                   @php
+                       $plantillaClienteConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_cliente');
+                       $plantillaAlbaranConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_albaran');
+                       $plantillaPedidoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_pedido');
+                       $plantillaProyectoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_proyecto');
+                   @endphp
+
                 <div class="grid gap-4 md:grid-cols-2">
-                                <x-ui.field label="Código cliente" for="plantilla_numeracion_cliente" :error="$errors->first('plantilla_numeracion_cliente')">
-                                    <x-ui.input id="plantilla_numeracion_cliente" name="plantilla_numeracion_cliente" wire:model.live="plantilla_numeracion_cliente" class="font-mono" />
+                                   <x-ui.field label="Código cliente" for="plantilla_numeracion_cliente" :error="$errors->first('plantilla_numeracion_cliente')">
+                                       <x-ui.input id="plantilla_numeracion_cliente" name="plantilla_numeracion_cliente" wire:model.live="plantilla_numeracion_cliente" class="font-mono" maxlength="{{ $plantillaClienteConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>
 
-                                <x-ui.field label="Número de albarán" for="plantilla_numeracion_albaran" :error="$errors->first('plantilla_numeracion_albaran')">
-                                    <x-ui.input id="plantilla_numeracion_albaran" name="plantilla_numeracion_albaran" wire:model.live="plantilla_numeracion_albaran" class="font-mono" />
+                                   <x-ui.field label="Número de albarán" for="plantilla_numeracion_albaran" :error="$errors->first('plantilla_numeracion_albaran')">
+                                       <x-ui.input id="plantilla_numeracion_albaran" name="plantilla_numeracion_albaran" wire:model.live="plantilla_numeracion_albaran" class="font-mono" maxlength="{{ $plantillaAlbaranConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>
 
-                                <x-ui.field label="Nº pedido" for="plantilla_numeracion_pedido" :error="$errors->first('plantilla_numeracion_pedido')">
-                                    <x-ui.input id="plantilla_numeracion_pedido" name="plantilla_numeracion_pedido" wire:model.live="plantilla_numeracion_pedido" class="font-mono" />
+                                   <x-ui.field label="Nº pedido" for="plantilla_numeracion_pedido" :error="$errors->first('plantilla_numeracion_pedido')">
+                                       <x-ui.input id="plantilla_numeracion_pedido" name="plantilla_numeracion_pedido" wire:model.live="plantilla_numeracion_pedido" class="font-mono" maxlength="{{ $plantillaPedidoConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>
 
-                                <x-ui.field label="Código proyecto" for="plantilla_numeracion_proyecto" :error="$errors->first('plantilla_numeracion_proyecto')">
-                                    <x-ui.input id="plantilla_numeracion_proyecto" name="plantilla_numeracion_proyecto" wire:model.live="plantilla_numeracion_proyecto" class="font-mono" />
+                                   <x-ui.field label="Código proyecto" for="plantilla_numeracion_proyecto" :error="$errors->first('plantilla_numeracion_proyecto')">
+                                       <x-ui.input id="plantilla_numeracion_proyecto" name="plantilla_numeracion_proyecto" wire:model.live="plantilla_numeracion_proyecto" class="font-mono" maxlength="{{ $plantillaProyectoConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>
                 </div>
             </div>
@@ -215,9 +230,6 @@
                                     required
                                     :error="$errors->first('token_caducidad_dias')">
                             <x-ui.input id="token_caducidad_dias" name="token_caducidad_dias" type="number" min="1" max="90" wire:model="token_caducidad_dias" />
-                            <p class="mt-1 text-xs text-slate-500">
-                                Tiempo durante el cual el enlace de firma sigue siendo válido.
-                            </p>
                         </x-ui.field>
                     </div>
 
@@ -254,43 +266,14 @@
             </div>
 
 
-            {{-- ═══ MENSAJES Y ERRORES (Livewire canónico) ═══ --}}
-            @if (session('status'))
-                <div class="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-                    {{ session('status') }}
-                </div>
-            @endif
-
+            {{-- ═══ AVISO GENERAL DE VALIDACIÓN (sin duplicar errores por campo) ═══ --}}
             @if ($errors->any())
-                <div class="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
-                    <ul class="space-y-1 text-xs text-red-700">
-                        @foreach ($errors->all() as $e)
-                            <li>{{ $e }}</li>
-                        @endforeach
-                    </ul>
+                <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    Revisa los campos marcados en rojo para continuar.
                 </div>
             @endif
 
-            @if ($debug_guardar)
-                <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                    <p class="font-semibold">Traza temporal de Guardar</p>
-                    <p class="mt-1">Momento: {{ $debug_guardar['momento'] ?? '-' }}</p>
-                    <p>Fase: {{ $debug_guardar['fase'] ?? '-' }}</p>
-                    <pre class="mt-2 overflow-x-auto whitespace-pre-wrap rounded bg-white/70 p-2 text-[11px]">{{ json_encode($debug_guardar, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-                </div>
-            @endif
 
-            {{-- ═══ LOG DE LARAVEL (últimas líneas) ═══ --}}
-            @if (!empty($laravel_log))
-                <div class="mt-4 rounded-md border border-slate-300 bg-slate-50 p-3 text-xs text-slate-800">
-                    <p class="mb-2 font-semibold">Últimas líneas de log [AJUSTES DEBUG]</p>
-                    <pre class="overflow-x-auto whitespace-pre-wrap">@foreach ($laravel_log as $line){{ $line }}@endforeach</pre>
-                </div>
-            @else
-                <div class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                    Aún no hay trazas de [AJUSTES DEBUG]. Pulsa Guardar para generarlas.
-                </div>
-            @endif
 
             {{-- ═══ BOTONES GLOBALES (siempre visibles, derecha) ═══ --}}
             <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
@@ -301,6 +284,17 @@
                     <span wire:loading.remove wire:target="guardar">Guardar</span>
                     <span wire:loading wire:target="guardar">Guardando…</span>
                 </x-ui.button>
+            </div>
+
+            {{-- Bloqueo global durante guardado --}}
+            <div wire:loading.flex wire:target="guardar" class="fixed inset-0 z-[9999] items-center justify-center bg-black/50">
+                <div class="rounded-lg bg-white px-8 py-8 shadow-2xl">
+                    <div class="mb-4 flex justify-center">
+                        <div class="size-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
+                    </div>
+                    <p class="text-lg font-semibold text-slate-900">Guardando ajustes...</p>
+                    <p class="mt-2 text-sm text-slate-600">Por favor, espera a que se complete.</p>
+                </div>
             </div>
         </div>
     </div>
