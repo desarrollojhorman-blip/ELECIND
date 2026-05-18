@@ -14,7 +14,37 @@
       "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" -Filter \"*proyecto*.php\")",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(D:\\\\xampp\\\\php\\\\php.exe -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Proyectos\\\\Index.php\")",
-      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Proyectos\\\\Index.php\")"
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Proyectos\\\\Index.php\")",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" log --oneline -40)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" log --since=\"2026-05-15\" --oneline --stat -10)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" log --pretty=format:\"%h %ad %s\" --date=short -15)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" ls-files storage/framework/views)",
+      "Bash(ls -la storage/logs/)",
+      "Bash(tail -n 3 storage/logs/laravel.log)",
+      "Bash(grep -o -E \"wire:click[^,]{0,20}guardar|guardar[^,]{0,10}wire:click|'wire:click'[^;]{0,30}\" storage/framework/views/39457aa24993b05a6d2c9e74b13c116a.php)",
+      "Bash(curl -s -L \"http://localhost/CLIENTES/ELECIND/public/configuracion/ajustes\")",
+      "Bash(curl -s -L \"http://localhost/CLIENTES/ELECIND/public/login\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -b /tmp/elecind_cookies.txt -o /tmp/lw.js -w 'livewire.js http=%{http_code} bytes=%{size_download} type=%{content_type}\\\\n' __TRACKED_VAR__/livewire-3371c788/livewire.js?id=ab6b028c)",
+      "Bash(curl -s -b /tmp/elecind_cookies.txt -o /dev/null -w 'app.js http=%{http_code} type=%{content_type}\\\\n' __TRACKED_VAR__/build/assets/app-CcNNqum8.js)",
+      "Bash(grep -o -E 'wire:click=\"guardar\"[^>]*|wire:click=\\\\\\\\\\\\\\\\?\"guardar\"' /tmp/elecind_ajustes.html)",
+      "Bash(python -c ' *)",
+      "Bash(php -r ' *)",
+      "Bash(cd \"c:/xampp/htdocs/CLIENTES/ELECIND\" && rm -f ./_diag_cookies.txt ./_diag_ajustes.html /tmp/elecind_*.html /tmp/elecind_cookies.txt /tmp/lw.js && git status --porcelain | grep -E \"_diag|elecind_\" || echo \"limpio \\(sin ficheros de diagnóstico en git status\\)\")",
+      "Bash(xxd)",
+      "Bash(php -r '$c=require \"config/session.php\"; echo \"driver=\".$c[\"driver\"].\" path=\".var_export\\($c[\"path\"],true\\).\" domain=\".var_export\\($c[\"domain\"],true\\).\" secure=\".var_export\\($c[\"secure\"],true\\).\" same_site=\".var_export\\($c[\"same_site\"]??null,true\\).\"\\\\n\";')",
+      "Bash(grep -n -E \"function actual|Cache::|static \\\\\\\\\\\\$|remember|->save\\\\\\(|function limpiarCache|forget\" app/Models/Empresa.php)",
+      "Bash(grep -n -E \"function \\(empresa|limpiarCache|colorPrimario|nombre\\)|Cache::|remember|forget|static \\\\\\\\\\\\$\" app/Support/Branding.php)",
+      "Bash(icacls storage *)",
+      "Bash(icacls \"bootstrap/cache\" /grant \"Users:\\(OI\\)\\(CI\\)F\" /T /Q)",
+      "PowerShell(icacls \"C:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\storage\" /grant \"Users:\\(OI\\)\\(CI\\)F\" /T /Q)",
+      "PowerShell(icacls \"C:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\bootstrap\\\\cache\" /grant \"Users:\\(OI\\)\\(CI\\)F\" /T /Q)",
+      "Read(//c/Users/PC7/.claude/projects/c--xampp-htdocs-CLIENTES-ELECIND/memory/**)"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views",
+      "c:\\Users\\PC7\\.claude\\projects\\c--xampp-htdocs-CLIENTES-ELECIND\\memory"
     ]
   }
 }

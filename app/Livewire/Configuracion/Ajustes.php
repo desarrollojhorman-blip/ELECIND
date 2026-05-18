@@ -21,17 +21,15 @@ class Ajustes extends Component
     use WithFileUploads;
 
     // ── Plantillas ───────────────────────────────────────────────────────────
+    // Sin validación de sintaxis: el usuario puede poner lo que quiera.
+    // Si es incorrecto, lo verá al generar el primer número.
 
-    #[Validate(['required', 'string', 'max:60'])]
     public string $plantilla_numeracion_albaran = 'ALB-{YYYY}-{NNNN}';
 
-    #[Validate(['required', 'string', 'max:60'])]
     public string $plantilla_numeracion_cliente = 'CLI-{NNNN}';
 
-    #[Validate(['required', 'string', 'max:60'])]
     public string $plantilla_numeracion_pedido = 'PED-{YYYY}-{NNNN}';
 
-    #[Validate(['required', 'string', 'max:60'])]
     public string $plantilla_numeracion_proyecto = 'PROY-{NNNN}';
 
     #[Validate(['required', 'integer', 'min:1', 'max:90'])]
@@ -73,6 +71,8 @@ class Ajustes extends Component
 
     #[Validate(['required', 'string', 'max:20'])]
     public string $color_texto_encabezado = self::COLOR_TEXTO_ENCABEZADO_DEFAULT;
+
+    public ?array $debug_guardar = null;
 
     // ────────────────────────────────────────────────────────────────────────
 
@@ -136,7 +136,45 @@ class Ajustes extends Component
 
     public function guardar(): void
     {
-        $this->validate();
+        $this->debug_guardar = [
+            'momento' => now()->format('Y-m-d H:i:s'),
+            'fase' => 'invocado',
+            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
+            'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
+            'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
+            'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
+            'token_caducidad_dias' => $this->token_caducidad_dias,
+            'archivo_cantidad_max' => $this->archivo_cantidad_max,
+            'color_primario' => $this->color_primario,
+            'color_secundario' => $this->color_secundario,
+            'color_texto_encabezado' => $this->color_texto_encabezado,
+            'origen' => 'Livewire::guardar()',
+        ];
+
+        // [AJUSTES DEBUG] — rastro temporal para diagnosticar el botón Guardar.
+        \Log::info('[AJUSTES DEBUG] guardar() INVOCADO', [
+            'user_id' => auth()->id(),
+            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
+            'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
+            'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
+            'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
+            'token_caducidad_dias' => $this->token_caducidad_dias,
+            'archivo_cantidad_max' => $this->archivo_cantidad_max,
+            'color_primario' => $this->color_primario,
+            'color_secundario' => $this->color_secundario,
+            'color_texto_encabezado' => $this->color_texto_encabezado,
+        ]);
+
+        try {
+            $this->validate();
+            $this->debug_guardar['fase'] = 'validado';
+            \Log::info('[AJUSTES DEBUG] validate() OK');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->debug_guardar['fase'] = 'error_validacion';
+            $this->debug_guardar['errores'] = $e->errors();
+            \Log::warning('[AJUSTES DEBUG] validate() FALLÓ', ['errors' => $e->errors()]);
+            throw $e;
+        }
 
         $empresa = Empresa::actual();
 
@@ -173,6 +211,20 @@ class Ajustes extends Component
         ]);
 
         $empresa->save();
+        $this->debug_guardar['fase'] = 'guardado';
+        $this->debug_guardar['persistido'] = [
+            'empresa_id' => $empresa->id,
+            'plantilla_numeracion_cliente' => $empresa->plantilla_numeracion_cliente,
+            'plantilla_numeracion_albaran' => $empresa->plantilla_numeracion_albaran,
+            'plantilla_numeracion_pedido' => $empresa->plantilla_numeracion_pedido,
+            'plantilla_numeracion_proyecto' => $empresa->plantilla_numeracion_proyecto,
+            'token_caducidad_dias' => $empresa->token_caducidad_dias,
+            'archivo_cantidad_max' => $empresa->archivo_cantidad_max,
+            'color_primario' => $empresa->color_primario,
+            'color_secundario' => $empresa->color_secundario,
+            'color_texto_encabezado' => $empresa->color_texto_encabezado,
+        ];
+        \Log::info('[AJUSTES DEBUG] empresa->save() EJECUTADO', ['empresa_id' => $empresa->id]);
 
         $this->logo_app_path = $empresa->logo_app_path;
         $this->logo_app_ratio = $empresa->logo_app_ratio;
@@ -181,11 +233,21 @@ class Ajustes extends Component
 
         Branding::limpiarCache();
 
-        session()->flash('status', 'Ajustes guardados correctamente.');
+        session()->flash('status', 'Ajustes guardados correctamente. [' . now()->format('H:i:s') . ']');
     }
 
     public function render(): View
     {
-        return view('livewire.configuracion.ajustes');
+        // Mostrar solo líneas relevantes de Ajustes en la vista para depuración
+        $logPath = storage_path('logs/laravel.log');
+        $logLines = [];
+        if (file_exists($logPath)) {
+            $lines = file($logPath);
+            $ajustesLines = array_values(array_filter($lines, static fn (string $line): bool => str_contains($line, '[AJUSTES DEBUG]')));
+            $logLines = array_slice($ajustesLines, -30); // Últimas 30 líneas de Ajustes
+        }
+        return view('livewire.configuracion.ajustes', [
+            'laravel_log' => $logLines,
+        ]);
     }
 }

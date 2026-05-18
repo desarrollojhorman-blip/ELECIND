@@ -18,7 +18,7 @@ class ClienteFactory extends Factory
         $nombre = $faker->company();
 
         return [
-            'numero_cliente' => $faker->unique()->numberBetween(1, 999_999),
+            'codigo_cliente' => (string) $faker->unique()->numberBetween(1, 999_999),
             'nombre' => $nombre,
             'nombre_comercial' => $faker->boolean(40) ? $faker->companySuffix().' '.$faker->lastName() : null,
             'cif' => $this->generarCif(),

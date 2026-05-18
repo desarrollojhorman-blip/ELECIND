@@ -77,6 +77,38 @@ Avance funcional reciente en navegación y módulo de proyectos:
 
 Resumen operativo detallado: [`docs/resumen/140526_2300_fase2_copilot.md`](./docs/resumen/140526_2300_fase2_copilot.md)
 
+## 🧪 Incidencia resuelta: módulo Ajustes
+
+Durante la estabilización del guardado en Ajustes se detectaron varios síntomas:
+
+- El botón Guardar parecía refrescar la pantalla pero no persistía cambios.
+- En algunos intentos el submit acababa como envío HTML nativo (query params en URL) en lugar de acción Livewire.
+- Apareció un error de Livewire por múltiples elementos raíz.
+- Hubo fases donde el componente quedaba mal anclado (el root reactivo no envolvía todo el contenido).
+
+### Causa principal
+
+La vista de Ajustes tenía problemas estructurales para Livewire (root mal detectado/anclado), mezclados con bindings complejos (Alpine + Livewire) en campos críticos, lo que hacía que el evento de guardar no fuera fiable en todos los casos.
+
+### Solución aplicada
+
+- Se dejó un único root válido para el componente Livewire.
+- Se corrigió la estructura de la vista para que Guardar y Deshacer queden dentro del árbol reactivo.
+- Se eliminó la dependencia innecesaria de submit HTML nativo para el guardado.
+- Se simplificaron bindings de color a `wire:model.live` directo.
+- Se añadieron trazas internas de depuración en `guardar()` con prefijo `[AJUSTES DEBUG]`.
+- Se mostró un bloque de trazas en UI para diagnóstico rápido.
+
+### Norma de trabajo a partir de ahora
+
+Para cualquier fallo o comportamiento extraño, el diagnóstico se hará siempre primero con logs:
+
+- Traza visual en pantalla (si aplica).
+- Logs técnicos en `storage/logs/laravel.log`.
+- Prefijos de contexto por módulo (ejemplo: `[AJUSTES DEBUG]`).
+
+Solo después de confirmar el punto exacto de fallo por logs, se aplicarán cambios de código.
+
 ## 🚀 Instalación rápida
 
 Ver [`docs/INSTALACION_Version3.md`](./docs/INSTALACION_Version3.md) para guía detallada.
