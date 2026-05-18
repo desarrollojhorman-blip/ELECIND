@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Usuarios" subtitle="Gestión de usuarios internos y responsables externos con roles y niveles." />
 
     {{-- Toolbar --}}
@@ -319,11 +319,11 @@
         </form>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cerrarModal">
-                {{ $modoSoloLectura ? 'Cerrar' : 'Cancelar' }}
-            </x-ui.button>
             @if (!$modoSoloLectura)
-                <x-ui.button variant="success" type="submit" form="form-usuario" wire:loading.attr="disabled" icon="heroicon-o-check">
+                <x-ui.button variant="neutral" wire:click="cerrarModal">
+                    Cancelar
+                </x-ui.button>
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-usuario" wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif
@@ -375,7 +375,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarDuplicados">
+            <x-ui.button variant="neutral" wire:click="cancelarDuplicados">
                 Volver al formulario
             </x-ui.button>
             <x-ui.button variant="success"
@@ -408,7 +408,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">
                 Cancelar
             </x-ui.button>
             <x-ui.button variant="danger"

@@ -52,6 +52,15 @@ class Editar extends Component
 
     public ?int $confirmarEliminarId = null;
 
+    public function deshacer(): void
+    {
+        if ($this->proyecto !== null) {
+            $this->form->fromModel($this->proyecto);
+        } else {
+            $this->form->reset();
+        }
+    }
+
     public function mount(?Proyecto $proyecto = null): void
     {
         if ($proyecto !== null && $proyecto->exists) {

@@ -26,12 +26,20 @@ class Empresa extends Model
         'logo_albaran_path',
         'logo_albaran_ratio',
         'logo_albaran_zoom',
+        'logo_app_path',
+        'logo_app_ratio',
+        'logo_app_zoom',
         'color_primario',
         'color_secundario',
         'color_texto_encabezado',
         'plantilla_numeracion_albaran',
+        'plantilla_numeracion_cliente',
+        'plantilla_numeracion_pedido',
+        'plantilla_numeracion_proyecto',
         'token_caducidad_dias',
         'plantilla_pdf_config',
+        'archivo_tamano_max_mb',
+        'archivo_cantidad_max',
     ];
 
     protected function casts(): array
@@ -39,10 +47,14 @@ class Empresa extends Model
         return [
             'plantilla_pdf_config' => 'array',
             'token_caducidad_dias' => 'integer',
+            'archivo_tamano_max_mb' => 'integer',
+            'archivo_cantidad_max' => 'integer',
             'logo_ratio' => 'float',
             'logo_zoom' => 'integer',
             'logo_albaran_ratio' => 'float',
             'logo_albaran_zoom' => 'integer',
+            'logo_app_ratio' => 'float',
+            'logo_app_zoom' => 'integer',
         ];
     }
 
@@ -56,9 +68,10 @@ class Empresa extends Model
 
         if ($instancia === null) {
             $instancia = self::create([
-                'nombre' => 'ELECIND',
-                'color_primario' => '#871f1f',
-                'color_secundario' => '#f5e6e6',
+                'nombre' => 'ENIA',
+                'color_primario' => '#334155',
+                'color_secundario' => '#f1f5f9',
+                'color_texto_encabezado' => '#ffffff',
                 'plantilla_numeracion_albaran' => 'ALB-{YYYY}-{NNNN}',
                 'token_caducidad_dias' => 7,
             ]);
@@ -83,5 +96,14 @@ class Empresa extends Model
         }
 
         return Storage::disk('public')->url($this->logo_albaran_path);
+    }
+
+    public function logoAppUrl(): ?string
+    {
+        if ($this->logo_app_path === null || $this->logo_app_path === '') {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->logo_app_path);
     }
 }

@@ -4,100 +4,143 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ELECIND - Iniciar sesión</title>
+    <title>{{ \App\Support\Branding::nombre() }} · Iniciar sesión</title>
     @if (! app()->runningUnitTests())
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
+    <style>
+        :root {
+            --c-primary-700: {{ \App\Support\Branding::colorPrimario() }};
+            --c-accent-100: {{ \App\Support\Branding::colorSecundario() }};
+            --c-table-header-text: {{ \App\Support\Branding::colorTextoEncabezado() }};
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
-    <div class="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div class="w-full max-w-md space-y-8">
-            <div>
-                <h1 class="text-center text-3xl font-bold tracking-tight text-gray-900">
-                    Panel Web ELECIND
-                </h1>
-                <p class="mt-2 text-center text-sm text-gray-600">
-                    Base single-tenant lista para iniciar Fase 1.
-                </p>
+<body class="min-h-screen bg-slate-800 antialiased">
+
+    <div class="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+
+        {{-- Tarjeta central --}}
+        <div class="w-full max-w-sm">
+
+            {{-- Logo / nombre --}}
+            <div class="mb-8 flex flex-col items-center gap-3">
+                @php $logoUrl = \App\Support\Branding::logoUrl(); @endphp
+                @if ($logoUrl)
+                    <img src="{{ $logoUrl }}"
+                         alt="{{ \App\Support\Branding::nombre() }}"
+                         class="h-14 w-auto object-contain"
+                         style="max-height: calc(3.5rem * {{ \App\Support\Branding::logoZoom() / 100 }});">
+                @else
+                    <div class="flex size-14 items-center justify-center rounded-xl text-white text-2xl font-bold"
+                         style="background-color: var(--c-primary-700);">
+                        {{ \App\Support\Branding::abreviatura() }}
+                    </div>
+                @endif
+                <span class="text-xl font-semibold text-white tracking-tight">
+                    {{ \App\Support\Branding::nombre() }}
+                </span>
             </div>
 
-            @if ($errors->any())
-                <div class="rounded-md bg-red-50 p-4">
-                    <div class="flex">
-                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                        </svg>
-                        <div class="ml-3">
-                            <p class="text-sm text-red-700">{{ $errors->first() }}</p>
+            {{-- Card --}}
+            <div class="rounded-2xl bg-white px-8 py-8 shadow-xl">
+
+                <h1 class="mb-6 text-center text-lg font-semibold text-slate-800">
+                    Iniciar sesión
+                </h1>
+
+                @if ($errors->any())
+                    <div class="mb-4 flex items-start gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                        <x-heroicon-o-exclamation-circle class="mt-0.5 size-4 shrink-0" />
+                        <span>{{ $errors->first() }}</span>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ mostrarPassword: false }">
+                    @csrf
+
+                    {{-- Usuario --}}
+                    <div>
+                        <label for="username" class="mb-1.5 block text-sm font-medium text-slate-700">
+                            Usuario
+                        </label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <x-heroicon-o-user class="size-4" />
+                            </span>
+                            <input id="username"
+                                   name="username"
+                                   type="text"
+                                   autocomplete="username"
+                                   required
+                                   autofocus
+                                   value="{{ old('username') }}"
+                                   placeholder="Nombre de usuario"
+                                   class="block w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700 @error('username') border-red-400 @enderror" />
                         </div>
-                    </div>
-                </div>
-            @endif
-
-            <form class="mt-8 space-y-6" method="post" action="{{ route('login') }}">
-                @csrf
-
-                <div class="space-y-4 rounded-md shadow-sm">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">
-                            {{ __('Usuario') }}
-                        </label>
-                        <input
-                            id="username"
-                            name="username"
-                            type="text"
-                            autocomplete="username"
-                            required
-                            value="{{ old('username') }}"
-                            class="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                            placeholder="{{ __('Nombre de usuario') }}"
-                        />
                         @error('username')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
+                    {{-- Contraseña --}}
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">
-                            {{ __('Contraseña') }}
+                        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">
+                            Contraseña
                         </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autocomplete="current-password"
-                            required
-                            class="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                            placeholder="{{ __('Contraseña') }}"
-                        />
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <x-heroicon-o-lock-closed class="size-4" />
+                            </span>
+                            <input id="password"
+                                   name="password"
+                                   :type="mostrarPassword ? 'text' : 'password'"
+                                   autocomplete="current-password"
+                                   required
+                                   placeholder="Contraseña"
+                                   class="block w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700 @error('password') border-red-400 @enderror" />
+                            <button type="button"
+                                    x-on:click="mostrarPassword = !mostrarPassword"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                                    :title="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                                <x-heroicon-o-eye x-show="!mostrarPassword" class="size-4" />
+                                <x-heroicon-o-eye-slash x-show="mostrarPassword" class="size-4" x-cloak />
+                            </button>
+                        </div>
                         @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
-                </div>
 
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input
-                            id="remember"
-                            name="remember"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label for="remember" class="ml-2 block text-sm text-gray-900">
-                            {{ __('Recuérdame') }}
+                    {{-- Recuérdame --}}
+                    <div class="flex items-center gap-2">
+                        <input id="remember"
+                               name="remember"
+                               type="checkbox"
+                               class="size-4 rounded border-slate-300 text-primary-700 focus:ring-primary-700" />
+                        <label for="remember" class="text-sm text-slate-600">
+                            Recuérdame
                         </label>
                     </div>
-                </div>
 
-                <button
-                    type="submit"
-                    class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    {{ __('Iniciar sesión') }}
-                </button>
-            </form>
+                    {{-- Submit --}}
+                    <button type="submit"
+                            class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 px-4 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                            style="background-color: var(--c-primary-700);">
+                        <x-heroicon-o-arrow-right-on-rectangle class="size-4" />
+                        Entrar
+                    </button>
+
+                </form>
+            </div>
+
+            {{-- Pie versión --}}
+            <p class="mt-6 text-center text-xs text-slate-500">
+                ENIA &middot; v{{ config('app.version', '1.0') }}
+            </p>
+
         </div>
     </div>
+
 </body>
 </html>

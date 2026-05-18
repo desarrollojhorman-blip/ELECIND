@@ -5,11 +5,13 @@
 
         <div class="space-y-3">
             <x-mobile.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
-                <x-ui.searchable-select
-                    wire-model="form.proyecto_id"
-                    :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->nombre])"
-                    placeholder="— Selecciona proyecto —"
-                />
+                <select wire:model.live="form.proyecto_id"
+                        class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white">
+                    <option value="">— Selecciona proyecto —</option>
+                    @foreach($this->proyectosDisponibles as $p)
+                        <option value="{{ $p->id }}">{{ $p->nombre }}</option>
+                    @endforeach
+                </select>
             </x-mobile.field>
 
             @if ($form->cliente_id)
@@ -21,23 +23,23 @@
             @endif
 
             <x-mobile.field label="Concepto" :error="$errors->first('form.concepto_id')">
-                <x-ui.searchable-select
-                    wire:key="concepto-sel-{{ $form->proyecto_id ?? 'none' }}"
-                    wire-model="form.concepto_id"
-                    :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
-                    placeholder="— Sin concepto —"
-                    :disabled="$form->proyecto_id === null"
-                />
+                <select wire:model="form.concepto_id"
+                        class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white">
+                    <option value="">— Sin concepto —</option>
+                    @foreach($this->conceptosDisponibles as $c)
+                        <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                    @endforeach
+                </select>
             </x-mobile.field>
 
             <x-mobile.field label="Responsable del proyecto" :error="$errors->first('form.responsable_id')">
-                <x-ui.searchable-select
-                    wire:key="responsable-sel-{{ $form->proyecto_id ?? 'none' }}"
-                    wire-model="form.responsable_id"
-                    :options="$this->usuariosProyecto->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                    placeholder="— Sin asignar —"
-                    :disabled="$form->proyecto_id === null"
-                />
+                <div wire:key="resp-{{ $selectKey }}">
+                    <x-ui.searchable-select
+                        wire-model="form.responsable_id"
+                        :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                        placeholder="— Sin asignar —"
+                    />
+                </div>
             </x-mobile.field>
 
             <div class="grid grid-cols-2 gap-3">
@@ -91,13 +93,13 @@
                     wire:key="comp-{{ $index }}">
                     <div class="space-y-3">
                         <x-mobile.field label="Trabajador" required :error="$errors->first('form.companeros.'.$index.'.trabajador_id')">
-                            <x-ui.searchable-select
-                                wire:key="comp-trab-{{ $index }}-{{ $form->proyecto_id ?? 'none' }}"
-                                wire-model="form.companeros.{{ $index }}.trabajador_id"
-                                :options="$this->usuariosProyecto->filter(fn($u) => $u->id !== auth()->id())->values()->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                                placeholder="— Selecciona —"
-                                :disabled="$form->proyecto_id === null"
-                            />
+                            <div wire:key="comp-sel-{{ $selectKey }}-{{ $index }}">
+                                <x-ui.searchable-select
+                                    wire-model="form.companeros.{{ $index }}.trabajador_id"
+                                    :options="$this->companerosDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                    placeholder="— Selecciona —"
+                                />
+                            </div>
                         </x-mobile.field>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -118,8 +120,7 @@
 
         <button type="button"
                 wire:click="addCompanero"
-                @disabled($form->proyecto_id === null)
-                class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50">
+                class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700">
             <x-heroicon-o-plus class="size-4" />
             Añadir compañero
         </button>
@@ -138,13 +139,13 @@
                     wire:key="mat-{{ $index }}">
                     <div class="space-y-3">
                         <x-mobile.field label="Material" required :error="$errors->first('form.materiales.'.$index.'.material_id')">
-                            <x-ui.searchable-select
-                                wire:key="mat-sel-{{ $index }}-{{ $form->proyecto_id ?? 'none' }}"
-                                wire-model="form.materiales.{{ $index }}.material_id"
-                                :options="$this->materialesProyecto->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock, 2, ',', ''), '0'), ',').' '.$m->unidad_medida])"
-                                placeholder="— Selecciona —"
-                                :disabled="$form->proyecto_id === null"
-                            />
+                            <div wire:key="mat-sel-{{ $selectKey }}-{{ $index }}">
+                                <x-ui.searchable-select
+                                    wire-model="form.materiales.{{ $index }}.material_id"
+                                    :options="$this->materialesProyecto->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock,2,',',''),'0'),',').' '.$m->unidad_medida])"
+                                    placeholder="— Selecciona —"
+                                />
+                            </div>
                         </x-mobile.field>
 
                         <x-mobile.field label="Cantidad" required :error="$errors->first('form.materiales.'.$index.'.cantidad')">
@@ -165,8 +166,7 @@
 
         <button type="button"
                 wire:click="addMaterial"
-                @disabled($form->proyecto_id === null)
-                class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50">
+                class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700">
             <x-heroicon-o-plus class="size-4" />
             Añadir material
         </button>

@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Grupo proyectos"
                       subtitle="Gestiona grupos de proyectos y asigna proyectos existentes a cada grupo." />
 
@@ -17,7 +17,7 @@
             <x-slot:leftActions>
                 @can('create', App\Models\TiposProyecto::class)
                     <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
-                        Nuevo grupo
+                        Nuevo
                     </x-ui.button>
                 @endcan
             </x-slot:leftActions>
@@ -144,7 +144,7 @@
                     Proyectos en este grupo
                 </h3>
 
-                @if (! $modoSoloLectura && auth()->user()?->can('tipos_proyecto.modificar'))
+                @if (! $modoSoloLectura && auth()->user()?->can('grupos_proyecto.modificar'))
                     <div class="mb-3 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
                         <label class="mb-1.5 block text-xs font-medium text-slate-700">
                             Añadir proyecto sin grupo
@@ -163,7 +163,7 @@
                                     @endforeach
                                 </x-ui.select>
                             </div>
-                            <x-ui.button variant="primary" wire:click="agregarProyectoAGrupo"
+                            <x-ui.button variant="success" wire:click="agregarProyectoAGrupo"
                                          icon="heroicon-o-plus" class="shrink-0 whitespace-nowrap">
                                 Añadir
                             </x-ui.button>
@@ -240,12 +240,10 @@
         @endif
 
         <x-slot:footer>
-            @if ($modoSoloLectura)
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cerrar</x-ui.button>
-            @else
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="success" type="submit" form="form-grupo-proyecto"
-                             wire:loading.attr="disabled" icon="heroicon-o-check">
+            @if (!$modoSoloLectura)
+                <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-grupo-proyecto"
+                             wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif
@@ -272,7 +270,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

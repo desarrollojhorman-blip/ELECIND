@@ -98,7 +98,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['numero_cliente', 'nombre', 'cif', 'poblacion', 'email', 'telefono', 'activo', 'created_at'];
+        $columnasPermitidas = ['codigo_cliente', 'nombre', 'cif', 'poblacion', 'email', 'telefono', 'activo', 'created_at'];
         if (! \in_array($columna, $columnasPermitidas, true)) {
             return;
         }
@@ -200,7 +200,7 @@ class Index extends Component
         if ($this->buscar !== '') {
             $termino = '%'.trim($this->buscar).'%';
             $query->where(function (Builder $q) use ($termino): void {
-                $q->where('numero_cliente', 'like', $termino)
+                $q->where('codigo_cliente', 'like', $termino)
                     ->orWhere('nombre', 'like', $termino)
                     ->orWhere('nombre_comercial', 'like', $termino)
                     ->orWhere('cif', 'like', $termino)

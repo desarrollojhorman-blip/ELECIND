@@ -29,6 +29,12 @@ class Edit extends Component
         $this->form->fromModel($empresa);
     }
 
+    public function deshacer(): void
+    {
+        $this->resetValidation();
+        $this->form->fromModel(Empresa::actual());
+    }
+
     public function guardar(): void
     {
         $empresa = Empresa::actual();
@@ -57,21 +63,6 @@ class Edit extends Component
         $this->form->nuevoLogo = null;
     }
 
-    public function quitarLogoAlbaran(): void
-    {
-        $this->form->eliminarLogoAlbaran = true;
-        $this->form->nuevoLogoAlbaran = null;
-    }
-
-    public function cancelarQuitarLogoAlbaran(): void
-    {
-        $this->form->eliminarLogoAlbaran = false;
-    }
-
-    public function descartarNuevoLogoAlbaran(): void
-    {
-        $this->form->nuevoLogoAlbaran = null;
-    }
 
     public function render(): View
     {

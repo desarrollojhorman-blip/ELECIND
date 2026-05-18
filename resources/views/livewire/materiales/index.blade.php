@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Materiales" subtitle="Catálogo de materiales agrupados por número de pedido." />
 
     {{-- Toolbar --}}
@@ -17,7 +17,7 @@
             <x-slot:leftActions>
                 @can('create', App\Models\Material::class)
                     <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
-                        Nuevo material
+                        Nuevo
                     </x-ui.button>
                 @endcan
 
@@ -222,12 +222,10 @@
         </form>
 
         <x-slot:footer>
-            @if ($modoSoloLectura)
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cerrar</x-ui.button>
-            @else
-                <x-ui.button variant="ghost" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="success" type="submit" form="form-material"
-                             wire:loading.attr="disabled" icon="heroicon-o-check">
+            @if (!$modoSoloLectura)
+                <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-material"
+                             wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif
@@ -250,7 +248,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

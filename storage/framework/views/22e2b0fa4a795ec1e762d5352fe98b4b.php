@@ -55,7 +55,7 @@ unset($__defined_vars, $__key, $__value); ?>
                     'label' => 'Grupo proyectos',
                     'route' => 'proyectos.grupos',
                     'key' => 'proyectos_grupos',
-                    'permission' => 'tipos_proyecto.ver',
+                    'permission' => 'grupos_proyecto.ver',
                 ],
                 [
                     'label' => 'Proyectos',
@@ -107,6 +107,13 @@ unset($__defined_vars, $__key, $__value); ?>
             'permission' => 'clientes.ver',
         ],
         [
+            'label' => 'Conceptos',
+            'icon' => 'heroicon-o-tag',
+            'route' => 'conceptos.index',
+            'key' => 'conceptos',
+            'permission' => 'conceptos.ver',
+        ],
+        [
             'label' => 'Usuarios',
             'icon' => 'heroicon-o-users',
             'route' => 'usuarios.index',
@@ -138,25 +145,19 @@ unset($__defined_vars, $__key, $__value); ?>
                     'label' => 'Empresa',
                     'route' => 'configuracion.empresa',
                     'key' => 'empresa',
-                    'permission' => 'configuracion.empresa',
+                    'permission' => 'configuracion.ver',
                 ],
                 [
                     'label' => 'Ajustes',
                     'route' => 'configuracion.ajustes',
                     'key' => 'ajustes',
-                    'permission' => 'configuracion.empresa',
+                    'permission' => 'configuracion.ver',
                 ],
                 [
                     'label' => 'Roles y permisos',
                     'route' => 'configuracion.roles',
                     'key' => 'roles',
                     'permission' => 'roles.gestionar',
-                ],
-                [
-                    'label' => 'Conceptos',
-                    'route' => 'conceptos.index',
-                    'key' => 'conceptos',
-                    'permission' => 'conceptos.ver',
                 ],
             ],
         ],
@@ -575,7 +576,7 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['x-show' => 'open || drawerOpen','x-transition.opacity' => true,'x-bind:class' => 'menuOpen ? \'\' : \'rotate-180\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
+<?php $component->withAttributes(['x-show' => 'open || drawerOpen','x-bind:class' => 'menuOpen ? \'\' : \'rotate-180\'','class' => 'size-4 shrink-0 text-slate-400 transition-transform']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
 <?php echo $__env->renderComponent(); ?>

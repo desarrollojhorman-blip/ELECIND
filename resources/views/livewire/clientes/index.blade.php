@@ -90,8 +90,8 @@
     <x-ui.data-table :colspan="8" empty="No hay clientes que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
-                <x-ui.sortable-header column="numero_cliente" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Nº cliente
+                <x-ui.sortable-header column="codigo_cliente" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Código cliente
                 </x-ui.sortable-header>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre
@@ -118,7 +118,7 @@
         <x-slot:rows>
             @foreach ($clientes as $cliente)
                 <tr wire:key="cliente-{{ $cliente->id }}" class="transition-colors hover:bg-slate-50">
-                    <td class="px-4 py-3 text-slate-700">{{ $cliente->numero_cliente }}</td>
+                    <td class="px-4 py-3 font-mono text-slate-700">{{ $cliente->codigo_cliente }}</td>
                     <td class="px-4 py-3">
                         <div class="font-medium text-slate-900">{{ $cliente->nombre }}</div>
                         @if ($cliente->nombre_comercial)
@@ -213,7 +213,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">
                 Cancelar
             </x-ui.button>
             <x-ui.button variant="danger"

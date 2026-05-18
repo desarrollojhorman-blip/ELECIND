@@ -8,17 +8,18 @@ use Throwable;
 
 /**
  * Centraliza la lógica de marca (logo + nombre + colores) leyendo de la
- * tabla `empresa` con caché de request para evitar consultas
- * duplicadas en una misma petición.
+ * tabla `empresa` con caché de request para evitar consultas duplicadas.
  *
- * Cascada del logo:
- *  1. Valores guardados en `empresa` (editables desde UI).
- *  2. Asset ENIA por defecto (images/brand/enia.svg) si está presente.
- *  3. Texto fallback (abreviatura) si no hay imagen.
+ * Cascada del logo para la UI (login, sidebar, móvil):
+ *  1. logo_app     (Ajustes)   → prioridad absoluta.
+ *  2. logo_path    (Empresa)   → fallback si no hay logo_app.
+ *  3. enia.svg     (asset)     → fallback si no hay logo de empresa.
+ *  4. null         (texto)     → usar Branding::nombre().
  *
- * Ratio aspect:
- *  - Cuadrado:    0.85 ≤ ratio ≤ 1.15 → encaja bien en cuadrados (sidebar colapsado).
- *  - Rectangular: ratio fuera de ese rango → se usa abreviatura en sidebar colapsado.
+ * Cascada del logo para documentos (albaranes/PDF):
+ *  1. logo_albaran_path (Empresa) → logo específico para documentos.
+ *  2. logo_path         (Empresa) → fallback.
+ *  3. enia.svg          (asset)   → fallback final.
  */
 class Branding
 {
@@ -59,14 +60,23 @@ class Branding
         self::$cacheCargada = false;
     }
 
+    // ── Logo UI (login, sidebar, móvil) ─────────────────────────────────────
+
     public static function logoUrl(): ?string
     {
-        $logo = self::actual()?->logoUrl();
-
-        if ($logo !== null) {
-            return $logo;
+        // 1. Logo app (Ajustes) — prioridad absoluta
+        $logoApp = self::actual()?->logoAppUrl();
+        if ($logoApp !== null) {
+            return $logoApp;
         }
 
+        // 2. Logo empresa
+        $logoEmpresa = self::actual()?->logoUrl();
+        if ($logoEmpresa !== null) {
+            return $logoEmpresa;
+        }
+
+        // 3. Asset ENIA por defecto
         if (file_exists(public_path('images/brand/enia.svg'))) {
             return asset('images/brand/enia.svg');
         }
@@ -74,10 +84,39 @@ class Branding
         return null;
     }
 
-    /**
-     * Logo específico para albaranes/facturas. Si no hay uno definido,
-     * cae al logo principal (incluida la cascada ENIA por defecto).
-     */
+    public static function logoRatio(): ?float
+    {
+        $empresa = self::actual();
+
+        if ($empresa?->logo_app_path !== null && $empresa?->logo_app_path !== '') {
+            return $empresa->logo_app_ratio;
+        }
+
+        if ($empresa?->logo_path !== null && $empresa?->logo_path !== '') {
+            return $empresa->logo_ratio;
+        }
+
+        return self::RATIO_ENIA_DEFAULT;
+    }
+
+    public static function logoZoom(): int
+    {
+        $empresa = self::actual();
+
+        if ($empresa?->logo_app_path !== null && $empresa?->logo_app_path !== '') {
+            return $empresa->logo_app_zoom ?: 100;
+        }
+
+        return $empresa?->logo_zoom ?: 100;
+    }
+
+    public static function logoEsCuadrado(): bool
+    {
+        return self::ratioEsCuadrado(self::logoRatio());
+    }
+
+    // ── Logo documentos (albaranes/PDF) ────────────────────────────────────
+
     public static function logoAlbaranUrl(): ?string
     {
         $logo = self::actual()?->logoAlbaranUrl();
@@ -86,18 +125,17 @@ class Branding
             return $logo;
         }
 
-        return self::logoUrl();
-    }
-
-    public static function logoRatio(): ?float
-    {
-        $empresa = self::actual();
-
-        if ($empresa?->logo_path !== null && $empresa?->logo_path !== '') {
-            return $empresa->logo_ratio;
+        // Cae al logo de empresa (no al logo_app — los documentos no usan el logo de la app)
+        $logoEmpresa = self::actual()?->logoUrl();
+        if ($logoEmpresa !== null) {
+            return $logoEmpresa;
         }
 
-        return self::RATIO_ENIA_DEFAULT;
+        if (file_exists(public_path('images/brand/enia.svg'))) {
+            return asset('images/brand/enia.svg');
+        }
+
+        return null;
     }
 
     public static function logoAlbaranRatio(): ?float
@@ -108,22 +146,16 @@ class Branding
             return $empresa->logo_albaran_ratio;
         }
 
-        return self::logoRatio();
-    }
+        if ($empresa?->logo_path !== null && $empresa?->logo_path !== '') {
+            return $empresa->logo_ratio;
+        }
 
-    public static function logoZoom(): int
-    {
-        return self::actual()?->logo_zoom ?: 100;
+        return self::RATIO_ENIA_DEFAULT;
     }
 
     public static function logoAlbaranZoom(): int
     {
         return self::actual()?->logo_albaran_zoom ?: 100;
-    }
-
-    public static function logoEsCuadrado(): bool
-    {
-        return self::ratioEsCuadrado(self::logoRatio());
     }
 
     public static function logoAlbaranEsCuadrado(): bool
@@ -142,8 +174,6 @@ class Branding
 
     /**
      * Detecta el ratio (ancho / alto) de una imagen leída desde disco.
-     * Soporta formatos raster (PNG/JPG/WebP) vía getimagesize y SVG
-     * parseando viewBox o atributos width/height.
      */
     public static function detectarRatio(string $absolutePath): ?float
     {
@@ -212,13 +242,15 @@ class Branding
         }
     }
 
+    // ── Nombre y texto ──────────────────────────────────────────────────────
+
     public static function nombre(): string
     {
         $config = self::actual();
 
         return $config?->nombre_comercial
             ?: $config?->nombre
-            ?: 'ELECIND';
+            ?: 'ENIA';
     }
 
     public static function abreviatura(): string
@@ -231,14 +263,16 @@ class Branding
         return self::logoUrl() !== null;
     }
 
+    // ── Colores ─────────────────────────────────────────────────────────────
+
     public static function colorPrimario(): string
     {
-        return self::actual()?->color_primario ?? '#871f1f';
+        return self::actual()?->color_primario ?? '#334155';
     }
 
     public static function colorSecundario(): string
     {
-        return self::actual()?->color_secundario ?? '#f5e6e6';
+        return self::actual()?->color_secundario ?? '#f1f5f9';
     }
 
     public static function colorTextoEncabezado(): string

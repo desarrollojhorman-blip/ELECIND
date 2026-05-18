@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Albaran;
+use App\Models\Cliente;
 use App\Models\Empresa;
+use App\Models\NumeroPedido;
+use App\Models\Proyecto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -18,10 +21,17 @@ use Illuminate\Support\Facades\DB;
  *   {NNNN} → secuencial dentro del año, 4 dígitos con ceros a la izquierda
  *   {NNN}  → secuencial dentro del año, 3 dígitos
  *   {NN}   → secuencial dentro del año, 2 dígitos
+ *   {N}    → secuencial sin ceros a la izquierda
  */
 class NumeracionService
 {
     public const PLANTILLA_DEFECTO = 'ALB-{YYYY}-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_CLIENTE = 'CLI-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_PEDIDO = 'PED-{YYYY}-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_PROYECTO = 'PROY-{NNNN}';
 
     public function siguienteNumeroAlbaran(?Carbon $fecha = null): string
     {
@@ -63,6 +73,103 @@ class NumeracionService
         return $existentes + 1;
     }
 
+    public function siguienteNumeroCliente(): string
+    {
+        $plantilla = $this->plantillaCliente();
+
+        return DB::transaction(function () use ($plantilla): string {
+            $secuencial = $this->siguienteSecuencialCliente();
+
+            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+        });
+    }
+
+    public function plantillaCliente(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_cliente;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_CLIENTE;
+    }
+
+    private function siguienteSecuencialCliente(): int
+    {
+        return Cliente::query()
+            ->withTrashed()
+            ->lockForUpdate()
+            ->count() + 1;
+    }
+
+    private function aplicarPlantillaCliente(string $plantilla, int $secuencial): string
+    {
+        $reemplazos = [
+            '{NNNN}' => str_pad((string) $secuencial, 4, '0', STR_PAD_LEFT),
+            '{NNN}'  => str_pad((string) $secuencial, 3, '0', STR_PAD_LEFT),
+            '{NN}'   => str_pad((string) $secuencial, 2, '0', STR_PAD_LEFT),
+            '{N}'    => (string) $secuencial,
+        ];
+
+return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
+    }
+
+    // ── Nº Pedido ────────────────────────────────────────────────────────────
+
+    public function siguienteNumeroPedido(?Carbon $fecha = null): string
+    {
+        $fecha = $fecha ?? Carbon::now();
+        $plantilla = $this->plantillaPedido();
+
+        return DB::transaction(function () use ($fecha, $plantilla): string {
+            $secuencial = NumeroPedido::query()
+                ->withTrashed()
+                ->whereYear('fecha', $fecha->year)
+                ->lockForUpdate()
+                ->count() + 1;
+
+            return $this->aplicarPlantilla($plantilla, $fecha, $secuencial);
+        });
+    }
+
+    public function plantillaPedido(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_pedido;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_PEDIDO;
+    }
+
+    // ── Código Proyecto ───────────────────────────────────────────────────────
+
+    public function siguienteNumeroProyecto(): string
+    {
+        $plantilla = $this->plantillaProyecto();
+
+        return DB::transaction(function () use ($plantilla): string {
+            $secuencial = Proyecto::query()
+                ->withTrashed()
+                ->lockForUpdate()
+                ->count() + 1;
+
+            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+        });
+    }
+
+    public function plantillaProyecto(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_proyecto;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_PROYECTO;
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+
     public function aplicarPlantilla(string $plantilla, Carbon $fecha, int $secuencial): string
     {
         $reemplazos = [
@@ -72,6 +179,7 @@ class NumeracionService
             '{NNNN}' => str_pad((string) $secuencial, 4, '0', STR_PAD_LEFT),
             '{NNN}' => str_pad((string) $secuencial, 3, '0', STR_PAD_LEFT),
             '{NN}' => str_pad((string) $secuencial, 2, '0', STR_PAD_LEFT),
+            '{N}' => (string) $secuencial,
         ];
 
         return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);

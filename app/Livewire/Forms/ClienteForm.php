@@ -12,7 +12,7 @@ class ClienteForm extends Form
     public ?int $id = null;
 
     #[Validate]
-    public ?int $numero_cliente = null;
+    public ?string $codigo_cliente = null;
 
     #[Validate]
     public string $nombre = '';
@@ -53,7 +53,7 @@ class ClienteForm extends Form
     public function rules(): array
     {
         return [
-            'numero_cliente' => ['required', 'integer', 'min:1', Rule::unique('clientes', 'numero_cliente')->ignore($this->id)],
+            'codigo_cliente' => ['required', 'string', 'max:50', Rule::unique('clientes', 'codigo_cliente')->ignore($this->id)->whereNull('deleted_at')],
             'nombre' => ['required', 'string', 'max:255'],
             'nombre_comercial' => ['nullable', 'string', 'max:255'],
             'cif' => [
@@ -77,7 +77,7 @@ class ClienteForm extends Form
     public function validationAttributes(): array
     {
         return [
-            'numero_cliente' => 'nº cliente',
+            'codigo_cliente' => 'código cliente',
             'nombre' => 'nombre',
             'nombre_comercial' => 'nombre comercial',
             'cif' => 'CIF',
@@ -95,7 +95,7 @@ class ClienteForm extends Form
     public function fromModel(Cliente $cliente): void
     {
         $this->id = (int) $cliente->getKey();
-        $this->numero_cliente = $cliente->numero_cliente;
+        $this->codigo_cliente = $cliente->codigo_cliente;
         $this->nombre = $cliente->nombre;
         $this->nombre_comercial = $cliente->nombre_comercial;
         $this->cif = $cliente->cif;

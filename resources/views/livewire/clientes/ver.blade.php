@@ -1,13 +1,18 @@
 <div class="space-y-4">
     {{-- Cabecera --}}
     <x-ui.page-header :title="$cliente->nombre" :subtitle="$cliente->nombre_comercial ?? 'Ver cliente'">
-        <x-slot:actions>
-            <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                Clientes
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
             </x-ui.button>
             @can('update', $cliente)
-                <x-ui.button as="a" href="{{ route('clientes.editar', $cliente) }}" wire:navigate.fresh variant="info" icon="heroicon-o-pencil-square">
+                <x-ui.button as="a" href="{{ route('clientes.editar', $cliente) }}" wire:navigate.fresh variant="neutral" icon="heroicon-o-pencil-square">
                     Editar
+                </x-ui.button>
+            @endcan
+            @can('clientes.ver')
+                <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
+                    Nuevo
                 </x-ui.button>
             @endcan
             @can('delete', $cliente)
@@ -15,14 +20,14 @@
                     Eliminar
                 </x-ui.button>
             @endcan
-        </x-slot:actions>
+        </x-slot:actionsLeft>
     </x-ui.page-header>
 
     {{-- Datos del cliente (solo lectura) --}}
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="grid gap-4 md:grid-cols-2">
-            <x-ui.field label="Nº cliente">
-                <x-ui.input type="number" :value="$cliente->numero_cliente" readonly />
+            <x-ui.field label="Código cliente">
+                <x-ui.input :value="$cliente->codigo_cliente" readonly class="font-mono" />
             </x-ui.field>
 
             <x-ui.field label="Nombre">
@@ -189,7 +194,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>

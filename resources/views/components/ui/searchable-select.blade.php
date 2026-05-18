@@ -1,21 +1,28 @@
 {{--
     Searchable select para listas largas. Integra con Livewire 3 vía $wire.set().
 
-    Uso:
+    Uso estático (opciones PHP, no reactivas):
     <x-ui.searchable-select
-        wire:key="mat-select-{{ $materialSelectKey }}"
-        wire-model="materialAAgregar"
-        :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion])"
-        placeholder="— Selecciona material —"
+        wire-model="campo"
+        :options="$collection->map(fn($m) => ['value' => $m->id, 'label' => $m->nombre])"
+        placeholder="— Selecciona —"
     />
 
-    Cada opción: array/objeto con claves 'value' y 'label'.
+    Uso reactivo (watch a una propiedad pública de Livewire):
+    <x-ui.searchable-select
+        wire-model="campo"
+        entangle="nombrePropiedadLivewire"
+        placeholder="— Selecciona —"
+    />
+
+    Cada opción: array con claves 'value' y 'label'.
 --}}
 @props([
     'wireModel',
     'options'     => [],
     'placeholder' => '— Selecciona —',
     'disabled'    => false,
+    'entangle'    => null,
 ])
 
 @php
@@ -30,28 +37,37 @@
 @endphp
 
 <div
+    {{ $attributes->only('wire:key') }}
     x-data="{
         open:     false,
         search:   '',
         selected: null,
-        options:  {{ $optionsJson }},
+        disabled: {{ $disabledJs }},
+        options: {{ $optionsJson }},
         get filtered() {
             if (!this.search.trim()) return this.options;
             const q = this.search.toLowerCase();
             return this.options.filter(o => o.label.toLowerCase().includes(q));
         },
         select(opt) {
+            if (this.disabled) return;
             this.selected = opt;
             this.open     = false;
             this.search   = '';
-            $wire.set('{{ $wireModel }}', opt.value);
+            this.$refs.hiddenInput.value = opt.value;
+            this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
         },
         clear() {
             this.selected = null;
             this.search   = '';
-            $wire.set('{{ $wireModel }}', null);
+            this.$refs.hiddenInput.value = '';
+            this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
         },
         init() {
+            const v = this.$refs.hiddenInput?.value;
+            if (v) {
+                this.selected = this.options.find(o => String(o.value) === String(v)) ?? null;
+            }
             this.$watch('open', val => {
                 if (val) this.$nextTick(() => this.$refs.searchInput?.focus());
             });
@@ -60,13 +76,18 @@
     x-on:click.outside="open = false"
     class="relative"
 >
+    <input type="hidden" wire:model.live="{{ $wireModel }}" x-ref="hiddenInput" />
+
     {{-- Trigger --}}
     <button
         type="button"
-        x-on:click="{{ $disabled ? '' : 'open = !open' }}"
-        :class="{ 'border-primary-500 ring-1 ring-primary-200': open }"
-        class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm transition-colors
-               {{ $disabled ? 'cursor-not-allowed bg-slate-50 text-slate-500 pointer-events-none' : 'cursor-pointer hover:border-slate-400' }}"
+        x-on:click="if (!disabled) open = !open"
+        :class="{
+            'border-primary-500 ring-1 ring-primary-200': open,
+            'cursor-not-allowed bg-slate-50 text-slate-500 pointer-events-none': disabled,
+            'cursor-pointer hover:border-slate-400': !disabled
+        }"
+        class="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm transition-colors"
     >
         <span
             x-text="selected ? selected.label : '{{ addslashes($placeholder) }}'"
@@ -75,7 +96,7 @@
         ></span>
         <span class="ml-2 flex shrink-0 items-center gap-1">
             <span
-                x-show="selected && !{{ $disabledJs }}"
+                x-show="selected && !disabled"
                 x-on:click.stop="clear()"
                 class="flex size-4 cursor-pointer items-center justify-center rounded text-slate-400 hover:text-slate-700"
                 title="Limpiar selección"

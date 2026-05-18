@@ -1,13 +1,18 @@
 <div class="space-y-4">
     {{-- Cabecera --}}
     <x-ui.page-header :title="$proyecto->nombre" subtitle="Ver proyecto">
-        <x-slot:actions>
-            <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="ghost" icon="heroicon-o-arrow-left">
-                Proyectos
+        <x-slot:actionsLeft>
+            <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
+                Todos
             </x-ui.button>
             @can('update', $proyecto)
-                <x-ui.button as="a" href="{{ route('proyectos.editar', $proyecto) }}" wire:navigate.fresh variant="info" icon="heroicon-o-pencil-square">
+                <x-ui.button as="a" href="{{ route('proyectos.editar', $proyecto) }}" wire:navigate.fresh variant="neutral" icon="heroicon-o-pencil-square">
                     Editar
+                </x-ui.button>
+            @endcan
+            @can('proyectos.ver')
+                <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
+                    Nuevo
                 </x-ui.button>
             @endcan
             @can('delete', $proyecto)
@@ -15,7 +20,7 @@
                     Eliminar
                 </x-ui.button>
             @endcan
-        </x-slot:actions>
+        </x-slot:actionsLeft>
     </x-ui.page-header>
 
     {{-- Datos del proyecto (solo lectura) --}}
@@ -215,7 +220,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
             </x-ui.button>
