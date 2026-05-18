@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Nº Pedido" subtitle="Gestión de números de pedido y sus materiales." />
 
     {{-- Toolbar --}}
@@ -267,8 +267,8 @@
         <x-slot:footer>
             @if (!$modoSoloLectura)
                 <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="info" type="submit" form="form-pedido"
-                             wire:loading.attr="disabled" icon="heroicon-o-check">
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-pedido"
+                             wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif

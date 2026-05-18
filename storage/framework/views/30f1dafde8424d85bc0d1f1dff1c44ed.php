@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <?php if (isset($component)) { $__componentOriginal91a231a9270579fa1ae9246bd51fb785 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal91a231a9270579fa1ae9246bd51fb785 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.page-header','data' => ['title' => 'Empresa','subtitle' => 'Datos fiscales y logos para documentos (albaranes y PDF).']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -754,17 +754,38 @@ Cancelar <?php echo $__env->renderComponent(); ?>
         <div class="flex justify-end gap-2 pt-2">
             <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'info','type' => 'submit','icon' => 'heroicon-o-check','wire:loading.attr' => 'disabled']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'neutral','wire:click' => 'deshacer','icon' => 'heroicon-o-arrow-uturn-left','type' => 'button']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('ui.button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['variant' => 'info','type' => 'submit','icon' => 'heroicon-o-check','wire:loading.attr' => 'disabled']); ?>
+<?php $component->withAttributes(['variant' => 'neutral','wire:click' => 'deshacer','icon' => 'heroicon-o-arrow-uturn-left','type' => 'button']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+Deshacer <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $attributes = $__attributesOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__attributesOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala8bb031a483a05f647cb99ed3a469847)): ?>
+<?php $component = $__componentOriginala8bb031a483a05f647cb99ed3a469847; ?>
+<?php unset($__componentOriginala8bb031a483a05f647cb99ed3a469847); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginala8bb031a483a05f647cb99ed3a469847 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala8bb031a483a05f647cb99ed3a469847 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.ui.button','data' => ['variant' => 'info','icon' => 'heroicon-o-arrow-down-tray','type' => 'submit','wire:loading.attr' => 'disabled']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('ui.button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'info','icon' => 'heroicon-o-arrow-down-tray','type' => 'submit','wire:loading.attr' => 'disabled']); ?>
 <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-                Guardar cambios
+                Guardar
              <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala8bb031a483a05f647cb99ed3a469847)): ?>

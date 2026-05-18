@@ -13,6 +13,16 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        // Limpiar permisos renombrados o eliminados en versiones anteriores.
+        Permission::whereIn('name', [
+            'configuracion.empresa',
+            'configuracion.numeracion_albaran',
+            'tipos_proyecto.ver',
+            'tipos_proyecto.crear',
+            'tipos_proyecto.modificar',
+            'tipos_proyecto.eliminar',
+        ])->delete();
+
         $permisos = $this->catalogoPermisos();
 
         foreach ($permisos as $permiso) {
@@ -129,11 +139,11 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'proyectos.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar proyectos a Excel', 'categoria' => 'proyectos'],
             ['name' => 'proyectos.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de proyectos', 'categoria' => 'proyectos'],
 
-            // ─────────────── Tipos de proyecto ───────────────
-            ['name' => 'tipos_proyecto.ver', 'ambito' => 'web', 'descripcion' => 'Ver tipos de proyecto', 'categoria' => 'tipos_proyecto'],
-            ['name' => 'tipos_proyecto.crear', 'ambito' => 'web', 'descripcion' => 'Crear tipos de proyecto', 'categoria' => 'tipos_proyecto'],
-            ['name' => 'tipos_proyecto.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
-            ['name' => 'tipos_proyecto.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar tipos de proyecto', 'categoria' => 'tipos_proyecto'],
+            // ─────────────── Grupos de proyecto ───────────────
+            ['name' => 'grupos_proyecto.ver', 'ambito' => 'web', 'descripcion' => 'Ver grupos de proyecto', 'categoria' => 'grupos_proyecto'],
+            ['name' => 'grupos_proyecto.crear', 'ambito' => 'web', 'descripcion' => 'Crear grupos de proyecto', 'categoria' => 'grupos_proyecto'],
+            ['name' => 'grupos_proyecto.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar grupos de proyecto', 'categoria' => 'grupos_proyecto'],
+            ['name' => 'grupos_proyecto.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar grupos de proyecto', 'categoria' => 'grupos_proyecto'],
 
             // ─────────────── Nº Pedido ───────────────
             ['name' => 'pedidos.ver', 'ambito' => 'web', 'descripcion' => 'Ver números de pedido', 'categoria' => 'materiales'],
@@ -178,8 +188,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'incidencias.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar incidencias', 'categoria' => 'incidencias'],
 
             // ─────────────── Configuración ───────────────
-            ['name' => 'configuracion.empresa', 'ambito' => 'web', 'descripcion' => 'Gestionar configuración de empresa', 'categoria' => 'configuracion'],
-            ['name' => 'configuracion.numeracion_albaran', 'ambito' => 'web', 'descripcion' => 'Cambiar plantilla de numeración', 'categoria' => 'configuracion'],
+            ['name' => 'configuracion.ver', 'ambito' => 'web', 'descripcion' => 'Ver configuración (empresa y ajustes)', 'categoria' => 'configuracion'],
+            ['name' => 'configuracion.editar', 'ambito' => 'web', 'descripcion' => 'Editar configuración (empresa y ajustes)', 'categoria' => 'configuracion'],
 
             // ─────────────── Roles y permisos ───────────────
             ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar roles personalizados', 'categoria' => 'roles'],

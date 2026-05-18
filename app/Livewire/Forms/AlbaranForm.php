@@ -41,6 +41,7 @@ class AlbaranForm extends Form
 
     public ?int $concepto_id = null;
 
+    /* responsable_id también actúa como firmante responsable */
     public ?int $responsable_id = null;
 
     public string $fecha = '';
@@ -50,6 +51,18 @@ class AlbaranForm extends Form
     public string $estado = 'borrador';
 
     public ?string $observaciones = null;
+
+    /* ───── Firmantes ──────────────────────────────────────────────────── */
+
+    public ?int $firma_trabajador_user_id = null;
+
+    public ?string $firma_trabajador_otro_nombre = null;
+
+    public ?string $firma_trabajador_otro_correo = null;
+
+    public ?string $firma_responsable_otro_nombre = null;
+
+    public ?string $firma_responsable_otro_correo = null;
 
     /* ───── Mis horas (línea personal del creador — solo móvil) ────────
      * En modo web ($omitirLineaCreador = true) estos campos se ignoran
@@ -91,6 +104,12 @@ class AlbaranForm extends Form
             'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
             'estado'    => ['required', Rule::in(array_column(EstadoAlbaran::cases(), 'value'))],
             'observaciones' => ['nullable', 'string', 'max:2000'],
+
+            'firma_trabajador_user_id'    => ['nullable', 'integer', 'exists:users,id'],
+            'firma_trabajador_otro_nombre' => ['nullable', 'string', 'max:150'],
+            'firma_trabajador_otro_correo' => ['nullable', 'email', 'max:150'],
+            'firma_responsable_otro_nombre' => ['nullable', 'string', 'max:150'],
+            'firma_responsable_otro_correo' => ['nullable', 'email', 'max:150'],
 
             'mi_horas' => $this->omitirLineaCreador ? ['nullable'] : ['required', 'numeric', 'min:0', 'max:24'],
             'mi_horas_extra' => $this->omitirLineaCreador ? ['nullable'] : ['required', 'numeric', 'min:0', 'max:24'],
@@ -139,6 +158,11 @@ class AlbaranForm extends Form
         $this->tipo_hora = $albaran->tipo_hora->value;
         $this->estado = $albaran->estado->value;
         $this->observaciones = $albaran->observaciones;
+        $this->firma_trabajador_user_id    = $albaran->firma_trabajador_user_id;
+        $this->firma_trabajador_otro_nombre = $albaran->firma_trabajador_otro_nombre;
+        $this->firma_trabajador_otro_correo = $albaran->firma_trabajador_otro_correo;
+        $this->firma_responsable_otro_nombre = $albaran->firma_responsable_otro_nombre;
+        $this->firma_responsable_otro_correo = $albaran->firma_responsable_otro_correo;
 
         $miId = (int) Auth::id();
 
@@ -218,6 +242,7 @@ class AlbaranForm extends Form
             $this->cliente_id = null;
             $this->responsable_id = null;
             $this->concepto_id = null;
+            $this->firma_trabajador_user_id = null;
             $this->materiales = [];
             $this->companeros = [];
 
@@ -260,44 +285,48 @@ class AlbaranForm extends Form
             $albaran->proyecto_id = $this->proyecto_id;
             $albaran->concepto_id = $this->concepto_id;
             $albaran->responsable_id = $this->responsable_id;
+            $albaran->firma_trabajador_user_id    = $this->firma_trabajador_user_id;
+            $albaran->firma_trabajador_otro_nombre = $this->firma_trabajador_otro_nombre ?: null;
+            $albaran->firma_trabajador_otro_correo = $this->firma_trabajador_otro_correo ?: null;
+            $albaran->firma_responsable_otro_nombre = $this->firma_responsable_otro_nombre ?: null;
+            $albaran->firma_responsable_otro_correo = $this->firma_responsable_otro_correo ?: null;
             $albaran->tipo_hora = TipoHora::from($this->tipo_hora);
             $albaran->estado = EstadoAlbaran::from($this->estado);
             $albaran->observaciones = $this->observaciones;
             $albaran->save();
 
-            // Líneas personal: borramos todas y recreamos para simplicidad.
-            // El Observer no actúa sobre lineas personal, así que es seguro.
-            $albaran->lineasPersonal()->delete();
-
             if (! $this->omitirLineaCreador) {
-                // Móvil: la línea del creador va siempre en primera posición.
+                // Móvil: gestiona las líneas como parte del formulario.
+                $albaran->lineasPersonal()->delete();
+
                 $albaran->lineasPersonal()->create([
                     'trabajador_id' => Auth::id(),
                     'horas' => $this->mi_horas,
                     'horas_extra' => $this->mi_horas_extra,
                 ]);
+
+                foreach ($this->companeros as $companero) {
+                    $albaran->lineasPersonal()->create([
+                        'trabajador_id' => $companero['trabajador_id'],
+                        'horas' => $companero['horas'],
+                        'horas_extra' => $companero['horas_extra'] ?? '0.00',
+                    ]);
+                }
+
+                // Líneas material: borramos una a una para que el Observer
+                // devuelva stock al material correspondiente.
+                $albaran->lineasMaterial()->each(fn ($linea) => $linea->delete());
+
+                foreach ($this->materiales as $material) {
+                    $albaran->lineasMaterial()->create([
+                        'material_id' => $material['material_id'],
+                        'cantidad' => $material['cantidad'],
+                    ]);
+                }
             }
+            // Web: líneas gestionadas directamente desde los modales de cada tab.
 
-            foreach ($this->companeros as $companero) {
-                $albaran->lineasPersonal()->create([
-                    'trabajador_id' => $companero['trabajador_id'],
-                    'horas' => $companero['horas'],
-                    'horas_extra' => $companero['horas_extra'] ?? '0.00',
-                ]);
-            }
-
-            // Líneas material: borramos una a una para que el Observer
-            // devuelva stock al material correspondiente.
-            $albaran->lineasMaterial()->each(fn ($linea) => $linea->delete());
-
-            foreach ($this->materiales as $material) {
-                $albaran->lineasMaterial()->create([
-                    'material_id' => $material['material_id'],
-                    'cantidad' => $material['cantidad'],
-                ]);
-            }
-
-            return $albaran->fresh(['lineasPersonal', 'lineasMaterial']);
+            return $albaran->fresh();
         });
     }
 }

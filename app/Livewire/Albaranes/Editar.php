@@ -12,25 +12,48 @@ use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.web', ['active' => 'albaranes'])]
 #[Title('Albarán')]
 class Editar extends Component
 {
+    use WithFileUploads;
+
     public AlbaranForm $form;
 
     public ?Albaran $albaran = null;
 
     public ?int $confirmarEliminarId = null;
 
-    public int $trabajadorSelectKey = 0;
+    // ── Modal trabajador ─────────────────────────────────────────────────────
+    public bool $modalTrabajadorAbierto = false;
+    public ?int $editandoLineaPersonalId = null;
+    public ?int $modalTrabajadorUserId = null;
+    public string $modalTrabajadorHoras = '8.00';
+    public string $modalTrabajadorHorasExtra = '0.00';
+    public ?int $confirmarEliminarLineaPersonalId = null;
 
-    public int $materialSelectKey = 0;
+    // ── Modal material ────────────────────────────────────────────────────────
+    public bool $modalMaterialAbierto = false;
+    public ?int $editandoLineaMaterialId = null;
+    public ?int $modalMaterialId = null;
+    public string $modalMaterialCantidad = '1.00';
+    public ?int $confirmarEliminarLineaMaterialId = null;
+
+    // ── Modal archivo ─────────────────────────────────────────────────────────
+    public bool $modalArchivoAbierto = false;
+    public string $modalArchivoNombre = '';
+    public ?TemporaryUploadedFile $modalArchivoFichero = null;
+    public ?int $confirmarEliminarArchivoId = null;
 
     public function mount(?Albaran $albaran = null): void
     {
@@ -40,7 +63,7 @@ class Editar extends Component
         if ($albaran !== null && $albaran->exists) {
             Gate::authorize('update', $albaran);
             $this->albaran = $albaran;
-            $this->albaran->loadMissing(['lineasPersonal', 'lineasMaterial']);
+            $this->albaran->load(['lineasPersonal.trabajador', 'lineasMaterial.material', 'firmas', 'tokensFirma', 'archivos']);
             $this->form->fromModel($albaran);
         } else {
             Gate::authorize('create', Albaran::class);
@@ -58,41 +81,260 @@ class Editar extends Component
             $this->form->omitirLineaCreador = true;
             $this->form->fecha = now()->format('Y-m-d');
         }
-        $this->trabajadorSelectKey++;
-        $this->materialSelectKey++;
     }
 
     public function updatedFormProyectoId(): void
     {
         $this->form->sincronizarClienteDesdeProyecto();
-        // Al cambiar proyecto se limpian las líneas de personal y material
-        // porque los disponibles cambian completamente.
-        $this->form->companeros = [];
-        $this->form->materiales = [];
-        $this->trabajadorSelectKey++;
-        $this->materialSelectKey++;
     }
 
-    public function agregarTrabajador(): void
+    // ── CRUD trabajadores ────────────────────────────────────────────────────
+
+    public function abrirModalTrabajador(?int $lineaId = null): void
     {
-        $this->form->addCompanero();
-        $this->trabajadorSelectKey++;
+        $this->modalTrabajadorUserId    = null;
+        $this->modalTrabajadorHoras     = '8.00';
+        $this->modalTrabajadorHorasExtra = '0.00';
+        $this->editandoLineaPersonalId  = null;
+
+        if ($lineaId !== null && $this->albaran !== null) {
+            $linea = $this->albaran->lineasPersonal->find($lineaId);
+            if ($linea !== null) {
+                $this->editandoLineaPersonalId   = $linea->id;
+                $this->modalTrabajadorUserId     = $linea->trabajador_id;
+                $this->modalTrabajadorHoras      = (string) $linea->horas;
+                $this->modalTrabajadorHorasExtra = (string) $linea->horas_extra;
+            }
+        }
+
+        $this->resetErrorBag();
+        $this->modalTrabajadorAbierto = true;
     }
 
-    public function quitarTrabajador(int $index): void
+    public function cerrarModalTrabajador(): void
     {
-        $this->form->removeCompanero($index);
+        $this->modalTrabajadorAbierto = false;
     }
 
-    public function agregarMaterial(): void
+    public function guardarTrabajador(): void
     {
-        $this->form->addMaterial();
-        $this->materialSelectKey++;
+        $this->validate([
+            'modalTrabajadorUserId'     => ['required', 'integer', 'exists:users,id'],
+            'modalTrabajadorHoras'      => ['required', 'numeric', 'min:0', 'max:24'],
+            'modalTrabajadorHorasExtra' => ['required', 'numeric', 'min:0', 'max:24'],
+        ], [
+            'modalTrabajadorUserId.required' => 'Selecciona un trabajador.',
+            'modalTrabajadorHoras.required'  => 'Las horas son obligatorias.',
+        ]);
+
+        if ($this->editandoLineaPersonalId !== null) {
+            $linea = $this->albaran?->lineasPersonal()->find($this->editandoLineaPersonalId);
+            $linea?->update([
+                'trabajador_id' => $this->modalTrabajadorUserId,
+                'horas'         => $this->modalTrabajadorHoras,
+                'horas_extra'   => $this->modalTrabajadorHorasExtra,
+            ]);
+        } else {
+            $this->albaran?->lineasPersonal()->create([
+                'trabajador_id' => $this->modalTrabajadorUserId,
+                'horas'         => $this->modalTrabajadorHoras,
+                'horas_extra'   => $this->modalTrabajadorHorasExtra,
+            ]);
+        }
+
+        $this->albaran?->load('lineasPersonal.trabajador');
+        $this->modalTrabajadorAbierto = false;
     }
 
-    public function quitarMaterial(int $index): void
+    public function confirmarEliminarTrabajador(int $lineaId): void
     {
-        $this->form->removeMaterial($index);
+        $this->confirmarEliminarLineaPersonalId = $lineaId;
+    }
+
+    public function cancelarEliminarTrabajador(): void
+    {
+        $this->confirmarEliminarLineaPersonalId = null;
+    }
+
+    public function eliminarTrabajador(): void
+    {
+        if ($this->confirmarEliminarLineaPersonalId === null) {
+            return;
+        }
+
+        $this->albaran?->lineasPersonal()
+            ->find($this->confirmarEliminarLineaPersonalId)
+            ?->delete();
+
+        $this->albaran?->load('lineasPersonal.trabajador');
+        $this->confirmarEliminarLineaPersonalId = null;
+    }
+
+    // ── CRUD materiales ───────────────────────────────────────────────────────
+
+    public function abrirModalMaterial(?int $lineaId = null): void
+    {
+        $this->modalMaterialId       = null;
+        $this->modalMaterialCantidad = '1.00';
+        $this->editandoLineaMaterialId = null;
+
+        if ($lineaId !== null && $this->albaran !== null) {
+            $linea = $this->albaran->lineasMaterial->find($lineaId);
+            if ($linea !== null) {
+                $this->editandoLineaMaterialId = $linea->id;
+                $this->modalMaterialId         = $linea->material_id;
+                $this->modalMaterialCantidad   = (string) $linea->cantidad;
+            }
+        }
+
+        $this->resetErrorBag();
+        $this->modalMaterialAbierto = true;
+    }
+
+    public function cerrarModalMaterial(): void
+    {
+        $this->modalMaterialAbierto = false;
+    }
+
+    public function guardarMaterial(): void
+    {
+        $this->validate([
+            'modalMaterialId'       => ['required', 'integer', 'exists:materiales,id'],
+            'modalMaterialCantidad' => ['required', 'numeric', 'min:0.01'],
+        ], [
+            'modalMaterialId.required'       => 'Selecciona un material.',
+            'modalMaterialCantidad.required' => 'La cantidad es obligatoria.',
+            'modalMaterialCantidad.min'      => 'La cantidad debe ser mayor que 0.',
+        ]);
+
+        if ($this->editandoLineaMaterialId !== null) {
+            $linea = $this->albaran?->lineasMaterial()->find($this->editandoLineaMaterialId);
+            $linea?->update([
+                'material_id' => $this->modalMaterialId,
+                'cantidad'    => $this->modalMaterialCantidad,
+            ]);
+        } else {
+            $this->albaran?->lineasMaterial()->create([
+                'material_id' => $this->modalMaterialId,
+                'cantidad'    => $this->modalMaterialCantidad,
+            ]);
+        }
+
+        $this->albaran?->load('lineasMaterial.material');
+        $this->modalMaterialAbierto = false;
+    }
+
+    public function confirmarEliminarMaterial(int $lineaId): void
+    {
+        $this->confirmarEliminarLineaMaterialId = $lineaId;
+    }
+
+    public function cancelarEliminarMaterial(): void
+    {
+        $this->confirmarEliminarLineaMaterialId = null;
+    }
+
+    public function eliminarMaterial(): void
+    {
+        if ($this->confirmarEliminarLineaMaterialId === null) {
+            return;
+        }
+
+        $this->albaran?->lineasMaterial()
+            ->find($this->confirmarEliminarLineaMaterialId)
+            ?->delete();
+
+        $this->albaran?->load('lineasMaterial.material');
+        $this->confirmarEliminarLineaMaterialId = null;
+    }
+
+    // ── CRUD archivos ─────────────────────────────────────────────────────────
+
+    public function abrirModalArchivo(): void
+    {
+        $this->modalArchivoNombre  = '';
+        $this->modalArchivoFichero = null;
+        $this->resetErrorBag();
+        $this->modalArchivoAbierto = true;
+    }
+
+    public function cerrarModalArchivo(): void
+    {
+        $this->modalArchivoAbierto = false;
+        $this->modalArchivoFichero = null;
+    }
+
+    public function guardarArchivo(): void
+    {
+        $empresa    = \App\Models\Empresa::actual();
+        $maxMb      = $empresa->archivo_tamano_max_mb ?? 10;
+        $maxArchivos = $empresa->archivo_cantidad_max ?? 20;
+
+        if ($this->albaran !== null && $this->albaran->archivos->count() >= $maxArchivos) {
+            $this->addError('modalArchivoFichero', "Este albarán ya tiene el máximo de {$maxArchivos} archivos permitidos.");
+            return;
+        }
+
+        $this->validate([
+            'modalArchivoFichero' => ['required', 'file', 'max:' . ($maxMb * 1024)],
+            'modalArchivoNombre'  => ['nullable', 'string', 'max:200'],
+        ], [
+            'modalArchivoFichero.required' => 'Selecciona un archivo.',
+            'modalArchivoFichero.max'      => "El archivo no puede superar {$maxMb} MB.",
+        ]);
+
+        if ($this->albaran === null || $this->modalArchivoFichero === null) {
+            return;
+        }
+
+        $ruta = $this->modalArchivoFichero->store(
+            "albaranes/{$this->albaran->id}",
+            'public'
+        );
+
+        $nombre = trim($this->modalArchivoNombre) !== ''
+            ? $this->modalArchivoNombre
+            : $this->modalArchivoFichero->getClientOriginalName();
+
+        $this->albaran->archivos()->create([
+            'nombre'          => $nombre,
+            'ruta'            => $ruta,
+            'nombre_original' => $this->modalArchivoFichero->getClientOriginalName(),
+            'mime_type'       => $this->modalArchivoFichero->getMimeType(),
+            'tamano'          => $this->modalArchivoFichero->getSize(),
+            'subido_por'      => Auth::id(),
+        ]);
+
+        $this->albaran->load('archivos');
+        $this->modalArchivoAbierto = false;
+        $this->modalArchivoFichero = null;
+    }
+
+    public function confirmarEliminarArchivo(int $archivoId): void
+    {
+        $this->confirmarEliminarArchivoId = $archivoId;
+    }
+
+    public function cancelarEliminarArchivo(): void
+    {
+        $this->confirmarEliminarArchivoId = null;
+    }
+
+    public function eliminarArchivo(): void
+    {
+        if ($this->confirmarEliminarArchivoId === null || $this->albaran === null) {
+            return;
+        }
+
+        $archivo = $this->albaran->archivos()->find($this->confirmarEliminarArchivoId);
+
+        if ($archivo !== null) {
+            Storage::disk('public')->delete($archivo->ruta);
+            $archivo->delete();
+        }
+
+        $this->albaran->load('archivos');
+        $this->confirmarEliminarArchivoId = null;
     }
 
     public function guardar(): void
@@ -127,6 +369,16 @@ class Editar extends Component
     public function cancelarEliminar(): void
     {
         $this->confirmarEliminarId = null;
+    }
+
+    public function notificarFirmantes(bool $trabajador, bool $responsable): void
+    {
+        if ($this->albaran === null) {
+            return;
+        }
+
+        // TODO: generar tokens y enviar correos cuando el sistema de firma esté listo.
+        session()->flash('status', 'Notificaciones enviadas correctamente.');
     }
 
     public function eliminar(): void
@@ -231,10 +483,19 @@ class Editar extends Component
 
     public function render(): View
     {
-        $titulo = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
+        $titulo   = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
         $tiposHora = TipoHora::cases();
-        $estados = EstadoAlbaran::cases();
+        $estados   = EstadoAlbaran::cases();
 
-        return view('livewire.albaranes.editar', compact('titulo', 'tiposHora', 'estados'));
+        $tokenTrabajador   = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'trabajador')->sortByDesc('created_at')->first();
+        $tokenResponsable  = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'responsable')->sortByDesc('created_at')->first();
+        $firmaTrabajador   = $this->albaran?->firmas->where('tipo.value', 'trabajador')->first();
+        $firmaResponsable  = $this->albaran?->firmas->where('tipo.value', 'responsable')->first();
+
+        return view('livewire.albaranes.editar', compact(
+            'titulo', 'tiposHora', 'estados',
+            'tokenTrabajador', 'tokenResponsable',
+            'firmaTrabajador', 'firmaResponsable',
+        ));
     }
 }

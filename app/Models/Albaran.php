@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property-read EloquentCollection<int, AlbaranLineaMaterial> $lineasMaterial
  * @property-read EloquentCollection<int, AlbaranFirma> $firmas
  * @property-read EloquentCollection<int, AlbaranTokenFirma> $tokensFirma
+ * @property-read EloquentCollection<int, AlbaranArchivo> $archivos
  */
 class Albaran extends Model
 {
@@ -50,6 +51,11 @@ class Albaran extends Model
         'tipo_hora',
         'observaciones',
         'snapshot_data',
+        'firma_trabajador_user_id',
+        'firma_trabajador_otro_nombre',
+        'firma_trabajador_otro_correo',
+        'firma_responsable_otro_nombre',
+        'firma_responsable_otro_correo',
     ];
 
     protected function casts(): array
@@ -87,6 +93,11 @@ class Albaran extends Model
         return $this->belongsTo(User::class, 'responsable_id');
     }
 
+    public function firmaTrabajador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'firma_trabajador_user_id');
+    }
+
     public function lineasPersonal(): HasMany
     {
         return $this->hasMany(AlbaranLineaPersonal::class);
@@ -105,6 +116,11 @@ class Albaran extends Model
     public function tokensFirma(): HasMany
     {
         return $this->hasMany(AlbaranTokenFirma::class);
+    }
+
+    public function archivos(): HasMany
+    {
+        return $this->hasMany(AlbaranArchivo::class);
     }
 
     /**

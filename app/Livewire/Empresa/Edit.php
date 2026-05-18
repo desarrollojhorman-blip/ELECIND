@@ -29,6 +29,12 @@ class Edit extends Component
         $this->form->fromModel($empresa);
     }
 
+    public function deshacer(): void
+    {
+        $this->resetValidation();
+        $this->form->fromModel(Empresa::actual());
+    }
+
     public function guardar(): void
     {
         $empresa = Empresa::actual();

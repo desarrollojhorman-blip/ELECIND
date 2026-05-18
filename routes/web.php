@@ -79,7 +79,7 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('proyectos.crear');
 
     Route::get('/proyectos/grupos', GruposProyectosIndex::class)
-        ->middleware('can:tipos_proyecto.ver')
+        ->middleware('can:grupos_proyecto.ver')
         ->name('proyectos.grupos');
 
     Route::get('/proyectos/{proyecto}', ProyectosVer::class)
@@ -111,11 +111,11 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('conceptos.index');
 
     Route::get('/configuracion/empresa', EmpresaEdit::class)
-        ->middleware('can:configuracion.empresa')
+        ->middleware('can:configuracion.ver')
         ->name('configuracion.empresa');
 
     Route::get('/configuracion/ajustes', ConfiguracionAjustes::class)
-        ->middleware('can:configuracion.empresa')
+        ->middleware('can:configuracion.ver')
         ->name('configuracion.ajustes');
 
     Route::get('/configuracion/roles', RolesIndex::class)

@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Roles y permisos" subtitle="Gestión de roles del sistema y personalizados con jerarquía por nivel y ámbito." />
 
     {{-- Toolbar --}}
@@ -239,7 +239,7 @@
             <x-ui.button variant="neutral" wire:click="cerrarModal">
                 Cancelar
             </x-ui.button>
-            <x-ui.button variant="info" type="submit" form="form-rol" wire:loading.attr="disabled" icon="heroicon-o-check">
+            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-rol" wire:loading.attr="disabled">
                 Guardar
             </x-ui.button>
         </x-slot:footer>

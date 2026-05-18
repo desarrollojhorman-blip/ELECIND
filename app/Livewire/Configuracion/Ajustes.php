@@ -37,6 +37,14 @@ class Ajustes extends Component
     #[Validate(['required', 'integer', 'min:1', 'max:90'])]
     public int $token_caducidad_dias = 7;
 
+    // ── Límites de archivos adjuntos ─────────────────────────────────────────
+
+    #[Validate(['required', 'integer', 'in:2,5,10,20,50'])]
+    public int $archivo_tamano_max_mb = 10;
+
+    #[Validate(['required', 'integer', 'min:1', 'max:100'])]
+    public int $archivo_cantidad_max = 20;
+
     // ── Logo de la aplicación (prioridad absoluta en UI) ─────────────────────
 
     public ?string $logo_app_path = null;
@@ -70,7 +78,7 @@ class Ajustes extends Component
 
     public function mount(): void
     {
-        Gate::authorize('configuracion.empresa');
+        Gate::authorize('configuracion.ver');
 
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
@@ -78,6 +86,8 @@ class Ajustes extends Component
         $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
         $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
+        $this->archivo_tamano_max_mb = $empresa->archivo_tamano_max_mb ?? 10;
+        $this->archivo_cantidad_max = $empresa->archivo_cantidad_max ?? 20;
 
         $this->logo_app_path = $empresa->logo_app_path;
         $this->logo_app_ratio = $empresa->logo_app_ratio;
@@ -105,10 +115,27 @@ class Ajustes extends Component
     }
 
 
+    public function deshacer(): void
+    {
+        $this->resetValidation();
+        $empresa = Empresa::actual();
+        $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
+        $this->plantilla_numeracion_cliente = $empresa->plantilla_numeracion_cliente ?? 'CLI-{NNNN}';
+        $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
+        $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
+        $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
+        $this->archivo_tamano_max_mb = $empresa->archivo_tamano_max_mb ?? 10;
+        $this->archivo_cantidad_max = $empresa->archivo_cantidad_max ?? 20;
+        $this->logo_app_zoom = $empresa->logo_app_zoom ?: 100;
+        $this->color_primario = $empresa->color_primario ?? '#334155';
+        $this->color_secundario = $empresa->color_secundario ?? '#f1f5f9';
+        $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
+        $this->nuevoLogoApp = null;
+        $this->eliminarLogoApp = false;
+    }
+
     public function guardar(): void
     {
-        Gate::authorize('configuracion.empresa');
-
         $this->validate();
 
         $empresa = Empresa::actual();
@@ -137,6 +164,8 @@ class Ajustes extends Component
             'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
             'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
             'token_caducidad_dias' => $this->token_caducidad_dias,
+            'archivo_tamano_max_mb' => $this->archivo_tamano_max_mb,
+            'archivo_cantidad_max' => $this->archivo_cantidad_max,
             'logo_app_zoom' => $this->logo_app_zoom,
             'color_primario' => $this->color_primario,
             'color_secundario' => $this->color_secundario,

@@ -38,6 +38,8 @@ class Empresa extends Model
         'plantilla_numeracion_proyecto',
         'token_caducidad_dias',
         'plantilla_pdf_config',
+        'archivo_tamano_max_mb',
+        'archivo_cantidad_max',
     ];
 
     protected function casts(): array
@@ -45,6 +47,8 @@ class Empresa extends Model
         return [
             'plantilla_pdf_config' => 'array',
             'token_caducidad_dias' => 'integer',
+            'archivo_tamano_max_mb' => 'integer',
+            'archivo_cantidad_max' => 'integer',
             'logo_ratio' => 'float',
             'logo_zoom' => 'integer',
             'logo_albaran_ratio' => 'float',

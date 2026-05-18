@@ -68,7 +68,20 @@
       "Bash(Get-ChildItem \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\\\\views\\\\livewire\\\\clientes\\\\index.blade.php\")",
       "Bash(D:\\\\xampp\\\\php\\\\php.exe \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" migrate --force)",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" migrate --force 2>&1)",
-      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" migrate --path=database/migrations/2026_05_17_000000_add_plantillas_pedido_proyecto_to_empresa.php --force)"
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" migrate --path=database/migrations/2026_05_17_000000_add_plantillas_pedido_proyecto_to_empresa.php --force)",
+      "Bash(\"D:\\\\xampp\\\\php\\\\php.exe\" artisan *)",
+      "Bash(powershell -Command 'Get-ChildItem -Recurse -Filter '\\\\''*.blade.php'\\\\'' '\\\\''d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\\\\views'\\\\'' | ForEach-Object { $c = Get-Content $_.FullName -Raw; $new = $c -replace '\\\\'' icon=\"heroicon-o-check\"'\\\\'', '\\\\'''\\\\''; if \\($c -ne $new\\) { Set-Content $_.FullName $new -NoNewline; Write-Host $_.FullName } }')",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan db:seed --class=RolesAndPermissionsSeeder)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan tinker --execute=\"$e = App\\\\Models\\\\Empresa::first\\(\\); echo json_encode\\(['albaran'=>$e->plantilla_numeracion_albaran,'cliente'=>$e->plantilla_numeracion_cliente,'pedido'=>$e->plantilla_numeracion_pedido,'proyecto'=>$e->plantilla_numeracion_proyecto], JSON_PRETTY_PRINT\\);\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan tinker --execute=\"echo json_encode\\(App\\\\Models\\\\Empresa::first\\(\\)->only\\(['plantilla_numeracion_albaran','plantilla_numeracion_cliente','plantilla_numeracion_pedido','plantilla_numeracion_proyecto']\\), JSON_PRETTY_PRINT\\);\")",
+      "PowerShell(cd \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" ; D:\\\\xampp\\\\php\\\\php.exe artisan tinker --execute=\"$e = App\\\\Models\\\\Empresa::first\\(\\); echo json_encode\\(['codigo_cliente' => $e->plantilla_numeracion_cliente, 'albaran' => $e->plantilla_numeracion_albaran, 'pedido' => $e->plantilla_numeracion_pedido, 'proyecto' => $e->plantilla_numeracion_proyecto]\\);\")",
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Recurse -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\node_modules\\\\alpinejs\\\\dist\\\\\" -Filter \"*.js\" | Select-Object -ExpandProperty FullName | head -20)",
+      "Bash(node -e ' *)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan cache:clear)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" view:clear)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" tinker --execute=\"echo config\\('app.debug'\\) ? 'DEBUG=true' : 'DEBUG=false';\" 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" tinker --execute=\"echo App\\\\Models\\\\Empresa::actual\\(\\)->getAttributes\\(\\)['plantilla_numeracion_cliente'] ?? 'COLUMNA NO EXISTE';\" 2>&1)"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

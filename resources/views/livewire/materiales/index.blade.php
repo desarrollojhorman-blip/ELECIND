@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Materiales" subtitle="Catálogo de materiales agrupados por número de pedido." />
 
     {{-- Toolbar --}}
@@ -224,8 +224,8 @@
         <x-slot:footer>
             @if (!$modoSoloLectura)
                 <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="info" type="submit" form="form-material"
-                             wire:loading.attr="disabled" icon="heroicon-o-check">
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-material"
+                             wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif

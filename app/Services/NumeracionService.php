@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  *   {NNNN} → secuencial dentro del año, 4 dígitos con ceros a la izquierda
  *   {NNN}  → secuencial dentro del año, 3 dígitos
  *   {NN}   → secuencial dentro del año, 2 dígitos
+ *   {N}    → secuencial sin ceros a la izquierda
  */
 class NumeracionService
 {
@@ -107,9 +108,10 @@ class NumeracionService
             '{NNNN}' => str_pad((string) $secuencial, 4, '0', STR_PAD_LEFT),
             '{NNN}'  => str_pad((string) $secuencial, 3, '0', STR_PAD_LEFT),
             '{NN}'   => str_pad((string) $secuencial, 2, '0', STR_PAD_LEFT),
+            '{N}'    => (string) $secuencial,
         ];
 
-        return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
+return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
     }
 
     // ── Nº Pedido ────────────────────────────────────────────────────────────
@@ -177,6 +179,7 @@ class NumeracionService
             '{NNNN}' => str_pad((string) $secuencial, 4, '0', STR_PAD_LEFT),
             '{NNN}' => str_pad((string) $secuencial, 3, '0', STR_PAD_LEFT),
             '{NN}' => str_pad((string) $secuencial, 2, '0', STR_PAD_LEFT),
+            '{N}' => (string) $secuencial,
         ];
 
         return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);

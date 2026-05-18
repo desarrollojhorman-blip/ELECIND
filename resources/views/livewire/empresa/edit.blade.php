@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header
         title="Empresa"
         subtitle="Datos fiscales y logos para documentos (albaranes y PDF)." />
@@ -155,8 +155,9 @@
 
         {{-- Acciones --}}
         <div class="flex justify-end gap-2 pt-2">
-            <x-ui.button variant="info" type="submit" icon="heroicon-o-check" wire:loading.attr="disabled">
-                Guardar cambios
+            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left" type="button">Deshacer</x-ui.button>
+            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" wire:loading.attr="disabled">
+                Guardar
             </x-ui.button>
         </div>
 

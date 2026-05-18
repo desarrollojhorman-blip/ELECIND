@@ -9,31 +9,31 @@ class TiposProyectoPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('tipos_proyecto.ver');
+        return $user->can('grupos_proyecto.ver');
     }
 
     public function view(User $user, TiposProyecto $tipo): bool
     {
-        return $user->can('tipos_proyecto.ver');
+        return $user->can('grupos_proyecto.ver');
     }
 
     public function create(User $user): bool
     {
-        return $user->can('tipos_proyecto.crear');
+        return $user->can('grupos_proyecto.crear');
     }
 
     public function update(User $user, TiposProyecto $tipo): bool
     {
-        return $user->can('tipos_proyecto.modificar');
+        return $user->can('grupos_proyecto.modificar');
     }
 
     public function delete(User $user, TiposProyecto $tipo): bool
     {
-        return $user->can('tipos_proyecto.eliminar');
+        return $user->can('grupos_proyecto.eliminar');
     }
 
     public function restore(User $user, TiposProyecto $tipo): bool
     {
-        return $user->can('tipos_proyecto.modificar');
+        return $user->can('grupos_proyecto.modificar');
     }
 }

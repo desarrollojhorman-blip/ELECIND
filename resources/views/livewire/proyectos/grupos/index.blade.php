@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <x-ui.page-header title="Grupo proyectos"
                       subtitle="Gestiona grupos de proyectos y asigna proyectos existentes a cada grupo." />
 
@@ -144,7 +144,7 @@
                     Proyectos en este grupo
                 </h3>
 
-                @if (! $modoSoloLectura && auth()->user()?->can('tipos_proyecto.modificar'))
+                @if (! $modoSoloLectura && auth()->user()?->can('grupos_proyecto.modificar'))
                     <div class="mb-3 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3">
                         <label class="mb-1.5 block text-xs font-medium text-slate-700">
                             Añadir proyecto sin grupo
@@ -242,8 +242,8 @@
         <x-slot:footer>
             @if (!$modoSoloLectura)
                 <x-ui.button variant="neutral" wire:click="cerrarModal">Cancelar</x-ui.button>
-                <x-ui.button variant="info" type="submit" form="form-grupo-proyecto"
-                             wire:loading.attr="disabled" icon="heroicon-o-check">
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-grupo-proyecto"
+                             wire:loading.attr="disabled">
                     Guardar
                 </x-ui.button>
             @endif

@@ -1,5 +1,5 @@
-<div class="space-y-4">
-    <x-ui.page-header :title="$titulo" subtitle="Datos fiscales y de contacto del cliente.">
+﻿<div class="space-y-4" x-data="{ tab: 'cliente' }">
+    <x-ui.page-header :title="$titulo" subtitle="Datos, proyectos y usuarios vinculados al cliente.">
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos
@@ -22,15 +22,57 @@
             <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
                 Deshacer
             </x-ui.button>
-            <x-ui.button variant="info" type="submit" form="form-cliente" wire:loading.attr="disabled" icon="heroicon-o-check">
+            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-cliente" wire:loading.attr="disabled">
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
         </x-slot:actionsRight>
     </x-ui.page-header>
 
+    {{-- Tabs + contenido --}}
+    @php $modoCrear = $cliente === null; @endphp
+    <div>
+    <div class="flex items-end overflow-x-auto border-b border-slate-200 px-2 pt-1.5">
+        <button type="button"
+                @click="tab = 'cliente'"
+                :class="tab === 'cliente'
+                    ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700'"
+                class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+            Cliente
+        </button>
+
+        @foreach ([
+            ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $cliente ? $this->proyectosDelCliente->count() : null],
+            ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $cliente ? $this->usuariosDeLosProyectos->count() : null],
+        ] as $t)
+            @if ($modoCrear)
+                <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
+                      title="Guarda primero el cliente para acceder a esta sección">
+                    <x-heroicon-o-lock-closed class="size-3" />
+                    {{ $t['label'] }}
+                </span>
+            @else
+                <button type="button"
+                        @click="tab = '{{ $t['key'] }}'"
+                        :class="tab === '{{ $t['key'] }}'
+                            ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                            : 'text-slate-500 hover:text-slate-700'"
+                        class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+                    {{ $t['label'] }}
+                    @if ($t['count'])
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
+                            {{ $t['count'] }}
+                        </span>
+                    @endif
+                </button>
+            @endif
+        @endforeach
+    </div>
+
+    {{-- ═══ Tab: Cliente ═══ --}}
     <form wire:submit="guardar" id="form-cliente" autocomplete="off">
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div x-show="tab === 'cliente'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Código cliente" required :error="$errors->first('form.codigo_cliente')">
                     <x-ui.input wire:model="form.codigo_cliente" class="font-mono" autofocus />
@@ -80,107 +122,105 @@
                     <x-ui.checkbox wire:model="form.activo" label="Cliente activo" />
                 </div>
             </div>
+
+            <x-ui.flash class="mt-4" />
         </div>
     </form>
 
-    {{-- Tablas relacionados: solo en modo edición --}}
-    @if ($cliente)
-        {{-- Proyectos vinculados --}}
-        <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <button type="button"
-                    x-on:click="abierto = !abierto"
-                    class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-                <h2 class="text-sm font-semibold text-slate-900">
-                    Proyectos vinculados
-                    <span class="ml-1 font-normal text-slate-400">({{ $this->proyectosDelCliente->count() }})</span>
-                </h2>
-                <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                           x-bind:class="abierto ? 'rotate-180' : ''" />
-            </button>
-            <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
-                @if ($this->proyectosDelCliente->isEmpty())
-                    <p class="px-6 py-4 text-sm text-slate-500">Sin proyectos asociados.</p>
-                @else
-                    <table class="w-full text-sm">
-                        <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
-                            <tr>
-                                <th class="px-6 py-2.5">Proyecto</th>
-                                <th class="px-6 py-2.5">Código</th>
-                                <th class="px-6 py-2.5">Tipo</th>
-                                <th class="px-6 py-2.5">Estado</th>
-                                <th class="px-6 py-2.5 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach ($this->proyectosDelCliente as $proyecto)
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-3 font-medium text-slate-800">{{ $proyecto->nombre }}</td>
-                                    <td class="px-6 py-3 text-slate-500">{{ $proyecto->codigo ?? '—' }}</td>
-                                    <td class="px-6 py-3 text-slate-500">{{ $proyecto->tipoProyecto?->nombre ?? '—' }}</td>
-                                    <td class="px-6 py-3 text-slate-500">{{ $proyecto->estado ? ucfirst($proyecto->estado) : '—' }}</td>
-                                    <td class="px-6 py-3 text-right">
-                                        <x-ui.icon-button
-                                            as="a"
-                                            href="/proyectos/{{ $proyecto->id }}"
-                                            wire:navigate
-                                            icon="heroicon-o-arrow-top-right-on-square"
-                                            variant="ghost"
-                                            tooltip="Ver proyecto" />
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
+    {{-- ═══ Tab: Proyectos ═══ --}}
+    <div x-show="tab === 'proyectos'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <div class="px-6 py-4">
+            <span class="text-sm font-semibold text-slate-900">Proyectos vinculados</span>
+            <p class="mt-0.5 text-xs text-slate-400">Proyectos asociados a este cliente</p>
         </div>
 
-        {{-- Usuarios vinculados --}}
-        <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <button type="button"
-                    x-on:click="abierto = !abierto"
-                    class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-                <h2 class="text-sm font-semibold text-slate-900">
-                    Usuarios vinculados
-                    <span class="ml-1 font-normal text-slate-400">({{ $this->usuariosDeLosProyectos->count() }})</span>
-                </h2>
-                <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                           x-bind:class="abierto ? 'rotate-180' : ''" />
-            </button>
-            <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
-                @if ($this->usuariosDeLosProyectos->isEmpty())
-                    <p class="px-6 py-4 text-sm text-slate-500">Sin usuarios vinculados.</p>
-                @else
-                    <table class="w-full text-sm">
-                        <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
-                            <tr>
-                                <th class="px-6 py-2.5">Nombre</th>
-                                <th class="px-6 py-2.5">Email</th>
-                                <th class="px-6 py-2.5">Rol</th>
-                                <th class="px-6 py-2.5">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach ($this->usuariosDeLosProyectos as $usuario)
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-3 font-medium text-slate-800">{{ trim($usuario->nombre.' '.$usuario->apellidos) }}</td>
-                                    <td class="px-6 py-3 text-slate-500">{{ $usuario->email ?? '—' }}</td>
-                                    <td class="px-6 py-3 text-slate-500">{{ $usuario->getRoleNames()->join(', ') ?: '—' }}</td>
-                                    <td class="px-6 py-3">
-                                        @if ($usuario->activo)
-                                            <x-ui.badge tone="success" dot>Activo</x-ui.badge>
-                                        @else
-                                            <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
+        @if ($this->proyectosDelCliente->isEmpty())
+            <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                No hay proyectos asociados a este cliente.
             </div>
+        @else
+            <div class="border-t border-slate-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                        <tr>
+                            <th class="px-6 py-2.5">Proyecto</th>
+                            <th class="w-36 px-6 py-2.5">Código</th>
+                            <th class="w-40 px-6 py-2.5">Tipo</th>
+                            <th class="w-28 px-6 py-2.5">Estado</th>
+                            <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($this->proyectosDelCliente as $proyecto)
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-3 font-medium text-slate-800">{{ $proyecto->nombre }}</td>
+                                <td class="px-6 py-3 font-mono text-xs text-slate-500">{{ $proyecto->codigo ?? '—' }}</td>
+                                <td class="px-6 py-3 text-slate-500">{{ $proyecto->tipoProyecto?->nombre ?? '—' }}</td>
+                                <td class="px-6 py-3 text-slate-500">{{ $proyecto->estado ? ucfirst($proyecto->estado) : '—' }}</td>
+                                <td class="px-6 py-3 text-right">
+                                    <x-ui.icon-button
+                                        as="a"
+                                        href="/proyectos/{{ $proyecto->id }}"
+                                        wire:navigate
+                                        icon="heroicon-o-arrow-top-right-on-square"
+                                        variant="ghost"
+                                        tooltip="Ver proyecto" />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    {{-- ═══ Tab: Usuarios ═══ --}}
+    <div x-show="tab === 'usuarios'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <div class="px-6 py-4">
+            <span class="text-sm font-semibold text-slate-900">Usuarios vinculados</span>
+            <p class="mt-0.5 text-xs text-slate-400">Usuarios asignados a los proyectos de este cliente</p>
         </div>
-    @endif
+
+        @if ($this->usuariosDeLosProyectos->isEmpty())
+            <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                No hay usuarios vinculados a los proyectos de este cliente.
+            </div>
+        @else
+            <div class="border-t border-slate-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                        <tr>
+                            <th class="px-6 py-2.5">Nombre</th>
+                            <th class="px-6 py-2.5">Email</th>
+                            <th class="w-40 px-6 py-2.5">Rol</th>
+                            <th class="w-28 px-6 py-2.5">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($this->usuariosDeLosProyectos as $usuario)
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-3 font-medium text-slate-800">
+                                    {{ trim($usuario->nombre.' '.$usuario->apellidos) }}
+                                </td>
+                                <td class="px-6 py-3 text-slate-500">{{ $usuario->email ?? '—' }}</td>
+                                <td class="px-6 py-3 text-slate-500">
+                                    {{ $usuario->getRoleNames()->join(', ') ?: '—' }}
+                                </td>
+                                <td class="px-6 py-3">
+                                    @if ($usuario->activo)
+                                        <x-ui.badge tone="success" dot>Activo</x-ui.badge>
+                                    @else
+                                        <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+    </div>{{-- /tabs + contenido --}}
 
     {{-- Modal confirmar eliminación --}}
     <x-ui.modal
