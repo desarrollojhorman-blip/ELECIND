@@ -3,6 +3,7 @@
     'disabled' => false,
     'badge' => null,
     'tone' => 'default',
+    'href' => null,
 ])
 
 @php
@@ -17,16 +18,30 @@
     $classes = $disabled
         ? "{$base} cursor-not-allowed text-slate-400"
         : "{$base} ".($tones[$tone] ?? $tones['default']);
+
+    $isLink = $href !== null && ! $disabled;
 @endphp
 
-<button type="button"
-        @if ($disabled) disabled @endif
-        {{ $attributes->class($classes) }}>
-    @if ($icon)
-        <x-dynamic-component :component="$icon" class="size-4 shrink-0" />
-    @endif
-    <span class="flex-1 text-left">{{ $slot }}</span>
-    @if ($badge)
-        <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $badge }}</span>
-    @endif
-</button>
+@if ($isLink)
+    <a href="{{ $href }}" {{ $attributes->class($classes) }}>
+        @if ($icon)
+            <x-dynamic-component :component="$icon" class="size-4 shrink-0" />
+        @endif
+        <span class="flex-1 text-left">{{ $slot }}</span>
+        @if ($badge)
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $badge }}</span>
+        @endif
+    </a>
+@else
+    <button type="button"
+            @if ($disabled) disabled @endif
+            {{ $attributes->class($classes) }}>
+        @if ($icon)
+            <x-dynamic-component :component="$icon" class="size-4 shrink-0" />
+        @endif
+        <span class="flex-1 text-left">{{ $slot }}</span>
+        @if ($badge)
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $badge }}</span>
+        @endif
+    </button>
+@endif

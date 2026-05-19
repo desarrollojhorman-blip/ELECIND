@@ -99,11 +99,6 @@ class AjustesFields
                 'validation' => 'template_60',
                 'help' => 'Ej: ALB-{YYYY}-{NNNN}. Usa {YYYY}, {NNNN}, {MM}, {DD}',
             ],
-            'plantilla_numeracion_cliente' => [
-                'type' => 'text',
-                'validation' => 'template_60',
-                'help' => 'Ej: CLI-{NNNN}. Máx. 60 caracteres.',
-            ],
             'plantilla_numeracion_pedido' => [
                 'type' => 'text',
                 'validation' => 'template_60',

@@ -191,17 +191,12 @@
                 <p class="mb-4 text-xs text-amber-700">💡 Puedes poner lo que quieras. Si es incorrecto, lo verás al crear el primer registro.</p>
 
                    @php
-                       $plantillaClienteConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_cliente');
                        $plantillaAlbaranConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_albaran');
                        $plantillaPedidoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_pedido');
                        $plantillaProyectoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_proyecto');
                    @endphp
 
                 <div class="grid gap-4 md:grid-cols-2">
-                                   <x-ui.field label="Código cliente" for="plantilla_numeracion_cliente" :error="$errors->first('plantilla_numeracion_cliente')">
-                                       <x-ui.input id="plantilla_numeracion_cliente" name="plantilla_numeracion_cliente" wire:model.live="plantilla_numeracion_cliente" class="font-mono" maxlength="{{ $plantillaClienteConfig['maxLength'] ?? 60 }}" />
-                    </x-ui.field>
-
                                    <x-ui.field label="Número de albarán" for="plantilla_numeracion_albaran" :error="$errors->first('plantilla_numeracion_albaran')">
                                        <x-ui.input id="plantilla_numeracion_albaran" name="plantilla_numeracion_albaran" wire:model.live="plantilla_numeracion_albaran" class="font-mono" maxlength="{{ $plantillaAlbaranConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>

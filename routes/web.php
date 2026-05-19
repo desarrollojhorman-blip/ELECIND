@@ -2,7 +2,14 @@
 
 use App\Http\Controllers\Api\ProyectoOpcionesController;
 use App\Http\Controllers\LoginController;
+use App\Livewire\Albaranes\Editar as AlbaranesEditar;
+use App\Livewire\Albaranes\Index as AlbaranesIndex;
+use App\Livewire\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Borradores\Editar as BorradoresEditar;
+use App\Livewire\Borradores\Index as BorradoresIndex;
+use App\Livewire\Borradores\Ver as BorradoresVer;
 use App\Livewire\Clientes\Editar as ClientesEditar;
+use App\Livewire\Clientes\Importar as ClientesImportar;
 use App\Livewire\Clientes\Index as ClientesIndex;
 use App\Livewire\Clientes\Ver as ClientesVer;
 use App\Livewire\Conceptos\Index as ConceptosIndex;
@@ -12,12 +19,6 @@ use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
 use App\Livewire\Materiales\Index as MaterialesIndex;
 use App\Livewire\Materiales\NumeroPedidos\Index as NumeroPedidosIndex;
 use App\Livewire\Perfil\MiPerfil;
-use App\Livewire\Albaranes\Editar as AlbaranesEditar;
-use App\Livewire\Albaranes\Index as AlbaranesIndex;
-use App\Livewire\Albaranes\Ver as AlbaranesVer;
-use App\Livewire\Borradores\Editar as BorradoresEditar;
-use App\Livewire\Borradores\Index as BorradoresIndex;
-use App\Livewire\Borradores\Ver as BorradoresVer;
 use App\Livewire\Proyectos\Editar as ProyectosEditar;
 use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
@@ -80,6 +81,10 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/clientes/crear', ClientesEditar::class)
         ->middleware('can:clientes.ver')
         ->name('clientes.crear');
+
+    Route::get('/clientes/importar', ClientesImportar::class)
+        ->middleware('can:clientes.importar')
+        ->name('clientes.importar');
 
     Route::get('/clientes/{cliente}', ClientesVer::class)
         ->middleware('can:clientes.ver')

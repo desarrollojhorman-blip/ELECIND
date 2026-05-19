@@ -32,7 +32,7 @@
     {{-- Tabs + contenido --}}
     @php $modoCrear = $cliente === null; @endphp
     <div>
-    <div class="flex items-end overflow-x-auto border-b border-slate-200 px-2 pt-1.5">
+    <div class="flex items-end border-b border-slate-200 px-2 pt-1.5">
         <button type="button"
                 @click="tab = 'cliente'"
                 :class="tab === 'cliente'
@@ -75,51 +75,55 @@
         <div x-show="tab === 'cliente'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Código cliente" required :error="$errors->first('form.codigo_cliente')">
-                    <x-ui.input wire:model="form.codigo_cliente" class="font-mono" autofocus />
+                    @if ($cliente === null)
+                        <x-ui.input wire:model="form.codigo_cliente" type="number" min="1" max="100000" step="1" class="font-mono" />
+                    @else
+                        <x-ui.input wire:model="form.codigo_cliente" type="number" class="font-mono" readonly />
+                    @endif
                 </x-ui.field>
 
                 <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                    <x-ui.input wire:model="form.nombre" />
+                    <x-ui.input wire:model="form.nombre" maxlength="{{ \App\Support\ClienteFields::getMaxLength('nombre') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Nombre comercial" :error="$errors->first('form.nombre_comercial')">
-                    <x-ui.input wire:model="form.nombre_comercial" />
+                    <x-ui.input wire:model="form.nombre_comercial" maxlength="{{ \App\Support\ClienteFields::getMaxLength('nombre_comercial') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="CIF" :error="$errors->first('form.cif')">
-                    <x-ui.input wire:model="form.cif" />
+                    <x-ui.input wire:model="form.cif" maxlength="{{ \App\Support\ClienteFields::getMaxLength('cif') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Teléfono" :error="$errors->first('form.telefono')">
-                    <x-ui.input wire:model="form.telefono" />
+                    <x-ui.input wire:model="form.telefono" maxlength="{{ \App\Support\ClienteFields::getMaxLength('telefono') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Email" :error="$errors->first('form.email')">
-                    <x-ui.input type="email" wire:model="form.email" />
+                    <x-ui.input type="email" wire:model="form.email" maxlength="{{ \App\Support\ClienteFields::getMaxLength('email') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Dirección" :error="$errors->first('form.direccion')">
-                    <x-ui.input wire:model="form.direccion" />
+                    <x-ui.input wire:model="form.direccion" maxlength="{{ \App\Support\ClienteFields::getMaxLength('direccion') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Código postal" :error="$errors->first('form.codigo_postal')">
-                    <x-ui.input wire:model="form.codigo_postal" />
+                    <x-ui.input wire:model="form.codigo_postal" maxlength="{{ \App\Support\ClienteFields::getMaxLength('codigo_postal') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Población" :error="$errors->first('form.poblacion')">
-                    <x-ui.input wire:model="form.poblacion" />
+                    <x-ui.input wire:model="form.poblacion" maxlength="{{ \App\Support\ClienteFields::getMaxLength('poblacion') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Provincia" :error="$errors->first('form.provincia')">
-                    <x-ui.input wire:model="form.provincia" />
+                    <x-ui.input wire:model="form.provincia" maxlength="{{ \App\Support\ClienteFields::getMaxLength('provincia') }}" />
                 </x-ui.field>
 
                 <x-ui.field label="Observaciones" class="md:col-span-2" :error="$errors->first('form.observaciones')">
-                    <x-ui.textarea wire:model="form.observaciones" rows="3" />
+                    <x-ui.textarea wire:model="form.observaciones" rows="3" maxlength="{{ \App\Support\ClienteFields::getMaxLength('observaciones') }}" />
                 </x-ui.field>
 
                 <div class="md:col-span-2">
-                    <x-ui.checkbox wire:model="form.activo" label="Cliente activo" />
+                    <x-ui.checkbox wire:model="form.activo" label="Activo" />
                 </div>
             </div>
 
@@ -142,10 +146,26 @@
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
-                            <th class="px-6 py-2.5">Proyecto</th>
-                            <th class="w-36 px-6 py-2.5">Código</th>
-                            <th class="w-40 px-6 py-2.5">Tipo</th>
-                            <th class="w-28 px-6 py-2.5">Estado</th>
+                            <th class="px-6 py-2.5">
+                                <button type="button" wire:click="ordenarProyectos('nombre')" class="flex items-center gap-1 hover:opacity-80">
+                                    Proyecto <span class="text-[10px] opacity-70">{{ $ordenProyectos === 'nombre' ? ($dirProyectos === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-36 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarProyectos('codigo')" class="flex items-center gap-1 hover:opacity-80">
+                                    Código <span class="text-[10px] opacity-70">{{ $ordenProyectos === 'codigo' ? ($dirProyectos === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-40 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarProyectos('tipo')" class="flex items-center gap-1 hover:opacity-80">
+                                    Tipo <span class="text-[10px] opacity-70">{{ $ordenProyectos === 'tipo' ? ($dirProyectos === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-28 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarProyectos('estado')" class="flex items-center gap-1 hover:opacity-80">
+                                    Estado <span class="text-[10px] opacity-70">{{ $ordenProyectos === 'estado' ? ($dirProyectos === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
                             <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
                         </tr>
                     </thead>
@@ -189,10 +209,26 @@
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
-                            <th class="px-6 py-2.5">Nombre</th>
-                            <th class="px-6 py-2.5">Email</th>
-                            <th class="w-40 px-6 py-2.5">Rol</th>
-                            <th class="w-28 px-6 py-2.5">Estado</th>
+                            <th class="px-6 py-2.5">
+                                <button type="button" wire:click="ordenarUsuarios('nombre')" class="flex items-center gap-1 hover:opacity-80">
+                                    Nombre <span class="text-[10px] opacity-70">{{ $ordenUsuarios === 'nombre' ? ($dirUsuarios === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="px-6 py-2.5">
+                                <button type="button" wire:click="ordenarUsuarios('email')" class="flex items-center gap-1 hover:opacity-80">
+                                    Email <span class="text-[10px] opacity-70">{{ $ordenUsuarios === 'email' ? ($dirUsuarios === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-40 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarUsuarios('rol')" class="flex items-center gap-1 hover:opacity-80">
+                                    Rol <span class="text-[10px] opacity-70">{{ $ordenUsuarios === 'rol' ? ($dirUsuarios === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-28 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarUsuarios('estado')" class="flex items-center gap-1 hover:opacity-80">
+                                    Estado <span class="text-[10px] opacity-70">{{ $ordenUsuarios === 'estado' ? ($dirUsuarios === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">

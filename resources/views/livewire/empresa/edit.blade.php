@@ -135,6 +135,7 @@
                                 <span class="text-xs text-amber-700">El logo se eliminará al guardar.</span>
                                 <x-ui.button size="sm" variant="neutral" wire:click="cancelarQuitarLogo" type="button">Cancelar</x-ui.button>
                             @endif
+                            
                         </div>
                     </div>
 

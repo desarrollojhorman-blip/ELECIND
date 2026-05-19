@@ -24,7 +24,7 @@
 
     <div>
         {{-- Tabs nav --}}
-        <div class="flex items-end overflow-x-auto border-b border-slate-200 px-2 pt-1.5">
+        <div class="flex items-end border-b border-slate-200 px-2 pt-1.5">
             <button type="button"
                     @click="tab = 'cliente'"
                     :class="tab === 'cliente'

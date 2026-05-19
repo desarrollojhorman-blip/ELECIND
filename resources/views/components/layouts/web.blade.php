@@ -22,7 +22,7 @@
     </style>
     @livewireStyles
 </head>
-<body class="flex h-screen flex-col overflow-hidden bg-slate-50 text-slate-900 antialiased">
+<body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
 
     {{-- Barra superior solo en móvil --}}
     <header class="flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-4 md:hidden">
@@ -50,10 +50,10 @@
          class="fixed inset-0 z-30 bg-black/40 md:hidden">
     </div>
 
-    <div class="flex min-h-0 flex-1 overflow-hidden">
+    <div class="flex flex-1">
         <x-ui.sidebar :active="$active" />
 
-        <main class="flex min-w-0 flex-1 flex-col overflow-y-auto px-4 py-5 lg:px-6 lg:py-6">
+        <main class="flex min-w-0 flex-1 flex-col px-4 py-5 lg:px-6 lg:py-6">
             <x-ui.flash />
             {{ $slot }}
         </main>

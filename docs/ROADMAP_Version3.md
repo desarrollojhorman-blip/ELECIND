@@ -277,10 +277,23 @@ Ver consolidado tras refactor `tipo_hora` + UX móvil + ampliación Configuraci�
 ## 📊 Fase 5 — Reportes y exportación (2 semanas)
 
 **Rama:** `fase-5-reportes`
+**Estado:** 🚧 EN CURSO — **Importación de Clientes funcional** (19/05/2026); exportación pendiente.
+**Nota:** se adelantó la parte de **importación** (no estaba detallada en el plan original; `maatwebsite/excel` ya se instaló en Fase 0). Patrón construido sobre Clientes para replicar al resto.
 
 ### Objetivos
 - Resumen mensual del trabajador.
 - Exportaciones Excel/PDF.
+- Importación Excel/CSV con mapeo de columnas.
+
+### Importar (Excel/CSV) — *añadido 19/05/2026*
+- [x] **Clientes**: importación manual con mapeo de columnas (subir → mapear → validar todo → crear)
+  - Reglas leídas de `ClienteFields` (misma fuente que el alta, sin duplicar)
+  - Todo o nada (un error → no guarda nada, lista todos los errores)
+  - Código manual si se mapea / autogenerado consecutivo si no
+  - Unicidad centralizada en `ClienteFields::uniqueFields()` (CIF puede repetirse)
+  - Límites: 15 MB · 5.000 filas · permiso `clientes.importar`
+- [ ] Replicar a Proyectos / Materiales / etc.
+- [ ] Coherencia de permisos: `conceptos`/`usuarios` muestran botón import pero sin permiso en seeder
 
 ### Tareas
 - [ ] **Móvil**: pantalla "Resumen mensual"
@@ -301,6 +314,10 @@ Ver consolidado tras refactor `tipo_hora` + UX móvil + ampliación Configuraci�
 
 ### Entregable
 - Reportes operativos. **App lista para usar en producción en Elecind.**
+
+Ver:
+- Resumen de sesión + decisiones y porqués: [`docs/resumen/190526_1500_clientes_fase_2.md`](./resumen/190526_1500_clientes_fase_2.md)
+- Detalle técnico de todas las reglas: [`docs/resumen/190526_1500_exportar_fase_2.md`](./resumen/190526_1500_exportar_fase_2.md)
 
 ---
 

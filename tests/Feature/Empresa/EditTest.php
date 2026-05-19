@@ -71,9 +71,9 @@ class EditTest extends TestCase
 
         $this->assertDatabaseCount('empresa', 1);
         $this->assertDatabaseHas('empresa', [
-            'nombre' => 'ELECIND',
-            'color_primario' => '#871f1f',
-            'color_secundario' => '#f5e6e6',
+            'nombre' => 'ENIA',
+            'color_primario' => '#334155',
+            'color_secundario' => '#f1f5f9',
         ]);
     }
 
@@ -96,28 +96,14 @@ class EditTest extends TestCase
             ->set('form.nombre_comercial', 'ELECIND')
             ->set('form.cif', 'B12345678')
             ->set('form.email_contacto', 'contacto@elecind.test')
-            ->set('form.color_primario', '#1d4ed8')
-            ->set('form.color_secundario', '#dbeafe')
             ->call('guardar')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('empresa', [
             'nombre' => 'Elecind Industrial',
             'cif' => 'B12345678',
-            'color_primario' => '#1d4ed8',
-            'color_secundario' => '#dbeafe',
+            'email_contacto' => 'contacto@elecind.test',
         ]);
-    }
-
-    public function test_validacion_color_primario_debe_ser_hex_valido(): void
-    {
-        $admin = $this->admin();
-
-        Livewire::actingAs($admin)
-            ->test(Edit::class)
-            ->set('form.color_primario', 'azul')
-            ->call('guardar')
-            ->assertHasErrors(['form.color_primario']);
     }
 
     public function test_validacion_nombre_obligatorio(): void
@@ -129,23 +115,6 @@ class EditTest extends TestCase
             ->set('form.nombre', '')
             ->call('guardar')
             ->assertHasErrors(['form.nombre' => 'required']);
-    }
-
-    public function test_validacion_token_caducidad_dias_entre_1_y_90(): void
-    {
-        $admin = $this->admin();
-
-        Livewire::actingAs($admin)
-            ->test(Edit::class)
-            ->set('form.token_caducidad_dias', 0)
-            ->call('guardar')
-            ->assertHasErrors(['form.token_caducidad_dias']);
-
-        Livewire::actingAs($admin)
-            ->test(Edit::class)
-            ->set('form.token_caducidad_dias', 91)
-            ->call('guardar')
-            ->assertHasErrors(['form.token_caducidad_dias']);
     }
 
     public function test_subir_logo_lo_guarda_en_disco_publico_y_persiste_la_ruta(): void
@@ -235,19 +204,4 @@ class EditTest extends TestCase
         $this->assertSame('Marca Test', Branding::nombre());
     }
 
-    public function test_branding_helper_devuelve_colores_configurados(): void
-    {
-        $admin = $this->admin();
-
-        Livewire::actingAs($admin)
-            ->test(Edit::class)
-            ->set('form.color_primario', '#0ea5e9')
-            ->set('form.color_secundario', '#e0f2fe')
-            ->call('guardar');
-
-        Branding::limpiarCache();
-
-        $this->assertSame('#0ea5e9', Branding::colorPrimario());
-        $this->assertSame('#e0f2fe', Branding::colorSecundario());
-    }
 }

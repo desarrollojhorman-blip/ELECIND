@@ -22,9 +22,16 @@
                 @endcan
 
                 <x-ui.actions-menu label="Acciones" icon="heroicon-o-bars-3">
-                    <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Pronto">
-                        Importar desde Excel/CSV
-                    </x-ui.actions-menu-item>
+                    @can('clientes.importar')
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray"
+                                                href="{{ route('clientes.importar') }}" wire:navigate>
+                            Importar xlsx/csv
+                        </x-ui.actions-menu-item>
+                    @else
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Sin permiso">
+                            Importar xlsx/csv
+                        </x-ui.actions-menu-item>
+                    @endcan
                     <x-ui.actions-menu-divider />
                     <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Pronto">
                         Exportar a Excel
@@ -118,7 +125,15 @@
         <x-slot:rows>
             @foreach ($clientes as $cliente)
                 <tr wire:key="cliente-{{ $cliente->id }}" class="transition-colors hover:bg-slate-50">
-                    <td class="px-4 py-3 font-mono text-slate-700">{{ $cliente->codigo_cliente }}</td>
+                    <td class="px-4 py-3 font-mono text-slate-700">
+                        @if ($cliente->codigo_cliente !== null)
+                            {{ $cliente->codigo_cliente }}
+                        @elseif ($cliente->codigo_cliente_anterior !== null)
+                            <span class="text-slate-400">{{ $cliente->codigo_cliente_anterior }} <span class="text-xs">(archivado)</span></span>
+                        @else
+                            <span class="text-slate-300">—</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-3">
                         <div class="font-medium text-slate-900">{{ $cliente->nombre }}</div>
                         @if ($cliente->nombre_comercial)

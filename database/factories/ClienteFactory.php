@@ -12,13 +12,16 @@ class ClienteFactory extends Factory
 {
     protected $model = Cliente::class;
 
+    /** Contador secuencial para generar codigo_cliente 1,2,3… */
+    protected static int $secuenciaCodigo = 0;
+
     public function definition(): array
     {
         $faker = fake('es_ES');
         $nombre = $faker->company();
 
         return [
-            'codigo_cliente' => (string) $faker->unique()->numberBetween(1, 999_999),
+            'codigo_cliente' => ++static::$secuenciaCodigo,
             'nombre' => $nombre,
             'nombre_comercial' => $faker->boolean(40) ? $faker->companySuffix().' '.$faker->lastName() : null,
             'cif' => $this->generarCif(),

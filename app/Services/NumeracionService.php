@@ -28,8 +28,6 @@ class NumeracionService
 {
     public const PLANTILLA_DEFECTO = 'ALB-{YYYY}-{NNNN}';
 
-    public const PLANTILLA_DEFECTO_CLIENTE = 'CLI-{NNNN}';
-
     public const PLANTILLA_DEFECTO_PEDIDO = 'PED-{YYYY}-{NNNN}';
 
     public const PLANTILLA_DEFECTO_PROYECTO = 'PROY-{NNNN}';
@@ -76,33 +74,20 @@ class NumeracionService
         return $existentes + 1;
     }
 
-    public function siguienteNumeroCliente(): string
+    /**
+     * Siguiente código de cliente = el número más grande existente + 1.
+     * Cuenta el máximo (incl. papelera) sobre la columna entera, no las filas.
+     */
+    public function siguienteNumeroCliente(): int
     {
-        $plantilla = $this->plantillaCliente();
+        return DB::transaction(function (): int {
+            $max = Cliente::query()
+                ->withTrashed()
+                ->lockForUpdate()
+                ->max('codigo_cliente');
 
-        return DB::transaction(function () use ($plantilla): string {
-            $secuencial = $this->siguienteSecuencialCliente();
-
-            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+            return ((int) $max) + 1;
         });
-    }
-
-    public function plantillaCliente(): string
-    {
-        $empresa = Empresa::query()->first();
-        $plantilla = $empresa?->plantilla_numeracion_cliente;
-
-        return ($plantilla !== null && $plantilla !== '')
-            ? $plantilla
-            : self::PLANTILLA_DEFECTO_CLIENTE;
-    }
-
-    private function siguienteSecuencialCliente(): int
-    {
-        return Cliente::query()
-            ->withTrashed()
-            ->lockForUpdate()
-            ->count() + 1;
     }
 
     private function aplicarPlantillaCliente(string $plantilla, int $secuencial): string

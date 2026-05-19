@@ -35,7 +35,8 @@ return new class extends Migration
             $table->string('codigo_cliente', 50)->nullable(false)->change();
         });
 
-        $indexes = collect(DB::select('SHOW INDEX FROM clientes'))->pluck('Key_name')->unique();
+        // API agnóstica de Laravel: funciona igual en MySQL y SQLite (tests).
+        $indexes = collect(Schema::getIndexes('clientes'))->pluck('name');
         if (! $indexes->contains('clientes_codigo_cliente_unique')) {
             Schema::table('clientes', function (Blueprint $table) {
                 $table->unique('codigo_cliente');

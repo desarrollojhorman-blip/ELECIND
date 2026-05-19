@@ -145,7 +145,7 @@ class Index extends Component
 
         $cliente->restore();
 
-        session()->flash('status', "Cliente «{$cliente->nombre}» restaurado.");
+        session()->flash('status', "Cliente «{$cliente->nombre}» restaurado. Se le asignó el código {$cliente->codigo_cliente} (el anterior quedó libre).");
     }
 
     #[Computed]

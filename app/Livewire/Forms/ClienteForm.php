@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Cliente;
+use App\Support\ClienteFields;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -52,22 +53,33 @@ class ClienteForm extends Form
      */
     public function rules(): array
     {
+        // Reglas base centralizadas en ClienteFields (fuente única de verdad).
+        $rules = ClienteFields::getValidationRules();
+
+        // Únicos dinámicos: QUÉ campos son únicos vive en ClienteFields
+        // (fuente única, compartida con la importación). Aquí solo se arma la
+        // regla, que depende del registro en edición + soft-delete.
+        foreach (ClienteFields::uniqueFields() as $campo) {
+            $rules[$campo][] = Rule::unique('clientes', $campo)
+                ->ignore($this->id)->whereNull('deleted_at');
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
         return [
-            'codigo_cliente' => ['required', 'string', 'max:50', Rule::unique('clientes', 'codigo_cliente')->ignore($this->id)->whereNull('deleted_at')],
-            'nombre' => ['required', 'string', 'max:255'],
-            'nombre_comercial' => ['nullable', 'string', 'max:255'],
-            'cif' => [
-                'nullable', 'string', 'max:20',
-                Rule::unique('clientes', 'cif')->ignore($this->id)->whereNull('deleted_at'),
-            ],
-            'direccion' => ['nullable', 'string', 'max:255'],
-            'codigo_postal' => ['nullable', 'string', 'max:10'],
-            'poblacion' => ['nullable', 'string', 'max:255'],
-            'provincia' => ['nullable', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:50'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'activo' => ['boolean'],
-            'observaciones' => ['nullable', 'string', 'max:2000'],
+            'required' => 'El campo :attribute es obligatorio.',
+            'integer' => 'El campo :attribute debe ser un número entero.',
+            'min' => 'El campo :attribute debe ser al menos :min.',
+            'max' => 'El campo :attribute no puede superar :max.',
+            'email' => 'El :attribute no tiene un formato válido.',
+            'unique' => 'Ese :attribute ya está en uso.',
+            'boolean' => 'El campo :attribute no es válido.',
         ];
     }
 
@@ -119,6 +131,10 @@ class ClienteForm extends Form
         if ($this->id === null) {
             $cliente = new Cliente;
         } else {
+            // Inmutable tras crear: el código no se modifica nunca al editar,
+            // aunque se manipule el formulario (salvaguarda backend).
+            unset($datos['codigo_cliente']);
+
             /** @var Cliente $cliente */
             $cliente = Cliente::findOrFail($this->id);
         }

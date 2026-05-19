@@ -173,7 +173,7 @@
            drawerOpen ? 'translate-x-0' : '-translate-x-full',
            open ? 'md:w-60 md:translate-x-0' : 'md:w-16 md:translate-x-0',
        ]"
-       class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:relative md:inset-auto md:z-auto">
+       class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:sticky md:top-0 md:h-screen md:inset-auto md:z-auto">
 
     @php
         $logoUrl = \App\Support\Branding::logoUrl();

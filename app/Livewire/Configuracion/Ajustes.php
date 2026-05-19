@@ -27,8 +27,6 @@ class Ajustes extends Component
 
     public string $plantilla_numeracion_albaran = 'ALB-{YYYY}-{NNNN}';
 
-    public string $plantilla_numeracion_cliente = 'CLI-{NNNN}';
-
     public string $plantilla_numeracion_pedido = 'PED-{YYYY}-{NNNN}';
 
     public string $plantilla_numeracion_proyecto = 'PROY-{NNNN}';
@@ -77,7 +75,6 @@ class Ajustes extends Component
 
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
-        $this->plantilla_numeracion_cliente = $empresa->plantilla_numeracion_cliente ?? 'CLI-{NNNN}';
         $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
         $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
@@ -124,7 +121,6 @@ class Ajustes extends Component
     {
         return [
             'plantilla_numeracion_albaran' => 'Numero de albaran',
-            'plantilla_numeracion_cliente' => 'Codigo cliente',
             'plantilla_numeracion_pedido' => 'Numero de pedido',
             'plantilla_numeracion_proyecto' => 'Codigo de proyecto',
             'token_caducidad_dias' => 'Caducidad del token de firma',
@@ -160,7 +156,6 @@ class Ajustes extends Component
         $this->resetValidation();
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
-        $this->plantilla_numeracion_cliente = $empresa->plantilla_numeracion_cliente ?? 'CLI-{NNNN}';
         $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
         $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
@@ -190,7 +185,6 @@ class Ajustes extends Component
         $this->debug_guardar = [
             'momento' => now()->format('Y-m-d H:i:s'),
             'fase' => 'invocado',
-            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
             'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
             'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
             'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
@@ -205,7 +199,6 @@ class Ajustes extends Component
         // [AJUSTES DEBUG] — rastro temporal para diagnosticar el botón Guardar.
         \Log::info('[AJUSTES DEBUG] guardar() INVOCADO', [
             'user_id' => auth()->id(),
-            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
             'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
             'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
             'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
@@ -249,7 +242,6 @@ class Ajustes extends Component
 
         $empresa->fill([
             'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
-            'plantilla_numeracion_cliente' => $this->plantilla_numeracion_cliente,
             'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
             'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
             'token_caducidad_dias' => $this->token_caducidad_dias,
@@ -265,7 +257,6 @@ class Ajustes extends Component
         $this->debug_guardar['fase'] = 'guardado';
         $this->debug_guardar['persistido'] = [
             'empresa_id' => $empresa->id,
-            'plantilla_numeracion_cliente' => $empresa->plantilla_numeracion_cliente,
             'plantilla_numeracion_albaran' => $empresa->plantilla_numeracion_albaran,
             'plantilla_numeracion_pedido' => $empresa->plantilla_numeracion_pedido,
             'plantilla_numeracion_proyecto' => $empresa->plantilla_numeracion_proyecto,
