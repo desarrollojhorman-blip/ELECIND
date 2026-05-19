@@ -1,4 +1,4 @@
-﻿<div>
+<div>
     <x-ui.page-header title="Grupo proyectos"
                       subtitle="Gestiona grupos de proyectos y asigna proyectos existentes a cada grupo." />
 

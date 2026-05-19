@@ -1,4 +1,4 @@
-﻿<div class="space-y-4" x-data="{ tab: 'cliente' }">
+<div class="space-y-4" x-data="{ tab: 'cliente' }">
     <x-ui.page-header :title="$titulo" subtitle="Datos, proyectos y usuarios vinculados al cliente.">
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
@@ -123,7 +123,6 @@
                 </div>
             </div>
 
-            <x-ui.flash class="mt-4" />
         </div>
     </form>
 

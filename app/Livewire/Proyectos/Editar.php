@@ -9,6 +9,7 @@ use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
 use App\Models\User;
+use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -58,6 +59,8 @@ class Editar extends Component
             $this->form->fromModel($this->proyecto);
         } else {
             $this->form->reset();
+            $this->form->estado = 'activo';
+            $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
         }
     }
 
@@ -67,12 +70,16 @@ class Editar extends Component
             Gate::authorize('update', $proyecto);
             $this->proyecto = $proyecto;
             $this->form->fromModel($proyecto);
+            if ($this->form->codigo === null) {
+                $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
+            }
             $this->selectorGrupo = $this->form->tipo_proyecto_id !== null
                 ? (string) $this->form->tipo_proyecto_id
                 : '';
         } else {
             Gate::authorize('create', Proyecto::class);
             $this->form->estado = 'activo';
+            $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
         }
     }
 
