@@ -98,6 +98,13 @@ class RolesAndPermissionsSeeder extends Seeder
     private function catalogoPermisos(): array
     {
         return [
+            // ─────────────── Borradores ───────────────
+            ['name' => 'borradores.ver_todos',  'ambito' => 'web', 'descripcion' => 'Ver todos los borradores de la empresa', 'categoria' => 'borradores'],
+            ['name' => 'borradores.ver_propios', 'ambito' => 'ambos', 'descripcion' => 'Ver SOLO mis borradores', 'categoria' => 'borradores'],
+            ['name' => 'borradores.crear',       'ambito' => 'ambos', 'descripcion' => 'Crear borradores', 'categoria' => 'borradores'],
+            ['name' => 'borradores.modificar',   'ambito' => 'web', 'descripcion' => 'Modificar borradores de otros', 'categoria' => 'borradores'],
+            ['name' => 'borradores.convertir',   'ambito' => 'web', 'descripcion' => 'Convertir borradores a albarán oficial', 'categoria' => 'borradores'],
+
             // ─────────────── Albaranes ───────────────
             ['name' => 'albaranes.ver_todos', 'ambito' => 'ambos', 'descripcion' => 'Ver albaranes de TODA la empresa (no solo los propios)', 'categoria' => 'albaranes'],
             ['name' => 'albaranes.ver_propios', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO los albaranes en los que participo', 'categoria' => 'albaranes'],

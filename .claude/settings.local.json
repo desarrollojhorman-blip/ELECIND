@@ -82,7 +82,8 @@
       "Bash(D:\\\\xampp\\\\php\\\\php.exe \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" view:clear)",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" tinker --execute=\"echo config\\('app.debug'\\) ? 'DEBUG=true' : 'DEBUG=false';\" 2>&1)",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" tinker --execute=\"echo App\\\\Models\\\\Empresa::actual\\(\\)->getAttributes\\(\\)['plantilla_numeracion_cliente'] ?? 'COLUMNA NO EXISTE';\" 2>&1)",
-      "Bash(Get-ChildItem -Path \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Directory)"
+      "Bash(Get-ChildItem -Path \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Directory)",
+      "Bash(xargs grep -l \"TipoHora\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

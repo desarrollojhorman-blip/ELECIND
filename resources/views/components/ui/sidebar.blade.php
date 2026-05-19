@@ -40,9 +40,23 @@
         [
             'label' => 'Albaranes',
             'icon' => 'heroicon-o-document-text',
-            'route' => 'albaranes.index',
-            'key' => 'albaranes',
-            'permission' => 'albaranes.ver_todos',
+            'route' => null,
+            'key' => 'albaranes_grupo',
+            'permission' => null,
+            'children' => [
+                [
+                    'label' => 'Borradores',
+                    'route' => 'borradores.index',
+                    'key' => 'borradores',
+                    'permission' => 'borradores.ver_todos',
+                ],
+                [
+                    'label' => 'Albaranes',
+                    'route' => 'albaranes.index',
+                    'key' => 'albaranes',
+                    'permission' => 'albaranes.ver_todos',
+                ],
+            ],
         ],
         [
             'label' => 'Materiales',
