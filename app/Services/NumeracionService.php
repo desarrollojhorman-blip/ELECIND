@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Albaran;
+use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\NumeroPedido;
@@ -32,6 +33,8 @@ class NumeracionService
     public const PLANTILLA_DEFECTO_PEDIDO = 'PED-{YYYY}-{NNNN}';
 
     public const PLANTILLA_DEFECTO_PROYECTO = 'PROY-{NNNN}';
+
+    public const PLANTILLA_DEFECTO_BORRADOR = 'BOR-{NNNN}';
 
     public function siguienteNumeroAlbaran(?Carbon $fecha = null): string
     {
@@ -166,6 +169,32 @@ return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantill
         return ($plantilla !== null && $plantilla !== '')
             ? $plantilla
             : self::PLANTILLA_DEFECTO_PROYECTO;
+    }
+
+    // ── Nº Borrador ──────────────────────────────────────────────────────────
+
+    public function siguienteNumeroBorrador(): string
+    {
+        $plantilla = $this->plantillaBorrador();
+
+        return DB::transaction(function () use ($plantilla): string {
+            $secuencial = Borrador::query()
+                ->withTrashed()
+                ->lockForUpdate()
+                ->count() + 1;
+
+            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
+        });
+    }
+
+    public function plantillaBorrador(): string
+    {
+        $empresa = Empresa::query()->first();
+        $plantilla = $empresa?->plantilla_numeracion_borrador ?? null;
+
+        return ($plantilla !== null && $plantilla !== '')
+            ? $plantilla
+            : self::PLANTILLA_DEFECTO_BORRADOR;
     }
 
     // ────────────────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
+use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Concepto;
 use App\Models\Empresa;
@@ -16,6 +17,7 @@ use App\Models\TiposProyecto;
 use App\Models\User;
 use App\Observers\AlbaranLineaMaterialObserver;
 use App\Policies\AlbaranPolicy;
+use App\Policies\BorradorPolicy;
 use App\Policies\ClientePolicy;
 use App\Policies\ConceptoPolicy;
 use App\Policies\EmpresaPolicy;
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Empresa::class, EmpresaPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Albaran::class, AlbaranPolicy::class);
+        Gate::policy(Borrador::class, BorradorPolicy::class);
 
         AlbaranLineaMaterial::observe(AlbaranLineaMaterialObserver::class);
     }

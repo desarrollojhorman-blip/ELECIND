@@ -29,6 +29,7 @@ class Ver extends Component
             'lineasPersonal.trabajador:id,nombre,apellidos',
             'lineasMaterial.material:id,descripcion,unidad_medida',
             'firmas',
+            'archivos',
         ]);
     }
 

@@ -1,4 +1,4 @@
-﻿<div class="space-y-4" x-data="{ tab: 'albaran' }">
+<div class="space-y-4" x-data="{ tab: 'albaran' }">
 
     {{-- Page Header --}}
     <x-ui.page-header :title="$titulo" subtitle="Cabecera y líneas del albarán.">
@@ -80,7 +80,16 @@
         <div x-show="tab === 'albaran'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
 
-                <x-ui.field label="Proyecto" required :error="$errors->first('form.proyecto_id')" class="md:col-span-2">
+                <x-ui.field label="Nº Albarán">
+                    <x-ui.input
+                        :value="$form->numero ?? ''"
+                        class="font-mono"
+                        readonly
+                        :placeholder="$form->id === null ? 'Se asignará automáticamente al guardar' : ''"
+                    />
+                </x-ui.field>
+
+                <x-ui.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
                     <x-ui.searchable-select
                         wire:key="proyecto-select"
                         wire-model="form.proyecto_id"
@@ -129,7 +138,6 @@
                 </p>
             @endif
 
-            <x-ui.flash class="mt-4" />
         </div>
     </form>
 

@@ -47,9 +47,8 @@ class ProyectoForm extends Form
         return [
             'nombre' => ['required', 'string', 'max:255'],
             'codigo' => [
-                'nullable', 'string', 'max:255',
+                'required', 'string', 'max:50',
                 Rule::unique('proyectos', 'codigo')
-                    ->where('cliente_id', $this->cliente_id)
                     ->ignore($this->id)
                     ->whereNull('deleted_at'),
             ],
@@ -87,7 +86,7 @@ class ProyectoForm extends Form
     public function messages(): array
     {
         return [
-            'codigo.unique' => 'Ya existe otro proyecto con este código para el mismo cliente.',
+            'codigo.unique' => 'Ya existe un proyecto con este código.',
             'fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ];
     }

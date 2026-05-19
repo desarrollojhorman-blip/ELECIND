@@ -35,6 +35,8 @@ class AlbaranForm extends Form
 
     /* ───── Cabecera ────────────────────────────────────────────────── */
 
+    public ?string $numero = null;
+
     public ?int $proyecto_id = null;
 
     public ?int $cliente_id = null;
@@ -150,6 +152,7 @@ class AlbaranForm extends Form
     public function fromModel(Albaran $albaran): void
     {
         $this->id = (int) $albaran->getKey();
+        $this->numero = $albaran->numero;
         $this->proyecto_id = $albaran->proyecto_id;
         $this->cliente_id = $albaran->cliente_id;
         $this->concepto_id = $albaran->concepto_id;

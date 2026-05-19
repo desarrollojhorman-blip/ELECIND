@@ -15,6 +15,9 @@ use App\Livewire\Perfil\MiPerfil;
 use App\Livewire\Albaranes\Editar as AlbaranesEditar;
 use App\Livewire\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Borradores\Editar as BorradoresEditar;
+use App\Livewire\Borradores\Index as BorradoresIndex;
+use App\Livewire\Borradores\Ver as BorradoresVer;
 use App\Livewire\Proyectos\Editar as ProyectosEditar;
 use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
@@ -37,6 +40,22 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/', function () {
         return view('web.dashboard');
     })->name('web.dashboard');
+
+    Route::get('/borradores', BorradoresIndex::class)
+        ->middleware('can:borradores.ver_todos')
+        ->name('borradores.index');
+
+    Route::get('/borradores/crear', BorradoresEditar::class)
+        ->middleware('can:borradores.crear')
+        ->name('borradores.crear');
+
+    Route::get('/borradores/{borrador}', BorradoresVer::class)
+        ->middleware('can:borradores.ver_todos')
+        ->name('borradores.ver');
+
+    Route::get('/borradores/{borrador}/editar', BorradoresEditar::class)
+        ->middleware('can:borradores.ver_todos')
+        ->name('borradores.editar');
 
     Route::get('/albaranes', AlbaranesIndex::class)
         ->middleware('can:albaranes.ver_todos')

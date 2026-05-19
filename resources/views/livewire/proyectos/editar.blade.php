@@ -1,4 +1,4 @@
-﻿<div class="space-y-4" x-data="{ tab: 'proyecto' }">
+<div class="space-y-4" x-data="{ tab: 'proyecto' }">
     <x-ui.page-header :title="$titulo" subtitle="Cabecera, equipo y recursos del proyecto.">
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
@@ -76,9 +76,9 @@
     <form wire:submit="guardar" id="form-proyecto" autocomplete="off">
         <div x-show="tab === 'proyecto'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
-                <x-ui.field label="Código proyecto" :error="$errors->first('form.codigo')"
-                            hint="Único por cliente. Se usará en albaranes y reportes.">
-                    <x-ui.input wire:model="form.codigo" placeholder="Ej. MAR-A-2026" class="font-mono" autofocus />
+                <x-ui.field label="Código proyecto" required :error="$errors->first('form.codigo')"
+                            hint="Generado automáticamente. Puedes modificarlo si lo necesitas.">
+                    <x-ui.input wire:model="form.codigo" class="font-mono" autofocus />
                 </x-ui.field>
 
                 <x-ui.field label="Nombre proyecto" required :error="$errors->first('form.nombre')">
@@ -147,7 +147,6 @@
                 @endif
             </div>
 
-            <x-ui.flash class="mt-4" />
         </div>
     </form>
 

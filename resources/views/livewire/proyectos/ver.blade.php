@@ -1,5 +1,4 @@
-<div class="space-y-4">
-    {{-- Cabecera --}}
+<div class="space-y-4" x-data="{ tab: 'proyecto' }">
     <x-ui.page-header :title="$proyecto->nombre" subtitle="Ver proyecto">
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
@@ -23,58 +22,92 @@
         </x-slot:actionsLeft>
     </x-ui.page-header>
 
-    {{-- Datos del proyecto (solo lectura) --}}
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="grid gap-4 md:grid-cols-2">
-            <x-ui.field label="Código proyecto">
-                <x-ui.input :value="$proyecto->codigo" class="font-mono" readonly />
-            </x-ui.field>
+    <div>
+        {{-- Tabs nav --}}
+        <div class="flex items-end overflow-x-auto border-b border-slate-200 px-2 pt-1.5">
+            <button type="button"
+                    @click="tab = 'proyecto'"
+                    :class="tab === 'proyecto'
+                        ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                        : 'text-slate-500 hover:text-slate-700'"
+                    class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+                Proyecto
+            </button>
 
-            <x-ui.field label="Nombre proyecto">
-                <x-ui.input :value="$proyecto->nombre" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Grupo">
-                <x-ui.input :value="$proyecto->tipoProyecto?->nombre ?? '—'" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Estado">
-                <x-ui.input :value="ucfirst($proyecto->estado)" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Fecha inicio">
-                <x-ui.input :value="$proyecto->fecha_inicio?->format('d/m/Y')" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Fecha fin">
-                <x-ui.input :value="$proyecto->fecha_fin?->format('d/m/Y')" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Cliente" class="md:col-span-2">
-                <x-ui.input :value="$proyecto->cliente?->nombre ?? '—'" readonly />
-            </x-ui.field>
-
-            <x-ui.field label="Descripción" class="md:col-span-2">
-                <x-ui.textarea :value="$proyecto->descripcion" rows="3" readonly />
-            </x-ui.field>
+            @foreach ([
+                ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $this->trabajadoresProyecto->count()],
+                ['key' => 'responsables', 'label' => 'Responsables', 'count' => $this->responsablesProyecto->count()],
+                ['key' => 'conceptos',    'label' => 'Conceptos',    'count' => $this->conceptosProyecto->count()],
+                ['key' => 'materiales',   'label' => 'Materiales',   'count' => $this->materialesProyecto->count()],
+            ] as $t)
+                <button type="button"
+                        @click="tab = '{{ $t['key'] }}'"
+                        :class="tab === '{{ $t['key'] }}'
+                            ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                            : 'text-slate-500 hover:text-slate-700'"
+                        class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+                    {{ $t['label'] }}
+                    @if ($t['count'])
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
+                            {{ $t['count'] }}
+                        </span>
+                    @endif
+                </button>
+            @endforeach
         </div>
-    </div>
 
-    {{-- Trabajadores --}}
-    <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <button type="button"
-                x-on:click="abierto = !abierto"
-                class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-            <h2 class="text-sm font-semibold text-slate-900">
-                Trabajadores
-                <span class="ml-1 font-normal text-slate-400">({{ $this->trabajadoresProyecto->count() }})</span>
-            </h2>
-            <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                       x-bind:class="abierto ? 'rotate-180' : ''" />
-        </button>
-        <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
+        {{-- ═══ Tab: Proyecto ═══ --}}
+        <div x-show="tab === 'proyecto'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+            <div class="grid gap-4 md:grid-cols-2">
+                <x-ui.field label="Código proyecto">
+                    <x-ui.input :value="$proyecto->codigo" class="font-mono" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Nombre proyecto">
+                    <x-ui.input :value="$proyecto->nombre" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Grupo">
+                    <x-ui.input :value="$proyecto->tipoProyecto?->nombre ?? '—'" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Estado">
+                    <x-ui.input :value="ucfirst($proyecto->estado)" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Fecha inicio">
+                    <x-ui.input :value="$proyecto->fecha_inicio?->format('d/m/Y')" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Fecha fin">
+                    <x-ui.input :value="$proyecto->fecha_fin?->format('d/m/Y')" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Cliente" class="md:col-span-2">
+                    <x-ui.input :value="$proyecto->cliente?->nombre ?? '—'" readonly />
+                </x-ui.field>
+
+                <x-ui.field label="Descripción" class="md:col-span-2">
+                    <x-ui.textarea :value="$proyecto->descripcion" rows="3" readonly />
+                </x-ui.field>
+            </div>
+        </div>
+
+        {{-- ═══ Tab: Trabajadores ═══ --}}
+        <div x-show="tab === 'trabajadores'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">Trabajadores</span>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {{ $this->trabajadoresProyecto->count() }}
+                    </span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-400">Trabajadores asignados a este proyecto</p>
+            </div>
             @if ($this->trabajadoresProyecto->isEmpty())
-                <p class="px-6 py-4 text-sm text-slate-500">Sin trabajadores asignados.</p>
+                <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                    Sin trabajadores asignados.
+                </div>
             @else
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
@@ -84,7 +117,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($this->trabajadoresProyecto as $trab)
-                            <tr wire:key="trabajador-ver-{{ $trab->id }}" class="hover:bg-slate-50">
+                            <tr wire:key="trab-ver-{{ $trab->id }}" class="hover:bg-slate-50">
                                 <td class="px-6 py-3 text-slate-700">{{ trim($trab->nombre.' '.$trab->apellidos) }}</td>
                             </tr>
                         @endforeach
@@ -92,23 +125,22 @@
                 </table>
             @endif
         </div>
-    </div>
 
-    {{-- Responsables --}}
-    <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <button type="button"
-                x-on:click="abierto = !abierto"
-                class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-            <h2 class="text-sm font-semibold text-slate-900">
-                Responsables
-                <span class="ml-1 font-normal text-slate-400">({{ $this->responsablesProyecto->count() }})</span>
-            </h2>
-            <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                       x-bind:class="abierto ? 'rotate-180' : ''" />
-        </button>
-        <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
+        {{-- ═══ Tab: Responsables ═══ --}}
+        <div x-show="tab === 'responsables'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">Responsables</span>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {{ $this->responsablesProyecto->count() }}
+                    </span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-400">Responsables asignados a este proyecto</p>
+            </div>
             @if ($this->responsablesProyecto->isEmpty())
-                <p class="px-6 py-4 text-sm text-slate-500">Sin responsables asignados.</p>
+                <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                    Sin responsables asignados.
+                </div>
             @else
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
@@ -118,7 +150,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($this->responsablesProyecto as $resp)
-                            <tr wire:key="responsable-ver-{{ $resp->id }}" class="hover:bg-slate-50">
+                            <tr wire:key="resp-ver-{{ $resp->id }}" class="hover:bg-slate-50">
                                 <td class="px-6 py-3 text-slate-700">{{ trim($resp->nombre.' '.$resp->apellidos) }}</td>
                             </tr>
                         @endforeach
@@ -126,23 +158,22 @@
                 </table>
             @endif
         </div>
-    </div>
 
-    {{-- Conceptos --}}
-    <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <button type="button"
-                x-on:click="abierto = !abierto"
-                class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-            <h2 class="text-sm font-semibold text-slate-900">
-                Conceptos
-                <span class="ml-1 font-normal text-slate-400">({{ $this->conceptosProyecto->count() }})</span>
-            </h2>
-            <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                       x-bind:class="abierto ? 'rotate-180' : ''" />
-        </button>
-        <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
+        {{-- ═══ Tab: Conceptos ═══ --}}
+        <div x-show="tab === 'conceptos'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">Conceptos</span>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {{ $this->conceptosProyecto->count() }}
+                    </span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-400">Conceptos de trabajo disponibles en los albaranes de este proyecto</p>
+            </div>
             @if ($this->conceptosProyecto->isEmpty())
-                <p class="px-6 py-4 text-sm text-slate-500">Sin conceptos asignados.</p>
+                <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                    Sin conceptos asignados.
+                </div>
             @else
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
@@ -160,36 +191,37 @@
                 </table>
             @endif
         </div>
-    </div>
 
-    {{-- Materiales --}}
-    <div x-data="{ abierto: false }" class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <button type="button"
-                x-on:click="abierto = !abierto"
-                class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50">
-            <h2 class="text-sm font-semibold text-slate-900">
-                Materiales
-                <span class="ml-1 font-normal text-slate-400">({{ $this->materialesProyecto->count() }})</span>
-            </h2>
-            <x-heroicon-o-chevron-down class="size-4 text-slate-400 transition-transform duration-150"
-                                       x-bind:class="abierto ? 'rotate-180' : ''" />
-        </button>
-        <div x-show="abierto" x-cloak x-transition class="border-t border-slate-100">
+        {{-- ═══ Tab: Materiales ═══ --}}
+        <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">Materiales</span>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                        {{ $this->materialesProyecto->count() }}
+                    </span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-400">Materiales disponibles para consumir en los albaranes de este proyecto</p>
+            </div>
             @if ($this->materialesProyecto->isEmpty())
-                <p class="px-6 py-4 text-sm text-slate-500">Sin materiales asignados.</p>
+                <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                    Sin materiales asignados.
+                </div>
             @else
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
                             <th class="px-6 py-2.5">Material</th>
-                            <th class="px-6 py-2.5">Stock</th>
+                            <th class="w-28 px-4 py-2.5 text-right">Stock</th>
+                            <th class="w-24 px-4 py-2.5">Unidad</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($this->materialesProyecto as $mat)
-                            <tr wire:key="material-ver-{{ $mat->id }}" class="hover:bg-slate-50">
+                            <tr wire:key="mat-ver-{{ $mat->id }}" class="hover:bg-slate-50">
                                 <td class="px-6 py-3 text-slate-700">{{ $mat->descripcion }}</td>
-                                <td class="px-6 py-3 text-slate-500">{{ $mat->stock }} {{ $mat->unidad_medida }}</td>
+                                <td class="px-4 py-3 text-right text-slate-500">{{ number_format((float) $mat->stock, 2) }}</td>
+                                <td class="px-4 py-3 text-slate-500">{{ $mat->unidad_medida }}</td>
                             </tr>
                         @endforeach
                     </tbody>
