@@ -30,6 +30,7 @@ class User extends Authenticatable
         'dni',
         'cif',
         'telefono',
+        'numero_empleado',
         'tipo_usuario',
         'cliente_id',
         'activo',

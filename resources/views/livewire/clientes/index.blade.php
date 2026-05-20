@@ -1,4 +1,13 @@
-<div>
+<div x-data="{ mostrarDescarga: false }"
+     x-on:descargar.window="
+        const a = document.createElement('a');
+        a.href = $event.detail.url;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        mostrarDescarga = true;
+     ">
     <x-ui.page-header title="Clientes" :subtitle="$this->subtituloListado" />
 
     {{-- Toolbar: acciones izquierdas + buscador + filtros --}}
@@ -35,8 +44,14 @@
                     <x-ui.actions-menu-divider />
                     @can('clientes.exportar')
                         <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray"
-                                                href="{{ route('clientes.exportar.excel', ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion]) }}">
-                            Exportar a Excel
+                                                wire:click="exportarExcel"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarExcel">
+                            <span wire:loading.remove wire:target="exportarExcel">Exportar a Excel</span>
+                            <span wire:loading wire:target="exportarExcel" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
                         </x-ui.actions-menu-item>
                     @else
                         <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Sin permiso">
@@ -45,12 +60,24 @@
                     @endcan
                     @can('clientes.exportar')
                         <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
-                                                href="{{ route('clientes.exportar.pdf', array_merge(['orientacion' => 'vertical'], ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion])) }}">
-                            PDF Vertical
+                                                wire:click="exportarPdf('vertical')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarPdf('vertical')">
+                            <span wire:loading.remove wire:target="exportarPdf('vertical')">PDF Vertical</span>
+                            <span wire:loading wire:target="exportarPdf('vertical')" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
                         </x-ui.actions-menu-item>
                         <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
-                                                href="{{ route('clientes.exportar.pdf', array_merge(['orientacion' => 'horizontal'], ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion])) }}">
-                            PDF Horizontal
+                                                wire:click="exportarPdf('horizontal')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarPdf('horizontal')">
+                            <span wire:loading.remove wire:target="exportarPdf('horizontal')">PDF Horizontal</span>
+                            <span wire:loading wire:target="exportarPdf('horizontal')" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
                         </x-ui.actions-menu-item>
                     @else
                         <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Sin permiso">
@@ -61,17 +88,47 @@
                         </x-ui.actions-menu-item>
                     @endcan
                 </x-ui.actions-menu>
+
+                {{-- Modo Papelera: visible solo a quien tenga el permiso
+                     `clientes.gestionar_papelera` (por defecto solo superadmin).
+                     Sobrescribe el filtro Estado. --}}
+                @if ($this->puedeVerPapelera)
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <input type="checkbox"
+                               wire:model.live="verPapelera"
+                               class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                        <x-heroicon-o-archive-box class="size-4" />
+                        <span>Papelera</span>
+                        @if ($this->totalPapelera > 0)
+                            <span class="text-xs font-semibold text-slate-500">({{ $this->totalPapelera }})</span>
+                        @endif
+                    </label>
+                @endif
             </x-slot:leftActions>
 
             {{-- Panel desplegable --}}
             <div class="grid gap-3 md:grid-cols-2">
                 <x-ui.field label="Estado">
-                    <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
-                        <option value="">Todos los estados</option>
-                        <option value="activas">Activas</option>
-                        <option value="inactivas">Inactivas</option>
-                        <option value="papelera">En papelera</option>
-                    </x-ui.select>
+                    {{-- Dos bloques: directivas @if/@disabled dentro de los atributos
+                         de un <x-componente> rompen Blade (memoria
+                         "directiva-blade-en-x-componente-rompe"). --}}
+                    @if ($modoPapelera)
+                        <x-ui.select wire:key="estado-{{ $resetKey }}"
+                                     wire:model.live="filtroEstado"
+                                     disabled>
+                            <option value="">Todos los estados</option>
+                            <option value="activas">Activas</option>
+                            <option value="inactivas">Inactivas</option>
+                        </x-ui.select>
+                        <p class="text-xs text-slate-400">Ignorado en modo Papelera.</p>
+                    @else
+                        <x-ui.select wire:key="estado-{{ $resetKey }}"
+                                     wire:model.live="filtroEstado">
+                            <option value="">Todos los estados</option>
+                            <option value="activas">Activas</option>
+                            <option value="inactivas">Inactivas</option>
+                        </x-ui.select>
+                    @endif
                 </x-ui.field>
 
                 <x-ui.field label="Provincia">
@@ -109,6 +166,24 @@
             @endif
         </x-ui.search-and-filter>
     </div>
+
+    {{-- Banner de modo Papelera (solo superadmin) --}}
+    @if ($modoPapelera)
+        <div class="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <x-heroicon-o-archive-box class="mt-0.5 size-4 shrink-0" />
+            <p class="flex-1">
+                <strong>Modo Papelera</strong> — viendo
+                {{ $this->totalPapelera }}
+                {{ $this->totalPapelera === 1 ? 'cliente eliminado' : 'clientes eliminados' }}.
+                Vista exclusiva del superadmin.
+            </p>
+            <button type="button"
+                    wire:click="$set('verPapelera', false)"
+                    class="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
+                Salir
+            </button>
+        </div>
+    @endif
 
     {{-- Tabla --}}
     <div class="mb-3 flex items-center justify-between">
@@ -220,7 +295,10 @@
                                         variant="info"
                                         tooltip="Editar" />
                                 @endcan
-                                @can('delete', $cliente)
+                                @can('clientes.eliminar')
+                                    {{-- @can('clientes.eliminar') en lugar de @can('delete', $cliente):
+                                         el botón se muestra a todo el que tenga permiso.
+                                         El chequeo de dependencias va al pulsar (Policy + Gate::inspect). --}}
                                     <x-ui.icon-button
                                         wire:click="confirmarEliminar({{ $cliente->id }})"
                                         icon="heroicon-o-trash"
@@ -248,10 +326,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará el cliente a la <strong>papelera</strong> (eliminación lógica).
+                    ¿Eliminar este cliente?
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Podrás restaurarla más tarde desde el filtro <em>«En papelera»</em>.
+                    Esta acción no se puede deshacer.
                 </p>
             </div>
         </div>
@@ -267,4 +345,67 @@
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
+
+    {{-- Modal informativo: la eliminación está bloqueada por dependencias --}}
+    <x-ui.modal
+        :show="$bloqueadoEliminarMensaje !== null"
+        title="No se puede eliminar"
+        close-action="cerrarBloqueo"
+        size="sm">
+
+        <div class="flex gap-3">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                <x-heroicon-o-exclamation-triangle class="size-5" />
+            </div>
+            <div>
+                <p class="text-sm text-slate-700">
+                    {{ $bloqueadoEliminarMensaje }}
+                </p>
+                <p class="mt-2 text-xs text-slate-500">
+                    Elimina o reasigna primero esos elementos.
+                </p>
+            </div>
+        </div>
+
+        <x-slot:footer>
+            <x-ui.button variant="neutral" wire:click="cerrarBloqueo">
+                Entendido
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+    {{-- Modal de descarga: avisa al usuario que el archivo se está bajando.
+         Vive en Alpine (no Livewire) porque es UX puramente local. --}}
+    <div x-show="mostrarDescarga"
+         x-cloak
+         x-transition.opacity
+         x-on:keydown.escape.window="mostrarDescarga = false"
+         class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4">
+        <div class="flex w-full max-w-md flex-col overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-slate-900/5"
+             @click.outside="mostrarDescarga = false">
+            <div class="flex items-center justify-between rounded-t-lg border-b border-accent-200 bg-accent-100 px-5 py-3">
+                <h3 class="text-base font-semibold text-primary-800">Descargando archivo</h3>
+                <button type="button"
+                        @click="mostrarDescarga = false"
+                        class="rounded p-1 text-slate-500 transition-colors hover:bg-white/60 hover:text-slate-700">
+                    <x-heroicon-o-x-mark class="size-5" />
+                </button>
+            </div>
+
+            <div class="px-5 py-6 text-center">
+                <x-heroicon-o-arrow-down-tray class="mx-auto mb-3 size-10 text-primary-600" />
+                <p class="text-sm text-slate-700">
+                    Tu archivo se está descargando. Espera unos segundos y revisa la barra de descargas del navegador.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 rounded-b-lg border-t border-slate-200 bg-slate-50 px-5 py-3">
+                <button type="button"
+                        @click="mostrarDescarga = false"
+                        class="rounded-md bg-primary-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-800">
+                    Continuar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

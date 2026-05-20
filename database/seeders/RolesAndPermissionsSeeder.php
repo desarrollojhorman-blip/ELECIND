@@ -66,6 +66,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'usuarios.crear_superadmin',
                 'usuarios.eliminar',       // sólo superadmin elimina usuarios
                 'albaranes.invalidar_firma', // sólo superadmin borra firmas (auditoría legal)
+                'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
+                'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
             ])
             ->pluck('name')
             ->all());
@@ -128,6 +130,10 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'usuarios.crear_responsable', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol responsable', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar usuarios', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar usuarios', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar usuarios a Excel', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.importar', 'ambito' => 'web', 'descripcion' => 'Importar usuarios desde Excel/CSV', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de usuarios', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.gestionar_papelera', 'ambito' => 'web', 'descripcion' => 'Ver papelera de usuarios y restaurar eliminados', 'categoria' => 'usuarios'],
 
             // ─────────────── Clientes ───────────────
             ['name' => 'clientes.ver', 'ambito' => 'web', 'descripcion' => 'Ver clientes', 'categoria' => 'clientes'],
@@ -137,6 +143,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'clientes.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar clientes a Excel', 'categoria' => 'clientes'],
             ['name' => 'clientes.importar', 'ambito' => 'web', 'descripcion' => 'Importar clientes desde Excel/CSV', 'categoria' => 'clientes'],
             ['name' => 'clientes.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de clientes', 'categoria' => 'clientes'],
+            ['name' => 'clientes.gestionar_papelera', 'ambito' => 'web', 'descripcion' => 'Ver papelera de clientes y restaurar eliminados', 'categoria' => 'clientes'],
 
             // ─────────────── Proyectos ───────────────
             ['name' => 'proyectos.ver', 'ambito' => 'web', 'descripcion' => 'Ver proyectos', 'categoria' => 'proyectos'],

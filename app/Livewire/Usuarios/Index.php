@@ -53,11 +53,24 @@ class Index extends Component
     #[Url(as: 'pp')]
     public int $porPagina = 25;
 
+    /**
+     * Modo "Papelera" → muestra SOLO los usuarios eliminados (soft-deleted).
+     * Solo aplicable a quien tenga `usuarios.gestionar_papelera`.
+     */
+    #[Url(as: 'papelera')]
+    public bool $verPapelera = false;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
 
     public ?int $confirmarEliminarId = null;
+
+    /**
+     * Si Gate::inspect('delete', ...) deniega (sin permiso, jerarquía o
+     * dependencias), el mensaje del Policy llega aquí y muestra modal informativo.
+     */
+    public ?string $bloqueadoEliminarMensaje = null;
 
     /** @var array<int, array{campo: string, valor: string, usuario_id: int, usuario_nombre: string, eliminado: bool}> */
     public array $duplicadosEncontrados = [];
@@ -79,6 +92,11 @@ class Index extends Component
     public function mount(): void
     {
         Gate::authorize('viewAny', User::class);
+
+        // Defensa: si manipulan la URL ?papelera=1 sin permiso, lo ignoramos.
+        if ($this->verPapelera && ! $this->puedeVerPapelera) {
+            $this->verPapelera = false;
+        }
     }
 
     public function updatedBuscar(): void
@@ -108,6 +126,16 @@ class Index extends Component
 
     public function updatedPorPagina(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedVerPapelera(): void
+    {
+        if ($this->verPapelera && ! $this->puedeVerPapelera) {
+            $this->verPapelera = false;
+
+            return;
+        }
         $this->resetPage();
     }
 
@@ -373,8 +401,16 @@ class Index extends Component
     public function confirmarEliminar(int $id): void
     {
         /** @var User $usuario */
-        $usuario = User::findOrFail($id);
-        Gate::authorize('delete', $usuario);
+        $usuario = User::withTrashed()->findOrFail($id);
+
+        $response = Gate::inspect('delete', $usuario);
+
+        if (! $response->allowed()) {
+            $this->bloqueadoEliminarMensaje = $response->message()
+                ?: 'No tienes permiso para eliminar este usuario.';
+
+            return;
+        }
 
         $this->confirmarEliminarId = $id;
     }
@@ -384,16 +420,23 @@ class Index extends Component
         $this->confirmarEliminarId = null;
     }
 
+    public function cerrarBloqueo(): void
+    {
+        $this->bloqueadoEliminarMensaje = null;
+    }
+
     public function eliminar(int $id): void
     {
         /** @var User $usuario */
         $usuario = User::findOrFail($id);
+        // Defensa server-side: si llegamos aquí saltándose la UI, el Policy
+        // bloquea con AuthorizationException + mensaje claro.
         Gate::authorize('delete', $usuario);
 
         $usuario->delete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Usuario «{$usuario->username}» enviado a papelera.");
+        session()->flash('status', "Usuario «{$usuario->username}» eliminado correctamente.");
     }
 
     public function restaurar(int $id): void
@@ -407,7 +450,79 @@ class Index extends Component
         session()->flash('status', "Usuario «{$usuario->username}» restaurado.");
     }
 
+    /* ── Exportar (filtros + orden actuales del listado) ─────────── */
+
+    /**
+     * Parámetros de URL para los exports: filtros y orden vigentes EN ESTE
+     * INSTANTE. Construirlos en PHP elimina dependencia del estado del DOM.
+     *
+     * @return array<string, string>
+     */
+    private function paramsExport(): array
+    {
+        return [
+            'q' => $this->buscar,
+            'estado' => $this->filtroEstado,
+            'tipo' => $this->filtroTipo ?? '',
+            'rol' => $this->filtroRol ?? '',
+            'empresa' => $this->filtroEmpresaCliente,
+            'orden' => $this->ordenColumna,
+            'dir' => $this->ordenDireccion,
+        ];
+    }
+
+    public function exportarExcel(): void
+    {
+        Gate::authorize('usuarios.exportar');
+
+        $this->dispatch(
+            'descargar',
+            url: route('usuarios.exportar.excel', $this->paramsExport())
+        );
+    }
+
+    public function exportarPdf(string $orientacion): void
+    {
+        Gate::authorize('usuarios.exportar');
+
+        if (! in_array($orientacion, ['vertical', 'horizontal'], true)) {
+            abort(404);
+        }
+
+        $this->dispatch(
+            'descargar',
+            url: route('usuarios.exportar.pdf', array_merge(['orientacion' => $orientacion], $this->paramsExport()))
+        );
+    }
+
     /* ───────────────────────── Computeds y catálogos ───────────────────── */
+
+    /**
+     * Puede ver/gestionar la papelera de usuarios. Protegido por permiso
+     * `usuarios.gestionar_papelera`. Por defecto solo el superadmin.
+     */
+    #[Computed]
+    public function puedeVerPapelera(): bool
+    {
+        return auth()->user()?->can('usuarios.gestionar_papelera') ?? false;
+    }
+
+    /**
+     * Total de usuarios "vivos" (activos + inactivos, EXCLUYE papelera).
+     * Es el número junto al título; NO cambia entre modos.
+     */
+    #[Computed]
+    public function totalUsuarios(): int
+    {
+        return User::count();
+    }
+
+    /** Total en papelera — para el badge del checkbox del superadmin. */
+    #[Computed]
+    public function totalPapelera(): int
+    {
+        return User::onlyTrashed()->count();
+    }
 
     #[Computed]
     public function filtrosAplicados(): int
@@ -491,20 +606,28 @@ class Index extends Component
         $actual = auth()->user();
         $nivelActual = $actual->nivelMaximo();
 
-        $query = User::query()
-            ->with(['roles:id,name,nivel,acceso', 'cliente:id,nombre']);
+        // Modo papelera: SOLO trashed, ignora filtro Estado (los demás siguen).
+        $modoPapelera = $this->verPapelera && $this->puedeVerPapelera;
+
+        $query = $modoPapelera
+            ? User::onlyTrashed()
+            : User::query();
+
+        $query->with(['roles:id,name,nivel,acceso', 'cliente:id,nombre']);
 
         // Jerarquía: oculta usuarios con algún rol de nivel mayor al propio.
         $query->whereDoesntHave('roles', function (Builder $q) use ($nivelActual): void {
             $q->where('nivel', '>', $nivelActual);
         });
 
-        if ($this->filtroEstado === 'papelera') {
-            $query->onlyTrashed();
-        } elseif ($this->filtroEstado === 'activos') {
-            $query->where('activo', true);
-        } elseif ($this->filtroEstado === 'inactivos') {
-            $query->where('activo', false);
+        if (! $modoPapelera) {
+            // Estado: activos / inactivos / (vacío = ambos). La opción "papelera"
+            // ya no se aplica desde la UI; si llega por URL antigua, se ignora.
+            if ($this->filtroEstado === 'activos') {
+                $query->where('activo', true);
+            } elseif ($this->filtroEstado === 'inactivos') {
+                $query->where('activo', false);
+            }
         }
 
         if ($this->filtroTipo !== null) {
@@ -536,6 +659,7 @@ class Index extends Component
 
         return view('livewire.usuarios.index', [
             'usuarios' => $query->paginate($this->porPagina)->onEachSide(2),
+            'modoPapelera' => $modoPapelera,
         ]);
     }
 }

@@ -38,15 +38,34 @@ class Index extends Component
     #[Url(as: 'pp')]
     public int $porPagina = 25;
 
+    /**
+     * Modo "Papelera" → muestra SOLO los clientes eliminados (soft-deleted).
+     * Solo visible/aplicable para superadmin. Para el resto se ignora.
+     */
+    #[Url(as: 'papelera')]
+    public bool $verPapelera = false;
+
     public bool $panelFiltrosAbierto = false;
 
     public ?int $confirmarEliminarId = null;
+
+    /**
+     * Si Gate::inspect('delete', $cliente) deniega por dependencias, el mensaje
+     * llega aquí y se muestra el modal informativo (un solo botón "Entendido").
+     */
+    public ?string $bloqueadoEliminarMensaje = null;
 
     public int $resetKey = 0;
 
     public function mount(): void
     {
         Gate::authorize('viewAny', Cliente::class);
+
+        // Defensa: si alguien manipula la URL ?papelera=1 sin permiso,
+        // lo ignoramos. (También se valida en render() pero mejor cortar antes.)
+        if ($this->verPapelera && ! $this->puedeVerPapelera) {
+            $this->verPapelera = false;
+        }
     }
 
     public function updatedBuscar(): void
@@ -69,6 +88,16 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatedVerPapelera(): void
+    {
+        if ($this->verPapelera && ! $this->puedeVerPapelera) {
+            $this->verPapelera = false;
+
+            return;
+        }
+        $this->resetPage();
+    }
+
     public function togglePanelFiltros(): void
     {
         $this->panelFiltrosAbierto = ! $this->panelFiltrosAbierto;
@@ -76,9 +105,9 @@ class Index extends Component
 
     public function limpiarFiltros(): void
     {
-        $this->filtroEstado   = '';
+        $this->filtroEstado = '';
         $this->filtroProvincia = '';
-        $this->buscar          = '';
+        $this->buscar = '';
         $this->resetPage();
         $this->resetKey++;
     }
@@ -114,16 +143,29 @@ class Index extends Component
         if ($this->ordenColumna === $columna) {
             $this->ordenDireccion = $this->ordenDireccion === 'asc' ? 'desc' : 'asc';
         } else {
-            $this->ordenColumna  = $columna;
+            $this->ordenColumna = $columna;
             $this->ordenDireccion = 'asc';
         }
     }
 
+    /**
+     * Comprueba si el cliente puede eliminarse (permiso + sin dependencias).
+     * Si no puede, abre el modal informativo con el motivo.
+     * Si puede, abre el modal de confirmación habitual.
+     */
     public function confirmarEliminar(int $id): void
     {
         /** @var Cliente $cliente */
-        $cliente = Cliente::findOrFail($id);
-        Gate::authorize('delete', $cliente);
+        $cliente = Cliente::withTrashed()->findOrFail($id);
+
+        $response = Gate::inspect('delete', $cliente);
+
+        if (! $response->allowed()) {
+            $this->bloqueadoEliminarMensaje = $response->message()
+                ?: 'No tienes permiso para eliminar este cliente.';
+
+            return;
+        }
 
         $this->confirmarEliminarId = $id;
     }
@@ -133,16 +175,23 @@ class Index extends Component
         $this->confirmarEliminarId = null;
     }
 
+    public function cerrarBloqueo(): void
+    {
+        $this->bloqueadoEliminarMensaje = null;
+    }
+
     public function eliminar(int $id): void
     {
         /** @var Cliente $cliente */
         $cliente = Cliente::findOrFail($id);
+        // Defensa server-side: si llegamos aquí saltándose la UI y hay deps,
+        // Gate::authorize lanza AuthorizationException con el mensaje del Policy.
         Gate::authorize('delete', $cliente);
 
         $cliente->delete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Cliente «{$cliente->nombre}» enviado a papelera.");
+        session()->flash('status', "Cliente «{$cliente->nombre}» eliminado correctamente.");
     }
 
     public function restaurar(int $id): void
@@ -156,10 +205,83 @@ class Index extends Component
         session()->flash('status', "Cliente «{$cliente->nombre}» restaurado. Se le asignó el código {$cliente->codigo_cliente} (el anterior quedó libre).");
     }
 
+    /* ── Exportar (filtros + orden actuales del listado) ─────────── */
+
+    /**
+     * Parámetros de URL para los exports: filtros y orden vigentes EN ESTE
+     * INSTANTE. Construirlos en PHP (no en el blade) elimina cualquier
+     * dependencia del estado del DOM al pulsar el botón.
+     *
+     * @return array<string, string>
+     */
+    private function paramsExport(): array
+    {
+        return [
+            'q' => $this->buscar,
+            'estado' => $this->filtroEstado,
+            'provincia' => $this->filtroProvincia,
+            'orden' => $this->ordenColumna,
+            'dir' => $this->ordenDireccion,
+        ];
+    }
+
+    public function exportarExcel(): void
+    {
+        Gate::authorize('clientes.exportar');
+
+        $this->dispatch(
+            'descargar',
+            url: route('clientes.exportar.excel', $this->paramsExport())
+        );
+    }
+
+    public function exportarPdf(string $orientacion): void
+    {
+        Gate::authorize('clientes.exportar');
+
+        if (! in_array($orientacion, ['vertical', 'horizontal'], true)) {
+            abort(404);
+        }
+
+        $this->dispatch(
+            'descargar',
+            url: route('clientes.exportar.pdf', array_merge(['orientacion' => $orientacion], $this->paramsExport()))
+        );
+    }
+
+    /* ── Computeds ─────────────────────────────────────────────── */
+
+    /**
+     * Total de clientes "vivos" (activos + inactivos, EXCLUYE papelera).
+     * Es el número que se muestra junto al título y NO cambia entre modos
+     * (el modo papelera solo afecta a la tabla; el contador se mantiene).
+     */
     #[Computed]
     public function totalClientes(): int
     {
         return Cliente::count();
+    }
+
+    /**
+     * Total de clientes en papelera. Solo se usa para la etiqueta del
+     * checkbox/banner de modo papelera (visible solo a superadmin).
+     */
+    #[Computed]
+    public function totalPapelera(): int
+    {
+        return Cliente::onlyTrashed()->count();
+    }
+
+    /**
+     * Puede ver/gestionar la papelera de clientes (ver eliminados + restaurar).
+     * Protegido por el permiso `clientes.gestionar_papelera`; por defecto solo
+     * el superadmin lo tiene, pero técnicamente se puede dar a cualquier rol
+     * desde la pantalla de Roles sin tocar código.
+     */
+    #[Computed]
+    public function puedeVerPapelera(): bool
+    {
+        return auth()->user()?->can('clientes.gestionar_papelera') ?? false;
     }
 
     #[Computed]
@@ -176,7 +298,8 @@ class Index extends Component
     public function filtrosAplicados(): int
     {
         $count = 0;
-        if ($this->filtroEstado !== '') {
+        // En modo papelera ignoramos el filtro Estado.
+        if (! $this->verPapelera && $this->filtroEstado !== '') {
             $count++;
         }
         if ($this->filtroProvincia !== '') {
@@ -207,14 +330,22 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = Cliente::query();
+        // Modo papelera: SOLO trashed, ignora filtros de Estado (los demás siguen).
+        $modoPapelera = $this->verPapelera && $this->puedeVerPapelera;
 
-        if ($this->filtroEstado === 'papelera') {
-            $query->onlyTrashed();
-        } elseif ($this->filtroEstado === 'activas') {
-            $query->where('activo', true);
-        } elseif ($this->filtroEstado === 'inactivas') {
-            $query->where('activo', false);
+        $query = $modoPapelera
+            ? Cliente::onlyTrashed()
+            : Cliente::query();
+
+        if (! $modoPapelera) {
+            // Estado: activas / inactivas / (vacío = ambas). La opción "papelera"
+            // de versiones anteriores ya no aplica desde la UI; si llega por URL
+            // antigua, se ignora (no se filtra nada).
+            if ($this->filtroEstado === 'activas') {
+                $query->where('activo', true);
+            } elseif ($this->filtroEstado === 'inactivas') {
+                $query->where('activo', false);
+            }
         }
 
         if ($this->filtroProvincia !== '') {
@@ -238,6 +369,7 @@ class Index extends Component
 
         return view('livewire.clientes.index', [
             'clientes' => $query->paginate($this->porPagina)->onEachSide(2),
+            'modoPapelera' => $modoPapelera,
         ]);
     }
 }

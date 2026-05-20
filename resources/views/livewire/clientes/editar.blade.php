@@ -10,7 +10,10 @@
                         Nuevo
                     </x-ui.button>
                 @endcan
-                @can('delete', $cliente)
+                @can('clientes.eliminar')
+                    {{-- @can('clientes.eliminar') (no @can('delete',$cliente)):
+                         el botón se ve a quien tenga permiso; el bloqueo por
+                         dependencias se gestiona al pulsar (modal informativo). --}}
                     <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                         Eliminar
                     </x-ui.button>
@@ -270,10 +273,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará <strong>{{ $cliente?->nombre }}</strong> a la papelera.
+                    ¿Eliminar el cliente <strong>{{ $cliente?->nombre }}</strong>?
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Podrás restaurarlo desde el filtro <em>«En papelera»</em>.
+                    Esta acción no se puede deshacer.
                 </p>
             </div>
         </div>
@@ -282,6 +285,34 @@
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
                 Eliminar
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+    {{-- Modal informativo: la eliminación está bloqueada por dependencias --}}
+    <x-ui.modal
+        :show="$bloqueadoEliminarMensaje !== null"
+        title="No se puede eliminar"
+        close-action="cerrarBloqueo"
+        size="sm">
+
+        <div class="flex gap-3">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                <x-heroicon-o-exclamation-triangle class="size-5" />
+            </div>
+            <div>
+                <p class="text-sm text-slate-700">
+                    {{ $bloqueadoEliminarMensaje }}
+                </p>
+                <p class="mt-2 text-xs text-slate-500">
+                    Elimina o reasigna primero esos elementos.
+                </p>
+            </div>
+        </div>
+
+        <x-slot:footer>
+            <x-ui.button variant="neutral" wire:click="cerrarBloqueo">
+                Entendido
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

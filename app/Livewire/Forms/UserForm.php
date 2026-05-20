@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\User;
+use App\Support\UserFields;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,9 @@ class UserForm extends Form
     #[Validate]
     public ?string $telefono = null;
 
+    #[Validate]
+    public ?string $numero_empleado = null;
+
     /** interno | externo */
     #[Validate]
     public string $tipo_usuario = 'interno';
@@ -41,7 +45,7 @@ class UserForm extends Form
     #[Validate]
     public ?int $cliente_id = null;
 
-    /** Nombre del rol Spatie: superadmin | administrador | trabajador | responsable */
+    /** Nombre del rol Spatie: superadmin | administrador | trabajador | responsable | custom */
     #[Validate]
     public string $rol = 'trabajador';
 
@@ -52,35 +56,41 @@ class UserForm extends Form
     public ?string $password = null;
 
     /**
+     * Reglas base centralizadas en {@see UserFields} + reglas dinámicas
+     * (unique, password required al crear, cliente_id required si externo).
+     *
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         $esNuevo = $this->id === null;
 
-        return [
-            'username' => [
-                'required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/',
-                Rule::unique('users', 'username')->ignore($this->id),
-            ],
-            'nombre' => ['required', 'string', 'max:100'],
-            'apellidos' => ['nullable', 'string', 'max:150'],
-            'email' => ['nullable', 'email', 'max:150'],
-            'dni' => ['nullable', 'string', 'max:20'],
-            'cif' => ['nullable', 'string', 'max:20'],
-            'telefono' => ['nullable', 'string', 'max:30'],
-            'tipo_usuario' => ['required', Rule::in(['interno', 'externo'])],
-            'cliente_id' => [
-                Rule::requiredIf(fn (): bool => $this->tipo_usuario === 'externo'),
-                'nullable', 'integer', 'exists:clientes,id',
-            ],
-            'rol' => ['required', Rule::exists('roles', 'name')],
-            'activo' => ['boolean'],
-            'password' => [
-                $esNuevo ? 'required' : 'nullable',
-                'nullable', 'string', 'min:6',
-            ],
+        // Reglas base — fuente única.
+        $rules = UserFields::getValidationRules();
+
+        // Quitamos la regla 'password' base si no se va a crear/cambiar:
+        // se vuelve a añadir abajo con el matiz "required al crear".
+        unset($rules['password']);
+
+        // Únicos dinámicos: QUÉ campos son únicos vive en UserFields.
+        // Aquí solo se arma la regla (depende del id en edición).
+        foreach (UserFields::uniqueFields() as $campo) {
+            $rules[$campo][] = Rule::unique('users', $campo)->ignore($this->id);
+        }
+
+        // cliente_id: required SOLO si tipo_usuario es externo.
+        $rules['cliente_id'] = array_merge(
+            [Rule::requiredIf(fn (): bool => $this->tipo_usuario === 'externo')],
+            $rules['cliente_id'] ?? []
+        );
+
+        // password: required al crear, nullable al editar.
+        $rules['password'] = [
+            $esNuevo ? 'required' : 'nullable',
+            'nullable', 'string', 'min:6', 'max:100',
         ];
+
+        return $rules;
     }
 
     /**
@@ -96,6 +106,7 @@ class UserForm extends Form
             'dni' => 'DNI',
             'cif' => 'CIF',
             'telefono' => 'teléfono',
+            'numero_empleado' => 'nº empleado',
             'tipo_usuario' => 'tipo de usuario',
             'cliente_id' => 'cliente',
             'rol' => 'rol',
@@ -120,7 +131,7 @@ class UserForm extends Form
             'cliente_id.required' => 'Debes seleccionar un cliente cuando el tipo de usuario es externo.',
             'cliente_id.exists' => 'El cliente seleccionado no existe.',
             'rol.required' => 'El rol es obligatorio.',
-            'rol.in' => 'El rol seleccionado no es válido.',
+            'rol.exists' => 'El rol seleccionado no existe.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos :min caracteres.',
         ];
@@ -136,6 +147,7 @@ class UserForm extends Form
         $this->dni = $user->dni;
         $this->cif = $user->cif;
         $this->telefono = $user->telefono;
+        $this->numero_empleado = $user->numero_empleado;
         $this->tipo_usuario = $user->tipo_usuario;
         $this->cliente_id = $user->cliente_id;
         $this->activo = (bool) $user->activo;
@@ -155,6 +167,7 @@ class UserForm extends Form
             'dni' => $this->dni,
             'cif' => $this->cif,
             'telefono' => $this->telefono,
+            'numero_empleado' => $this->numero_empleado,
             'tipo_usuario' => $this->tipo_usuario,
             'cliente_id' => $this->tipo_usuario === 'externo' ? $this->cliente_id : null,
             'activo' => $this->activo,

@@ -83,9 +83,24 @@ class Editar extends Component
 
     public ?int $confirmarEliminarId = null;
 
+    /**
+     * Si Gate::inspect('delete', ...) deniega por dependencias (Policy con
+     * Response::deny), guardamos el mensaje aquí y se muestra el modal
+     * informativo (botón "Entendido"). Sin abrir el de confirmación.
+     */
+    public ?string $bloqueadoEliminarMensaje = null;
+
     public function confirmarEliminar(): void
     {
-        Gate::authorize('delete', $this->cliente);
+        $response = Gate::inspect('delete', $this->cliente);
+
+        if (! $response->allowed()) {
+            $this->bloqueadoEliminarMensaje = $response->message()
+                ?: 'No tienes permiso para eliminar este cliente.';
+
+            return;
+        }
+
         $this->confirmarEliminarId = $this->cliente->id;
     }
 
@@ -94,21 +109,31 @@ class Editar extends Component
         $this->confirmarEliminarId = null;
     }
 
+    public function cerrarBloqueo(): void
+    {
+        $this->bloqueadoEliminarMensaje = null;
+    }
+
     public function eliminar(): void
     {
+        // Defensa server-side: si llegamos aquí saltándose la UI, el Policy
+        // bloquea con AuthorizationException + mensaje claro.
         Gate::authorize('delete', $this->cliente);
         $nombre = $this->cliente->nombre;
         $this->cliente->delete();
-        session()->flash('status', "Cliente «{$nombre}» enviado a papelera.");
+        session()->flash('status', "Cliente «{$nombre}» eliminado correctamente.");
         $this->redirectRoute('clientes.index', navigate: true);
     }
 
     /* ── Ordenación de tablas vinculadas ───────────────────────── */
 
     public string $ordenProyectos = 'nombre';
-    public string $dirProyectos   = 'asc';
-    public string $ordenUsuarios  = 'nombre';
-    public string $dirUsuarios    = 'asc';
+
+    public string $dirProyectos = 'asc';
+
+    public string $ordenUsuarios = 'nombre';
+
+    public string $dirUsuarios = 'asc';
 
     public function ordenarProyectos(string $campo): void
     {
@@ -145,9 +170,9 @@ class Editar extends Component
 
         $clave = match ($this->ordenProyectos) {
             'codigo' => fn (Proyecto $p): string => (string) $p->codigo,
-            'tipo'   => fn (Proyecto $p): string => (string) ($p->tipoProyecto?->nombre ?? ''),
+            'tipo' => fn (Proyecto $p): string => (string) ($p->tipoProyecto?->nombre ?? ''),
             'estado' => fn (Proyecto $p): string => (string) ($p->estado ?? ''),
-            default  => fn (Proyecto $p): string => (string) $p->nombre,
+            default => fn (Proyecto $p): string => (string) $p->nombre,
         };
 
         return $this->dirProyectos === 'desc'
@@ -172,10 +197,10 @@ class Editar extends Component
             ->values();
 
         $clave = match ($this->ordenUsuarios) {
-            'email'  => fn (User $u): string => (string) ($u->email ?? ''),
-            'rol'    => fn (User $u): string => $u->getRoleNames()->join(', '),
+            'email' => fn (User $u): string => (string) ($u->email ?? ''),
+            'rol' => fn (User $u): string => $u->getRoleNames()->join(', '),
             'estado' => fn (User $u): int => $u->activo ? 1 : 0,
-            default  => fn (User $u): string => trim($u->nombre.' '.$u->apellidos),
+            default => fn (User $u): string => trim($u->nombre.' '.$u->apellidos),
         };
 
         return $this->dirUsuarios === 'desc'

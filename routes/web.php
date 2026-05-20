@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\ProyectoOpcionesController;
 use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExcel;
 use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\Usuarios\ExportarExcelController as UsuariosExportarExcel;
+use App\Http\Controllers\Usuarios\ExportarPdfController as UsuariosExportarPdf;
 use App\Livewire\Albaranes\Editar as AlbaranesEditar;
 use App\Livewire\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Albaranes\Ver as AlbaranesVer;
@@ -26,6 +28,7 @@ use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Roles\Index as RolesIndex;
+use App\Livewire\Usuarios\Importar as UsuariosImportar;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -140,6 +143,19 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/usuarios', UsuariosIndex::class)
         ->middleware('can:usuarios.ver_todos')
         ->name('usuarios.index');
+
+    Route::get('/usuarios/importar', UsuariosImportar::class)
+        ->middleware('can:usuarios.importar')
+        ->name('usuarios.importar');
+
+    Route::get('/usuarios/exportar/excel', UsuariosExportarExcel::class)
+        ->middleware('can:usuarios.exportar')
+        ->name('usuarios.exportar.excel');
+
+    Route::get('/usuarios/exportar/pdf/{orientacion}', UsuariosExportarPdf::class)
+        ->where('orientacion', 'vertical|horizontal')
+        ->middleware('can:usuarios.exportar')
+        ->name('usuarios.exportar.pdf');
 
     Route::get('/conceptos', ConceptosIndex::class)
         ->middleware('can:conceptos.ver')
