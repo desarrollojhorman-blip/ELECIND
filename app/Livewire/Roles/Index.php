@@ -34,6 +34,9 @@ class Index extends Component
     #[Url(as: 'ambito')]
     public ?string $filtroAmbito = null;
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
@@ -67,6 +70,11 @@ class Index extends Component
     }
 
     public function updatedFiltroAmbito(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -404,7 +412,7 @@ class Index extends Component
         $query->orderByDesc('nivel')->orderBy('name');
 
         return view('livewire.roles.index', [
-            'roles' => $query->paginate(15),
+            'roles' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }

@@ -40,6 +40,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'desc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
@@ -66,6 +69,11 @@ class Index extends Component
     }
 
     public function updatedFiltroFamilia(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -280,7 +288,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.materiales.index', [
-            'materiales' => $query->paginate(15),
+            'materiales' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }

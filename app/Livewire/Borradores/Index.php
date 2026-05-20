@@ -37,6 +37,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'desc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public ?int $confirmarEliminarId = null;
@@ -52,6 +55,7 @@ class Index extends Component
     public function updatedFiltroEstado(): void { $this->resetPage(); }
     public function updatedFiltroDesde(): void { $this->resetPage(); }
     public function updatedFiltroHasta(): void { $this->resetPage(); }
+    public function updatedPorPagina(): void { $this->resetPage(); }
 
     public function togglePanelFiltros(): void
     {
@@ -168,7 +172,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.borradores.index', [
-            'borradores' => $query->paginate(15),
+            'borradores' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }

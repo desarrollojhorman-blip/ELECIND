@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-header title="Clientes" subtitle="Gestión de clientes y sus datos fiscales." />
+    <x-ui.page-header title="Clientes" :badge="$this->totalClientes" subtitle="Gestión de clientes y sus datos fiscales." />
 
     {{-- Toolbar: acciones izquierdas + buscador + filtros --}}
     <div class="mb-3">
@@ -25,20 +25,41 @@
                     @can('clientes.importar')
                         <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray"
                                                 href="{{ route('clientes.importar') }}" wire:navigate>
-                            Importar xlsx/csv
+                            Importar Excel
                         </x-ui.actions-menu-item>
                     @else
                         <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Sin permiso">
-                            Importar xlsx/csv
+                            Importar Excel
                         </x-ui.actions-menu-item>
                     @endcan
                     <x-ui.actions-menu-divider />
-                    <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Pronto">
-                        Exportar a Excel
-                    </x-ui.actions-menu-item>
-                    <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Pronto">
-                        Exportar a PDF
-                    </x-ui.actions-menu-item>
+                    @can('clientes.exportar')
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray"
+                                                href="{{ route('clientes.exportar.excel', ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion]) }}">
+                            Exportar a Excel
+                        </x-ui.actions-menu-item>
+                    @else
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Sin permiso">
+                            Exportar a Excel
+                        </x-ui.actions-menu-item>
+                    @endcan
+                    @can('clientes.exportar')
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
+                                                href="{{ route('clientes.exportar.pdf', array_merge(['orientacion' => 'vertical'], ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion])) }}">
+                            PDF Vertical
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
+                                                href="{{ route('clientes.exportar.pdf', array_merge(['orientacion' => 'horizontal'], ['q' => $buscar, 'estado' => $filtroEstado, 'provincia' => $filtroProvincia, 'orden' => $ordenColumna, 'dir' => $ordenDireccion])) }}">
+                            PDF Horizontal
+                        </x-ui.actions-menu-item>
+                    @else
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Sin permiso">
+                            PDF Vertical
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Sin permiso">
+                            PDF Horizontal
+                        </x-ui.actions-menu-item>
+                    @endcan
                     <x-ui.actions-menu-divider />
                     <x-ui.actions-menu-item icon="heroicon-o-printer" disabled badge="Pronto">
                         Imprimir lista
@@ -94,6 +115,22 @@
     </div>
 
     {{-- Tabla --}}
+    <div class="mb-3 flex items-center justify-between">
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="text-xs text-slate-500">Filas:</span>
+            <select wire:model.live="porPagina"
+                    class="rounded-md border-slate-300 py-1 pl-2 pr-7 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        {{ $clientes->links() }}
+    </div>
     <x-ui.data-table :colspan="8" empty="No hay clientes que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
@@ -201,10 +238,6 @@
             @endforeach
         </x-slot:rows>
     </x-ui.data-table>
-
-    <div class="mt-3">
-        {{ $clientes->links() }}
-    </div>
 
     {{-- Modal confirmar eliminación --}}
     <x-ui.modal

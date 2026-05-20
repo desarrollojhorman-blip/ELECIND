@@ -46,6 +46,22 @@
         </x-ui.search-and-filter>
     </div>
 
+    <div class="mb-3 flex items-center justify-between">
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="text-xs text-slate-500">Filas:</span>
+            <select wire:model.live="porPagina"
+                    class="rounded-md border-slate-300 py-1 pl-2 pr-7 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        {{ $grupos->links() }}
+    </div>
     <x-ui.data-table :colspan="5" empty="No hay grupos que coincidan con la búsqueda o filtros.">
         <x-slot:head>
             <tr>
@@ -109,8 +125,6 @@
             @endforeach
         </x-slot:rows>
     </x-ui.data-table>
-
-    <div class="mt-3">{{ $grupos->links() }}</div>
 
     <x-ui.modal :show="$modalAbierto"
         :title="$modoSoloLectura ? 'Ver grupo de proyectos' : ($form->id ? 'Editar grupo de proyectos' : 'Nuevo grupo de proyectos')"

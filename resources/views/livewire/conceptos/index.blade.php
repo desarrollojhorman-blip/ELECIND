@@ -1,4 +1,4 @@
-﻿<div>
+<div>
     <x-ui.page-header title="Conceptos" subtitle="Catálogo global de conceptos asignables a proyectos." />
 
     {{-- Toolbar --}}
@@ -60,6 +60,22 @@
     </div>
 
     {{-- Tabla --}}
+    <div class="mb-3 flex items-center justify-between">
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="text-xs text-slate-500">Filas:</span>
+            <select wire:model.live="porPagina"
+                    class="rounded-md border-slate-300 py-1 pl-2 pr-7 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        {{ $conceptos->links() }}
+    </div>
     <x-ui.data-table :colspan="5" empty="No hay conceptos que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
@@ -132,10 +148,6 @@
             @endforeach
         </x-slot:rows>
     </x-ui.data-table>
-
-    <div class="mt-3">
-        {{ $conceptos->links() }}
-    </div>
 
     {{-- Modal crear/editar --}}
     <x-ui.modal

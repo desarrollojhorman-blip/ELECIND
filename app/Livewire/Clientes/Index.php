@@ -35,6 +35,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'asc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public ?int $confirmarEliminarId = null;
@@ -57,6 +60,11 @@ class Index extends Component
     }
 
     public function updatedFiltroProvincia(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -149,6 +157,12 @@ class Index extends Component
     }
 
     #[Computed]
+    public function totalClientes(): int
+    {
+        return Cliente::count();
+    }
+
+    #[Computed]
     public function filtrosAplicados(): int
     {
         $count = 0;
@@ -213,7 +227,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.clientes.index', [
-            'clientes' => $query->paginate(15),
+            'clientes' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }
