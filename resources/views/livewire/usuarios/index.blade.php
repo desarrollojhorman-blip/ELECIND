@@ -9,8 +9,7 @@
         mostrarDescarga = true;
      ">
     <x-ui.page-header title="Usuarios"
-                       :badge="$this->totalUsuarios"
-                       subtitle="Gestión de usuarios internos y responsables externos con roles y niveles." />
+                       :subtitle="$this->subtituloListado" />
 
     {{-- Toolbar --}}
     <div class="mb-3">
@@ -212,9 +211,12 @@
         </div>
         {{ $usuarios->links() }}
     </div>
-    <x-ui.data-table :colspan="7" empty="No hay usuarios que coincidan con los filtros aplicados.">
+    <x-ui.data-table :colspan="8" empty="No hay usuarios que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
+                <x-ui.sortable-header column="id" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    ID
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="username" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Usuario
                 </x-ui.sortable-header>
@@ -236,6 +238,7 @@
         <x-slot:rows>
             @foreach ($usuarios as $usuario)
                 <tr wire:key="usuario-{{ $usuario->id }}" class="transition-colors hover:bg-slate-50">
+                    <td class="px-4 py-3 font-mono text-slate-500">{{ $usuario->id }}</td>
                     <td class="px-4 py-3">
                         <div class="font-mono text-sm font-medium text-slate-900">{{ $usuario->username }}</div>
                         @php $rolPrincipal = $usuario->roles->first(); @endphp
@@ -331,6 +334,14 @@
             <div>
                 <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Acceso y rol</h3>
                 <div class="grid gap-4 md:grid-cols-2">
+                    <x-ui.field label="ID" hint="Asignado por el sistema; no editable.">
+                        @if ($form->id !== null)
+                            <x-ui.input :value="$form->id" readonly />
+                        @else
+                            <x-ui.input value="—" readonly />
+                        @endif
+                    </x-ui.field>
+
                     <x-ui.field label="Usuario" required :error="$errors->first('form.username')">
                         <x-ui.input wire:model.live.debounce.500ms="form.username" :disabled="$modoSoloLectura" autofocus />
                     </x-ui.field>

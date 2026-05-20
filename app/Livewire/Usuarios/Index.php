@@ -192,7 +192,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['username', 'nombre', 'email', 'tipo_usuario', 'created_at'];
+        $columnasPermitidas = ['id', 'username', 'nombre', 'email', 'tipo_usuario', 'created_at'];
         if (! \in_array($columna, $columnasPermitidas, true)) {
             return;
         }
@@ -522,6 +522,17 @@ class Index extends Component
     public function totalPapelera(): int
     {
         return User::onlyTrashed()->count();
+    }
+
+    /** Subtítulo bajo el título: total real (activos + inactivos, sin papelera). */
+    #[Computed]
+    public function subtituloListado(): string
+    {
+        $total = $this->totalUsuarios;
+
+        return $total === 1
+            ? '1 usuario · activo o inactivo'
+            : "{$total} usuarios · activos e inactivos";
     }
 
     #[Computed]
