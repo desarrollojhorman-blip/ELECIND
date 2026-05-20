@@ -58,6 +58,22 @@
     @endif
 
     {{-- Tabla --}}
+    <div class="mb-3 flex items-center justify-between">
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="text-xs text-slate-500">Filas:</span>
+            <select wire:model.live="porPagina"
+                    class="rounded-md border-slate-300 py-1 pl-2 pr-7 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        {{ $borradores->links() }}
+    </div>
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table class="w-full text-sm">
             <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
@@ -135,11 +151,6 @@
             </tbody>
         </table>
 
-        @if ($borradores->hasPages())
-            <div class="border-t border-slate-100 px-6 py-3">
-                {{ $borradores->links() }}
-            </div>
-        @endif
     </div>
 
     {{-- Modal confirmar eliminación --}}

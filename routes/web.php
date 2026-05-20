@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\ProyectoOpcionesController;
+use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExcel;
+use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
 use App\Http\Controllers\LoginController;
 use App\Livewire\Albaranes\Editar as AlbaranesEditar;
 use App\Livewire\Albaranes\Index as AlbaranesIndex;
@@ -85,6 +87,15 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/clientes/importar', ClientesImportar::class)
         ->middleware('can:clientes.importar')
         ->name('clientes.importar');
+
+    Route::get('/clientes/exportar/excel', ClientesExportarExcel::class)
+        ->middleware('can:clientes.exportar')
+        ->name('clientes.exportar.excel');
+
+    Route::get('/clientes/exportar/pdf/{orientacion}', ClientesExportarPdf::class)
+        ->where('orientacion', 'vertical|horizontal')
+        ->middleware('can:clientes.exportar')
+        ->name('clientes.exportar.pdf');
 
     Route::get('/clientes/{cliente}', ClientesVer::class)
         ->middleware('can:clientes.ver')

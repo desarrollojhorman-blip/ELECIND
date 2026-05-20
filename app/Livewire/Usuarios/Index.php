@@ -50,6 +50,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'asc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
@@ -99,6 +102,11 @@ class Index extends Component
     }
 
     public function updatedFiltroEmpresaCliente(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -527,7 +535,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.usuarios.index', [
-            'usuarios' => $query->paginate(15),
+            'usuarios' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }

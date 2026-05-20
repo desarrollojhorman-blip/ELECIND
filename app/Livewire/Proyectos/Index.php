@@ -45,6 +45,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'asc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public ?int $confirmarEliminarId = null;
@@ -77,6 +80,11 @@ class Index extends Component
     }
 
     public function updatedFiltroResponsable(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -283,7 +291,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.proyectos.index', [
-            'proyectos' => $query->paginate(15),
+            'proyectos' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }

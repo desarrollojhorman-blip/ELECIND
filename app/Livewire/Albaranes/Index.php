@@ -47,6 +47,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'desc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public ?int $confirmarEliminarId = null;
@@ -64,6 +67,7 @@ class Index extends Component
     public function updatedFiltroTipo(): void { $this->resetPage(); }
     public function updatedFiltroDesde(): void { $this->resetPage(); }
     public function updatedFiltroHasta(): void { $this->resetPage(); }
+    public function updatedPorPagina(): void { $this->resetPage(); }
 
     public function togglePanelFiltros(): void
     {
@@ -208,7 +212,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.albaranes.index', [
-            'albaranes' => $query->paginate(15),
+            'albaranes' => $query->paginate($this->porPagina)->onEachSide(2),
             'estados' => EstadoAlbaran::cases(),
             'tiposHora' => TipoHora::cases(),
         ]);

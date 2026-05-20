@@ -35,6 +35,9 @@ class Index extends Component
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'asc';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
@@ -54,6 +57,11 @@ class Index extends Component
     }
 
     public function updatedFiltroEstado(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -219,7 +227,7 @@ class Index extends Component
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
 
         return view('livewire.conceptos.index', [
-            'conceptos' => $query->paginate(15),
+            'conceptos' => $query->paginate($this->porPagina)->onEachSide(2),
         ]);
     }
 }
