@@ -163,6 +163,16 @@ class Index extends Component
     }
 
     #[Computed]
+    public function subtituloListado(): string
+    {
+        $total = $this->totalClientes;
+
+        return $total === 1
+            ? '1 cliente · activo o inactivo'
+            : "{$total} clientes · activos e inactivos";
+    }
+
+    #[Computed]
     public function filtrosAplicados(): int
     {
         $count = 0;

@@ -1,5 +1,5 @@
 <div>
-    <x-ui.page-header title="Clientes" :badge="$this->totalClientes" subtitle="Gestión de clientes y sus datos fiscales." />
+    <x-ui.page-header title="Clientes" :subtitle="$this->subtituloListado" />
 
     {{-- Toolbar: acciones izquierdas + buscador + filtros --}}
     <div class="mb-3">
@@ -60,10 +60,6 @@
                             PDF Horizontal
                         </x-ui.actions-menu-item>
                     @endcan
-                    <x-ui.actions-menu-divider />
-                    <x-ui.actions-menu-item icon="heroicon-o-printer" disabled badge="Pronto">
-                        Imprimir lista
-                    </x-ui.actions-menu-item>
                 </x-ui.actions-menu>
             </x-slot:leftActions>
 

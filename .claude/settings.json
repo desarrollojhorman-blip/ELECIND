@@ -48,7 +48,11 @@
       "Bash(php -l app/Support/ClienteFields.php)",
       "Bash(php -l app/Livewire/Forms/ClienteForm.php)",
       "Bash(./vendor/bin/pint app/Support/ClienteFields.php app/Livewire/Forms/ClienteForm.php app/Livewire/Clientes/Importar.php)",
-      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; echo '\\\\''uniqueFields: '\\\\''.implode\\('\\\\'','\\\\'', App\\\\Support\\\\ClienteFields::uniqueFields\\(\\)\\).PHP_EOL; $r=App\\\\Support\\\\ClienteFields::getValidationRules\\(\\); echo '\\\\''codigo base: '\\\\''.implode\\('\\\\''|'\\\\'',$r['\\\\''codigo_cliente'\\\\'']\\).PHP_EOL; echo '\\\\''cif base: '\\\\''.implode\\('\\\\''|'\\\\'',$r['\\\\''cif'\\\\'']\\).PHP_EOL;')"
+      "Bash(php -r 'require '\\\\''vendor/autoload.php'\\\\''; echo '\\\\''uniqueFields: '\\\\''.implode\\('\\\\'','\\\\'', App\\\\Support\\\\ClienteFields::uniqueFields\\(\\)\\).PHP_EOL; $r=App\\\\Support\\\\ClienteFields::getValidationRules\\(\\); echo '\\\\''codigo base: '\\\\''.implode\\('\\\\''|'\\\\'',$r['\\\\''codigo_cliente'\\\\'']\\).PHP_EOL; echo '\\\\''cif base: '\\\\''.implode\\('\\\\''|'\\\\'',$r['\\\\''cif'\\\\'']\\).PHP_EOL;')",
+      "Bash(composer require *)",
+      "Bash(npm install *)",
+      "Bash(composer dump-autoload *)",
+      "Bash(./vendor/bin/pint app/Providers/AppServiceProvider.php)"
     ],
     "additionalDirectories": [
       "\\tmp",

@@ -1,9 +1,9 @@
 <?php
 
-use App\Providers\AppServiceProvider;
-use App\Providers\FortifyServiceProvider;
-
 return [
-    AppServiceProvider::class,
-    FortifyServiceProvider::class,
+    App\Providers\AppServiceProvider::class,
+    App\Providers\FortifyServiceProvider::class,
+    // App\Providers\TelescopeServiceProvider lo registra AppServiceProvider
+    // condicionalmente (solo local + paquete instalado) para que producción
+    // (composer install --no-dev) no rompa.
 ];
