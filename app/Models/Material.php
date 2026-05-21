@@ -21,12 +21,16 @@ class Material extends Model
         'descripcion',
         'unidad_medida',
         'stock',
+        'precio_coste',
+        'precio_venta',
     ];
 
     protected function casts(): array
     {
         return [
             'stock' => 'decimal:2',
+            'precio_coste' => 'decimal:2',
+            'precio_venta' => 'decimal:2',
         ];
     }
 

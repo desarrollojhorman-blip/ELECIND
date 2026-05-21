@@ -40,6 +40,10 @@ class AdminUsersSeeder extends Seeder
                 'apellidos' => 'Demo',
                 'email' => 'trabajador@elecind.local',
                 'tipo_usuario' => 'interno',
+                'numero_empleado' => 'EMP-001',
+                'tasa_hora' => 22.500,
+                'tasa_extra' => 28.000,
+                'tasa_festivo' => 35.000,
                 'activo' => true,
                 'password' => 'password',
             ]

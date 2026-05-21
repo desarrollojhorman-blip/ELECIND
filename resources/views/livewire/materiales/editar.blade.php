@@ -116,6 +116,29 @@
                         <x-ui.input type="number" step="0.01" min="0" wire:model="form.stock" class="font-mono" />
                     </x-ui.field>
                 </div>
+
+                {{-- Precios (€) — visible solo a quien tenga `materiales.gestionar_precios`.
+                     Por defecto solo lo tiene superadmin; otorgable desde Roles.
+                     En el albarán solo se muestra `precio_venta`; `precio_coste`
+                     queda para informes internos (margen, etc.). --}}
+                @can('materiales.gestionar_precios')
+                    <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Precios (€)</h3>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <x-ui.field label="Precio coste €" :error="$errors->first('form.precio_coste')">
+                            <x-ui.input type="number" step="0.01" min="0"
+                                        wire:model="form.precio_coste"
+                                        placeholder="0,00"
+                                        class="font-mono" />
+                        </x-ui.field>
+
+                        <x-ui.field label="Precio venta €" :error="$errors->first('form.precio_venta')">
+                            <x-ui.input type="number" step="0.01" min="0"
+                                        wire:model="form.precio_venta"
+                                        placeholder="0,00"
+                                        class="font-mono" />
+                        </x-ui.field>
+                    </div>
+                @endcan
             </div>
         </form>
 

@@ -80,6 +80,19 @@
                     <x-ui.input :value="rtrim(rtrim(number_format((float) $material->stock, 2, ',', ''), '0'), ',')" readonly class="font-mono" />
                 </x-ui.field>
             </div>
+
+            {{-- Precios (€) — solo si tiene `materiales.gestionar_precios`. --}}
+            @can('materiales.gestionar_precios')
+                <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Precios (€)</h3>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <x-ui.field label="Precio coste €">
+                        <x-ui.input :value="$material->precio_coste !== null ? number_format((float) $material->precio_coste, 2, ',', '.') : '—'" readonly class="font-mono" />
+                    </x-ui.field>
+                    <x-ui.field label="Precio venta €">
+                        <x-ui.input :value="$material->precio_venta !== null ? number_format((float) $material->precio_venta, 2, ',', '.') : '—'" readonly class="font-mono" />
+                    </x-ui.field>
+                </div>
+            @endcan
         </div>
 
         {{-- ═══ Tab: Albaranes ═══ --}}

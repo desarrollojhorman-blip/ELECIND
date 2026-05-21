@@ -25,6 +25,13 @@ class MaterialForm extends Form
     #[Validate]
     public float $stock = 0;
 
+    /** Precios (€). Aplica el permiso `materiales.gestionar_precios` para verlos/editarlos. */
+    #[Validate]
+    public ?string $precio_coste = null;
+
+    #[Validate]
+    public ?string $precio_venta = null;
+
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -36,6 +43,8 @@ class MaterialForm extends Form
             'descripcion' => ['required', 'string', 'max:500'],
             'unidad_medida' => ['required', 'string', 'max:20'],
             'stock' => ['required', 'numeric', 'min:0'],
+            'precio_coste' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'precio_venta' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
         ];
     }
 
@@ -50,6 +59,8 @@ class MaterialForm extends Form
             'descripcion' => 'descripción',
             'unidad_medida' => 'unidad de medida',
             'stock' => 'stock',
+            'precio_coste' => 'precio coste',
+            'precio_venta' => 'precio venta',
         ];
     }
 
@@ -61,6 +72,8 @@ class MaterialForm extends Form
         $this->descripcion = $material->descripcion;
         $this->unidad_medida = $material->unidad_medida;
         $this->stock = (float) $material->stock;
+        $this->precio_coste = $material->precio_coste !== null ? (string) $material->precio_coste : null;
+        $this->precio_venta = $material->precio_venta !== null ? (string) $material->precio_venta : null;
     }
 
     public function save(): Material
@@ -69,6 +82,14 @@ class MaterialForm extends Form
 
         $datos = $this->all();
         unset($datos['id']);
+
+        // Precios: '' → null, string con coma decimal → float.
+        $datos['precio_coste'] = $this->precio_coste === null || $this->precio_coste === ''
+            ? null
+            : (float) str_replace(',', '.', $this->precio_coste);
+        $datos['precio_venta'] = $this->precio_venta === null || $this->precio_venta === ''
+            ? null
+            : (float) str_replace(',', '.', $this->precio_venta);
 
         if ($this->id === null) {
             $material = new Material;

@@ -72,7 +72,13 @@
       "Bash(php -l app/Exports/UsuariosExport.php)",
       "Bash(php -l app/Http/Controllers/Usuarios/ExportarExcelController.php)",
       "Bash(php -l app/Http/Controllers/Usuarios/ExportarPdfController.php)",
-      "Bash(./vendor/bin/pint app/Livewire/Forms/UserForm.php app/Livewire/Usuarios/Importar.php app/Exports/UsuariosExport.php app/Http/Controllers/Usuarios/ExportarExcelController.php app/Http/Controllers/Usuarios/ExportarPdfController.php app/Support/UserFields.php app/Models/User.php database/seeders/RolesAndPermissionsSeeder.php)"
+      "Bash(./vendor/bin/pint app/Livewire/Forms/UserForm.php app/Livewire/Usuarios/Importar.php app/Exports/UsuariosExport.php app/Http/Controllers/Usuarios/ExportarExcelController.php app/Http/Controllers/Usuarios/ExportarPdfController.php app/Support/UserFields.php app/Models/User.php database/seeders/RolesAndPermissionsSeeder.php)",
+      "Bash(php -l app/Observers/AlbaranLineaPersonalObserver.php)",
+      "Bash(php -l app/Observers/AlbaranLineaMaterialObserver.php)",
+      "Bash(php -l app/Observers/AlbaranObserver.php)",
+      "Bash(php -l app/Providers/AppServiceProvider.php)",
+      "Bash(php -l app/Livewire/Forms/MaterialForm.php)",
+      "Bash(./vendor/bin/pint database/factories/UserFactory.php database/factories/MaterialFactory.php database/seeders/AdminUsersSeeder.php)"
     ],
     "additionalDirectories": [
       "\\tmp",

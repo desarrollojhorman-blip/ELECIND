@@ -35,11 +35,17 @@ class MaterialFactory extends Factory
 
         [$descripcion, $unidad] = fake()->randomElement($articulos);
 
+        // Precio coste entre 0,50 € y 80 €. Precio venta con margen 1,3×–2,2×.
+        $coste = fake()->randomFloat(2, 0.5, 80);
+        $venta = round($coste * fake()->randomFloat(2, 1.3, 2.2), 2);
+
         return [
             'numero_pedido_id' => NumeroPedido::factory(),
             'descripcion' => $descripcion.' '.fake()->bothify('#?'),
             'unidad_medida' => $unidad,
             'stock' => fake()->randomFloat(2, 0, 500),
+            'precio_coste' => $coste,
+            'precio_venta' => $venta,
         ];
     }
 }

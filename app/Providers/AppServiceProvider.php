@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
+use App\Models\AlbaranLineaPersonal;
 use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Concepto;
@@ -16,6 +17,8 @@ use App\Models\Role;
 use App\Models\TiposProyecto;
 use App\Models\User;
 use App\Observers\AlbaranLineaMaterialObserver;
+use App\Observers\AlbaranLineaPersonalObserver;
+use App\Observers\AlbaranObserver;
 use App\Policies\AlbaranPolicy;
 use App\Policies\BorradorPolicy;
 use App\Policies\ClientePolicy;
@@ -58,6 +61,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Albaran::class, AlbaranPolicy::class);
         Gate::policy(Borrador::class, BorradorPolicy::class);
 
+        // Observers de albaranes:
+        //   - AlbaranLineaMaterial: ajuste de stock + snapshot del material.
+        //   - AlbaranLineaPersonal: snapshot del trabajador (nombre + tasas).
+        //   - Albaran (cabecera): snapshot de cliente, proyecto, concepto,
+        //     creador y responsable. Solo se (re)escribe el snapshot cuando
+        //     cambia la FK correspondiente (regla "isDirty").
         AlbaranLineaMaterial::observe(AlbaranLineaMaterialObserver::class);
+        AlbaranLineaPersonal::observe(AlbaranLineaPersonalObserver::class);
+        Albaran::observe(AlbaranObserver::class);
     }
 }

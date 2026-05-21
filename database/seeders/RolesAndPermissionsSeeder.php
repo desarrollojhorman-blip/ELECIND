@@ -68,6 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
                 'usuarios.gestionar_tarifas', // por defecto solo superadmin ve/modifica las tasas (dato sensible)
+                'materiales.gestionar_precios', // por defecto solo superadmin ve/modifica los precios (dato sensible)
             ])
             ->pluck('name')
             ->all());
@@ -173,6 +174,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'materiales.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar materiales', 'categoria' => 'materiales'],
             ['name' => 'materiales.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar materiales a Excel', 'categoria' => 'materiales'],
             ['name' => 'materiales.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de materiales', 'categoria' => 'materiales'],
+            ['name' => 'materiales.gestionar_precios', 'ambito' => 'web', 'descripcion' => 'Ver y modificar los precios (coste/venta) de los materiales', 'categoria' => 'materiales'],
 
             // ─────────────── Familias de material ───────────────
             ['name' => 'materiales.familias.ver', 'ambito' => 'web', 'descripcion' => 'Ver familias de material', 'categoria' => 'materiales'],

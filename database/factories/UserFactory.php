@@ -31,6 +31,10 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'tipo_usuario' => 'interno',
+            'numero_empleado' => 'EMP-'.fake()->unique()->numberBetween(1, 999),
+            'tasa_hora' => fake()->randomFloat(3, 15, 35),       // 15–35 €/h base
+            'tasa_extra' => fake()->randomFloat(3, 18, 40),      // 18–40 €/h extras
+            'tasa_festivo' => fake()->randomFloat(3, 25, 50),    // 25–50 €/h festivo
             'activo' => true,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -61,6 +65,11 @@ class UserFactory extends Factory
         return $this->state(fn (array $attrs) => [
             'tipo_usuario' => 'externo',
             'cliente_id' => $clienteId,
+            // Los externos (responsables de cliente) NO suelen tener tasas.
+            'tasa_hora' => null,
+            'tasa_extra' => null,
+            'tasa_festivo' => null,
+            'numero_empleado' => null,
         ]);
     }
 
