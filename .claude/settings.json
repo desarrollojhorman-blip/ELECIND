@@ -67,7 +67,12 @@
       "Bash(php -l app/Livewire/Usuarios/Index.php)",
       "Bash(./vendor/bin/pint app/Models/User.php app/Support/UserFields.php app/Livewire/Forms/UserForm.php app/Policies/UserPolicy.php app/Livewire/Usuarios/Index.php app/Livewire/Usuarios/Importar.php app/Exports/UsuariosExport.php app/Http/Controllers/Usuarios/ExportarExcelController.php app/Http/Controllers/Usuarios/ExportarPdfController.php database/seeders/RolesAndPermissionsSeeder.php routes/web.php)",
       "Bash(php -r \"require 'vendor/autoload.php'; var_dump\\(class_exists\\('App\\\\\\\\Livewire\\\\\\\\Usuarios\\\\\\\\Importar'\\), class_exists\\('App\\\\\\\\Exports\\\\\\\\UsuariosExport'\\), class_exists\\('App\\\\\\\\Http\\\\\\\\Controllers\\\\\\\\Usuarios\\\\\\\\ExportarExcelController'\\), class_exists\\('App\\\\\\\\Http\\\\\\\\Controllers\\\\\\\\Usuarios\\\\\\\\ExportarPdfController'\\), class_exists\\('App\\\\\\\\Support\\\\\\\\UserFields'\\)\\);\")",
-      "Bash(./vendor/bin/pint app/Livewire/Usuarios/Index.php)"
+      "Bash(./vendor/bin/pint app/Livewire/Usuarios/Index.php)",
+      "Bash(php -l app/Livewire/Usuarios/Importar.php)",
+      "Bash(php -l app/Exports/UsuariosExport.php)",
+      "Bash(php -l app/Http/Controllers/Usuarios/ExportarExcelController.php)",
+      "Bash(php -l app/Http/Controllers/Usuarios/ExportarPdfController.php)",
+      "Bash(./vendor/bin/pint app/Livewire/Forms/UserForm.php app/Livewire/Usuarios/Importar.php app/Exports/UsuariosExport.php app/Http/Controllers/Usuarios/ExportarExcelController.php app/Http/Controllers/Usuarios/ExportarPdfController.php app/Support/UserFields.php app/Models/User.php database/seeders/RolesAndPermissionsSeeder.php)"
     ],
     "additionalDirectories": [
       "\\tmp",

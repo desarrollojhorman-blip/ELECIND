@@ -441,6 +441,36 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Tasas (€/hora) — visible solo a quien tenga `usuarios.gestionar_tarifas`.
+                 Por defecto solo lo tiene superadmin; otorgable a otros desde Roles. --}}
+            @can('usuarios.gestionar_tarifas')
+                <div>
+                    <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tasas (€/hora)</h3>
+                    <p class="mb-3 text-xs text-slate-500">
+                        Tarifa por hora aplicada a este usuario. Aplica principalmente a trabajadores internos; opcionales para externos. Acepta hasta 3 decimales.
+                    </p>
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <x-ui.field label="Tasa base" :error="$errors->first('form.tasa_hora')" hint="€/hora estándar.">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_hora" :disabled="$modoSoloLectura"
+                                        placeholder="0,000" />
+                        </x-ui.field>
+
+                        <x-ui.field label="Tasa extra" :error="$errors->first('form.tasa_extra')" hint="€/hora extras.">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_extra" :disabled="$modoSoloLectura"
+                                        placeholder="0,000" />
+                        </x-ui.field>
+
+                        <x-ui.field label="Tasa festivo" :error="$errors->first('form.tasa_festivo')" hint="€/hora en festivo.">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_festivo" :disabled="$modoSoloLectura"
+                                        placeholder="0,000" />
+                        </x-ui.field>
+                    </div>
+                </div>
+            @endcan
         </form>
 
         <x-slot:footer>

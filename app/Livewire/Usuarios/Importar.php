@@ -63,7 +63,7 @@ class Importar extends Component
      */
     public function camposDisponibles(): array
     {
-        return [
+        $campos = [
             'username' => 'Usuario (login)  (obligatorio)',
             'password' => 'Contraseña  (obligatoria)',
             'nombre' => 'Nombre  (obligatorio)',
@@ -79,6 +79,15 @@ class Importar extends Component
             'acceso' => 'Acceso (web/móvil/ambos)',
             'activo' => 'Activo (sí/no)',
         ];
+
+        // Tasas: solo si el actor tiene permiso de gestionar tarifas.
+        if (auth()->user()?->can('usuarios.gestionar_tarifas')) {
+            $campos['tasa_hora'] = 'Tasa base (€/hora)';
+            $campos['tasa_extra'] = 'Tasa extra (€/hora)';
+            $campos['tasa_festivo'] = 'Tasa festivo (€/hora)';
+        }
+
+        return $campos;
     }
 
     /** @return array<string, array<int, string>> */
@@ -99,7 +108,27 @@ class Importar extends Component
             'cliente_codigo' => ['empresa', 'cliente', 'codigo cliente', 'cod cliente', 'codigo empresa', 'empresa codigo'],
             'acceso' => ['acceso', 'access'],
             'activo' => ['activo', 'estado', 'active', 'alta'],
+            'tasa_hora' => ['tasa', 'tasa hora', 'tasa base', 'precio hora', 'tarifa', 'tarifa hora'],
+            'tasa_extra' => ['tasa extra', 'precio extra', 'tarifa extra', 'extras'],
+            'tasa_festivo' => ['tasa festivo', 'tasa fest', 'precio festivo', 'tarifa festivo', 'festivo'],
         ];
+    }
+
+    /**
+     * Convierte una celda de Excel a float decimal o null.
+     * Acepta "22.191", "22,191", "22.191 €/h", "  ". Devuelve null si vacío.
+     */
+    private function parsearDecimal(string $valor): ?float
+    {
+        $v = trim($valor);
+        if ($v === '') {
+            return null;
+        }
+        // Quita símbolos comunes (€, /h, etc.) y normaliza coma decimal a punto.
+        $v = preg_replace('/[€$\s]|\/h/i', '', $v) ?? $v;
+        $v = str_replace(',', '.', $v);
+
+        return is_numeric($v) ? (float) $v : null;
     }
 
     private function normalizar(string $texto): string
@@ -274,7 +303,7 @@ class Importar extends Component
         return match ($v) {
             'web' => 'web',
             'movil', 'mobil', 'mobile' => 'movil',
-            'ambos', 'both', 'both' => 'ambos',
+            'ambos', 'both' => 'ambos',
             default => null,
         };
     }
@@ -468,6 +497,9 @@ class Importar extends Component
                 'cif' => $crudo['cif'] ?? null,
                 'telefono' => $crudo['telefono'] ?? null,
                 'numero_empleado' => $crudo['numero_empleado'] ?? null,
+                'tasa_hora' => in_array('tasa_hora', $destinos, true) ? $this->parsearDecimal((string) ($crudo['tasa_hora'] ?? '')) : null,
+                'tasa_extra' => in_array('tasa_extra', $destinos, true) ? $this->parsearDecimal((string) ($crudo['tasa_extra'] ?? '')) : null,
+                'tasa_festivo' => in_array('tasa_festivo', $destinos, true) ? $this->parsearDecimal((string) ($crudo['tasa_festivo'] ?? '')) : null,
                 'tipo_usuario' => $tipo,
                 'cliente_id' => $clienteId,
                 'activo' => $activo,
@@ -505,6 +537,9 @@ class Importar extends Component
                 'cif' => 'CIF',
                 'telefono' => 'Teléfono',
                 'numero_empleado' => 'Nº empleado',
+                'tasa_hora' => 'Tasa base',
+                'tasa_extra' => 'Tasa extra',
+                'tasa_festivo' => 'Tasa festivo',
             ];
 
             $validador = Validator::make($datos, $reglas, $mensajes, $atributos);
@@ -569,6 +604,9 @@ class Importar extends Component
                     'cif' => $datos['cif'],
                     'telefono' => $datos['telefono'],
                     'numero_empleado' => $datos['numero_empleado'],
+                    'tasa_hora' => $datos['tasa_hora'] ?? null,
+                    'tasa_extra' => $datos['tasa_extra'] ?? null,
+                    'tasa_festivo' => $datos['tasa_festivo'] ?? null,
                     'tipo_usuario' => $datos['tipo_usuario'],
                     'cliente_id' => $datos['cliente_id'],
                     'activo' => $datos['activo'],

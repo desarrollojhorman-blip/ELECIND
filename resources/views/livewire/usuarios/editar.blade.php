@@ -173,10 +173,37 @@
                                 hint="Información extra (HR). Texto libre, no único.">
                         <x-ui.input wire:model="form.numero_empleado" />
                     </x-ui.field>
+                </div>
 
-                    <div class="md:col-span-2">
-                        <x-ui.checkbox wire:model="form.activo" label="Usuario activo" />
+                {{-- Tasas (€/hora) como subsección dentro del mismo bloque.
+                     Visible solo a quien tenga `usuarios.gestionar_tarifas`
+                     (por defecto solo superadmin). --}}
+                @can('usuarios.gestionar_tarifas')
+                    <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Tasas (€/hora)</h3>
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <x-ui.field label="Tasa base €/h" :error="$errors->first('form.tasa_hora')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_hora"
+                                        placeholder="0,000" />
+                        </x-ui.field>
+
+                        <x-ui.field label="Tasa extra €/h" :error="$errors->first('form.tasa_extra')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_extra"
+                                        placeholder="0,000" />
+                        </x-ui.field>
+
+                        <x-ui.field label="Tasa festivo €/h" :error="$errors->first('form.tasa_festivo')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_festivo"
+                                        placeholder="0,000" />
+                        </x-ui.field>
                     </div>
+                @endcan
+
+                {{-- Usuario activo: standalone al final, después de Tasas. --}}
+                <div class="mt-6 border-t border-slate-100 pt-4">
+                    <x-ui.checkbox wire:model="form.activo" label="Usuario activo" />
                 </div>
             </div>
         </form>

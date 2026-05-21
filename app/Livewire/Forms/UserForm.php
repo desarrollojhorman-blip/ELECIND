@@ -38,6 +38,16 @@ class UserForm extends Form
     #[Validate]
     public ?string $numero_empleado = null;
 
+    /** Tarifas (€/hora). Aplican principalmente a internos; opcionales para todos. */
+    #[Validate]
+    public ?string $tasa_hora = null;
+
+    #[Validate]
+    public ?string $tasa_extra = null;
+
+    #[Validate]
+    public ?string $tasa_festivo = null;
+
     /** interno | externo */
     #[Validate]
     public string $tipo_usuario = 'interno';
@@ -107,6 +117,9 @@ class UserForm extends Form
             'cif' => 'CIF',
             'telefono' => 'teléfono',
             'numero_empleado' => 'nº empleado',
+            'tasa_hora' => 'tasa por hora',
+            'tasa_extra' => 'tasa extra',
+            'tasa_festivo' => 'tasa festivo',
             'tipo_usuario' => 'tipo de usuario',
             'cliente_id' => 'cliente',
             'rol' => 'rol',
@@ -148,6 +161,9 @@ class UserForm extends Form
         $this->cif = $user->cif;
         $this->telefono = $user->telefono;
         $this->numero_empleado = $user->numero_empleado;
+        $this->tasa_hora = $user->tasa_hora !== null ? (string) $user->tasa_hora : null;
+        $this->tasa_extra = $user->tasa_extra !== null ? (string) $user->tasa_extra : null;
+        $this->tasa_festivo = $user->tasa_festivo !== null ? (string) $user->tasa_festivo : null;
         $this->tipo_usuario = $user->tipo_usuario;
         $this->cliente_id = $user->cliente_id;
         $this->activo = (bool) $user->activo;
@@ -168,6 +184,9 @@ class UserForm extends Form
             'cif' => $this->cif,
             'telefono' => $this->telefono,
             'numero_empleado' => $this->numero_empleado,
+            'tasa_hora' => $this->tasa_hora === null || $this->tasa_hora === '' ? null : (float) str_replace(',', '.', $this->tasa_hora),
+            'tasa_extra' => $this->tasa_extra === null || $this->tasa_extra === '' ? null : (float) str_replace(',', '.', $this->tasa_extra),
+            'tasa_festivo' => $this->tasa_festivo === null || $this->tasa_festivo === '' ? null : (float) str_replace(',', '.', $this->tasa_festivo),
             'tipo_usuario' => $this->tipo_usuario,
             'cliente_id' => $this->tipo_usuario === 'externo' ? $this->cliente_id : null,
             'activo' => $this->activo,

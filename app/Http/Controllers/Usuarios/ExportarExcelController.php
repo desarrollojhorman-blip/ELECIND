@@ -23,6 +23,7 @@ class ExportarExcelController
         /** @var User|null $actor */
         $actor = auth()->user();
         $nivelActor = $actor?->nivelMaximo() ?? 0;
+        $puedeVerTarifas = $actor?->can('usuarios.gestionar_tarifas') ?? false;
 
         $export = new UsuariosExport(
             buscar: $buscar,
@@ -33,6 +34,7 @@ class ExportarExcelController
             ordenColumna: $ordenColumna,
             ordenDireccion: $ordenDireccion,
             nivelActor: $nivelActor,
+            puedeVerTarifas: $puedeVerTarifas,
         );
 
         $fecha = now()->format('Y-m-d');

@@ -28,6 +28,7 @@ class ExportarPdfController
         /** @var User|null $actor */
         $actor = auth()->user();
         $nivelActor = $actor?->nivelMaximo() ?? 0;
+        $puedeVerTarifas = $actor?->can('usuarios.gestionar_tarifas') ?? false;
 
         $query = User::query()->with(['roles:id,name', 'cliente:id,nombre']);
 
@@ -86,6 +87,7 @@ class ExportarPdfController
             'fecha' => now()->format('d/m/Y H:i'),
             'total' => $usuarios->count(),
             'filtrosActivos' => $this->describeFiltros($buscar, $filtroEstado, $filtroTipo, $filtroRol, $filtroEmpresa),
+            'puedeVerTarifas' => $puedeVerTarifas,
         ];
 
         $mpdf = new Mpdf([

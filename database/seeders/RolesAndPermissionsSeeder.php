@@ -67,6 +67,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'albaranes.invalidar_firma', // sólo superadmin borra firmas (auditoría legal)
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
+                'usuarios.gestionar_tarifas', // por defecto solo superadmin ve/modifica las tasas (dato sensible)
             ])
             ->pluck('name')
             ->all());
@@ -133,6 +134,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'usuarios.importar', 'ambito' => 'web', 'descripcion' => 'Importar usuarios desde Excel/CSV', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.imprimir', 'ambito' => 'web', 'descripcion' => 'Imprimir lista de usuarios', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.gestionar_papelera', 'ambito' => 'web', 'descripcion' => 'Ver papelera de usuarios y restaurar eliminados', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.gestionar_tarifas', 'ambito' => 'web', 'descripcion' => 'Ver y modificar las tasas (€/hora) de los usuarios', 'categoria' => 'usuarios'],
 
             // ─────────────── Clientes ───────────────
             ['name' => 'clientes.ver', 'ambito' => 'web', 'descripcion' => 'Ver clientes', 'categoria' => 'clientes'],

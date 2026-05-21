@@ -107,6 +107,11 @@
             <th style="width:8%">Rol</th>
             <th style="width:{{ $esH ? '11%' : '11%' }}">Empresa</th>
             <th style="width:4%">Act.</th>
+            @if ($puedeVerTarifas)
+                <th style="width:5%; text-align:right;">T. base</th>
+                <th style="width:5%; text-align:right;">T. extra</th>
+                <th style="width:5%; text-align:right;">T. fest.</th>
+            @endif
         </tr>
     </thead>
     <tbody>
@@ -130,10 +135,15 @@
                         <span class="badge-no">No</span>
                     @endif
                 </td>
+                @if ($puedeVerTarifas)
+                    <td style="text-align:right;">{{ $usuario->tasa_hora !== null ? number_format((float) $usuario->tasa_hora, 3, ',', '.') : '—' }}</td>
+                    <td style="text-align:right;">{{ $usuario->tasa_extra !== null ? number_format((float) $usuario->tasa_extra, 3, ',', '.') : '—' }}</td>
+                    <td style="text-align:right;">{{ $usuario->tasa_festivo !== null ? number_format((float) $usuario->tasa_festivo, 3, ',', '.') : '—' }}</td>
+                @endif
             </tr>
         @empty
             <tr>
-                <td colspan="12" style="text-align:center; color:#94a3b8; padding:5mm;">
+                <td colspan="{{ $puedeVerTarifas ? 15 : 12 }}" style="text-align:center; color:#94a3b8; padding:5mm;">
                     No hay usuarios con los filtros aplicados.
                 </td>
             </tr>

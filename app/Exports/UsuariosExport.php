@@ -22,6 +22,7 @@ class UsuariosExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
         private readonly string $ordenColumna,
         private readonly string $ordenDireccion,
         private readonly int $nivelActor,
+        private readonly bool $puedeVerTarifas = false,
     ) {}
 
     public function query(): Builder
@@ -75,7 +76,7 @@ class UsuariosExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
     /** @return array<int, string> */
     public function headings(): array
     {
-        return [
+        $base = [
             'ID',
             'Usuario',
             'Nombre',
@@ -90,12 +91,20 @@ class UsuariosExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
             'Empresa',
             'Activo',
         ];
+
+        if ($this->puedeVerTarifas) {
+            $base[] = 'Tasa base (€/h)';
+            $base[] = 'Tasa extra (€/h)';
+            $base[] = 'Tasa festivo (€/h)';
+        }
+
+        return $base;
     }
 
     /** @param User $row */
     public function map($row): array
     {
-        return [
+        $base = [
             $row->id,
             $row->username,
             $row->nombre,
@@ -110,6 +119,14 @@ class UsuariosExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMap
             $row->cliente?->nombre,
             $row->activo ? 'Sí' : 'No',
         ];
+
+        if ($this->puedeVerTarifas) {
+            $base[] = $row->tasa_hora !== null ? (float) $row->tasa_hora : null;
+            $base[] = $row->tasa_extra !== null ? (float) $row->tasa_extra : null;
+            $base[] = $row->tasa_festivo !== null ? (float) $row->tasa_festivo : null;
+        }
+
+        return $base;
     }
 
     public function styles(Worksheet $sheet): array

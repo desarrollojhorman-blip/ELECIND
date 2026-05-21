@@ -105,10 +105,27 @@
                 <x-ui.field label="Nº empleado">
                     <x-ui.input :value="$usuario->numero_empleado ?? '—'" readonly />
                 </x-ui.field>
+            </div>
 
-                <div class="md:col-span-2">
-                    <x-ui.checkbox :checked="$usuario->activo" label="Usuario activo" disabled />
+            {{-- Tasas (€/hora) — solo si tiene `usuarios.gestionar_tarifas`. --}}
+            @can('usuarios.gestionar_tarifas')
+                <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Tasas (€/hora)</h3>
+                <div class="grid gap-4 md:grid-cols-3">
+                    <x-ui.field label="Tasa base €/h">
+                        <x-ui.input :value="$usuario->tasa_hora !== null ? number_format((float) $usuario->tasa_hora, 3, ',', '.') : '—'" readonly />
+                    </x-ui.field>
+                    <x-ui.field label="Tasa extra €/h">
+                        <x-ui.input :value="$usuario->tasa_extra !== null ? number_format((float) $usuario->tasa_extra, 3, ',', '.') : '—'" readonly />
+                    </x-ui.field>
+                    <x-ui.field label="Tasa festivo €/h">
+                        <x-ui.input :value="$usuario->tasa_festivo !== null ? number_format((float) $usuario->tasa_festivo, 3, ',', '.') : '—'" readonly />
+                    </x-ui.field>
                 </div>
+            @endcan
+
+            {{-- Usuario activo: standalone al final, después de Tasas. --}}
+            <div class="mt-6 border-t border-slate-100 pt-4">
+                <x-ui.checkbox :checked="$usuario->activo" label="Usuario activo" disabled />
             </div>
         </div>
 
