@@ -26,7 +26,7 @@
 
             <x-slot:leftActions>
                 @can('create', App\Models\User::class)
-                    <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
+                    <x-ui.button as="a" href="{{ route('usuarios.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
                 @endcan
@@ -292,14 +292,18 @@
                             @else
                                 @can('view', $usuario)
                                     <x-ui.icon-button
-                                        wire:click="abrirVer({{ $usuario->id }})"
+                                        as="a"
+                                        href="{{ route('usuarios.ver', $usuario) }}"
+                                        wire:navigate
                                         icon="heroicon-o-eye"
                                         variant="neutral"
                                         tooltip="Ver detalle" />
                                 @endcan
                                 @can('update', $usuario)
                                     <x-ui.icon-button
-                                        wire:click="abrirEditar({{ $usuario->id }})"
+                                        as="a"
+                                        href="{{ route('usuarios.editar', $usuario) }}"
+                                        wire:navigate
                                         icon="heroicon-o-pencil-square"
                                         variant="info"
                                         tooltip="Editar" />
@@ -326,6 +330,7 @@
     <x-ui.modal
         :show="$modalAbierto"
         :title="$modoSoloLectura ? 'Ver usuario' : ($form->id ? 'Editar usuario' : 'Nuevo usuario')"
+        :badge="$form->id"
         close-action="cerrarModal"
         size="lg">
 
@@ -334,14 +339,6 @@
             <div>
                 <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Acceso y rol</h3>
                 <div class="grid gap-4 md:grid-cols-2">
-                    <x-ui.field label="ID" hint="Asignado por el sistema; no editable.">
-                        @if ($form->id !== null)
-                            <x-ui.input :value="$form->id" readonly />
-                        @else
-                            <x-ui.input value="—" readonly />
-                        @endif
-                    </x-ui.field>
-
                     <x-ui.field label="Usuario" required :error="$errors->first('form.username')">
                         <x-ui.input wire:model.live.debounce.500ms="form.username" :disabled="$modoSoloLectura" autofocus />
                     </x-ui.field>

@@ -46,6 +46,7 @@
         </button>
 
         @foreach ([
+            ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $cliente ? $this->albaranesDelCliente->count() : null],
             ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $cliente ? $this->proyectosDelCliente->count() : null],
             ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $cliente ? $this->usuariosDeLosProyectos->count() : null],
         ] as $t)
@@ -182,10 +183,10 @@
                                 <td class="px-6 py-3 text-right">
                                     <x-ui.icon-button
                                         as="a"
-                                        href="/proyectos/{{ $proyecto->id }}"
+                                        href="{{ route('proyectos.ver', $proyecto) }}"
                                         wire:navigate
                                         icon="heroicon-o-arrow-top-right-on-square"
-                                        variant="ghost"
+                                        variant="info"
                                         tooltip="Ver proyecto" />
                                 </td>
                             </tr>
@@ -232,6 +233,7 @@
                                     Estado <span class="text-[10px] opacity-70">{{ $ordenUsuarios === 'estado' ? ($dirUsuarios === 'asc' ? '▲' : '▼') : '↕' }}</span>
                                 </button>
                             </th>
+                            <th class="w-16 px-6 py-2.5 text-right">Ir</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -250,6 +252,84 @@
                                     @else
                                         <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
                                     @endif
+                                </td>
+                                <td class="px-6 py-3 text-right">
+                                    <x-ui.icon-button
+                                        as="a"
+                                        href="{{ route('usuarios.ver', $usuario) }}"
+                                        wire:navigate
+                                        icon="heroicon-o-arrow-top-right-on-square"
+                                        variant="info"
+                                        tooltip="Ver usuario" />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+    {{-- ═══ Tab: Albaranes ═══ --}}
+    <div x-show="tab === 'albaranes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <div class="px-6 py-4">
+            <span class="text-sm font-semibold text-slate-900">Albaranes vinculados</span>
+            <p class="mt-0.5 text-xs text-slate-400">Albaranes asociados a este cliente</p>
+        </div>
+
+        @if ($this->albaranesDelCliente->isEmpty())
+            <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                No hay albaranes asociados a este cliente.
+            </div>
+        @else
+            <div class="border-t border-slate-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                        <tr>
+                            <th class="w-32 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarAlbaranes('numero')" class="flex items-center gap-1 hover:opacity-80">
+                                    Número <span class="text-[10px] opacity-70">{{ $ordenAlbaranes === 'numero' ? ($dirAlbaranes === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-32 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarAlbaranes('fecha')" class="flex items-center gap-1 hover:opacity-80">
+                                    Fecha <span class="text-[10px] opacity-70">{{ $ordenAlbaranes === 'fecha' ? ($dirAlbaranes === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="px-6 py-2.5">
+                                <button type="button" wire:click="ordenarAlbaranes('proyecto')" class="flex items-center gap-1 hover:opacity-80">
+                                    Proyecto <span class="text-[10px] opacity-70">{{ $ordenAlbaranes === 'proyecto' ? ($dirAlbaranes === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-28 px-6 py-2.5">
+                                <button type="button" wire:click="ordenarAlbaranes('estado')" class="flex items-center gap-1 hover:opacity-80">
+                                    Estado <span class="text-[10px] opacity-70">{{ $ordenAlbaranes === 'estado' ? ($dirAlbaranes === 'asc' ? '▲' : '▼') : '↕' }}</span>
+                                </button>
+                            </th>
+                            <th class="w-16 px-6 py-2.5 text-right">Ir</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($this->albaranesDelCliente as $albaran)
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-3 font-mono text-xs text-slate-700">{{ $albaran->numero ?? '#'.$albaran->id }}</td>
+                                <td class="px-6 py-3 text-slate-500">{{ $albaran->fecha?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="px-6 py-3 text-slate-700">{{ $albaran->proyecto?->nombre ?? '—' }}</td>
+                                <td class="px-6 py-3">
+                                    @php $estado = $albaran->estado instanceof \BackedEnum ? $albaran->estado->value : (string) $albaran->estado; @endphp
+                                    <x-ui.badge :tone="match($estado) {
+                                        'firmado', 'facturado' => 'success',
+                                        'pendiente' => 'warning',
+                                        default => 'neutral'
+                                    }" dot>{{ ucfirst($estado) }}</x-ui.badge>
+                                </td>
+                                <td class="px-6 py-3 text-right">
+                                    <x-ui.icon-button
+                                        as="a"
+                                        href="{{ route('albaranes.ver', $albaran) }}"
+                                        wire:navigate
+                                        icon="heroicon-o-arrow-top-right-on-square"
+                                        variant="info"
+                                        tooltip="Ver albarán" />
                                 </td>
                             </tr>
                         @endforeach

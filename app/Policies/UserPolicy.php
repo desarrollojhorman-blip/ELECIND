@@ -76,8 +76,8 @@ class UserPolicy
         $proyectosResponsable = Proyecto::query()->where('responsable_principal_id', $target->getKey())->count();
         $proyectos = $proyectosAsignados + $proyectosResponsable;
 
-        $albaranesCreados = Albaran::query()->where('creador_id', $target->getKey())->count();
-        $albaranesEnLineas = AlbaranLineaPersonal::query()->where('usuario_id', $target->getKey())->distinct('albaran_id')->count('albaran_id');
+        $albaranesCreados = Albaran::query()->where('creado_por', $target->getKey())->count();
+        $albaranesEnLineas = AlbaranLineaPersonal::query()->where('trabajador_id', $target->getKey())->distinct('albaran_id')->count('albaran_id');
         $albaranes = $albaranesCreados + $albaranesEnLineas;
 
         if ($proyectos > 0 || $albaranes > 0) {

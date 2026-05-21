@@ -43,6 +43,9 @@ class Index extends Component
     #[Url(as: 'pp')]
     public int $porPagina = 25;
 
+    #[Url(as: 'papelera')]
+    public bool $verPapelera = false;
+
     public bool $panelFiltrosAbierto = false;
 
     public bool $modalAbierto = false;
@@ -56,6 +59,10 @@ class Index extends Component
     public function mount(): void
     {
         Gate::authorize('viewAny', Material::class);
+
+        if ($this->verPapelera && ! $this->puedeVerPapelera) {
+            $this->verPapelera = false;
+        }
     }
 
     public function updatedBuscar(): void
@@ -231,6 +238,18 @@ class Index extends Component
     }
 
     #[Computed]
+    public function puedeVerPapelera(): bool
+    {
+        return auth()->user()?->can('materiales.modificar') ?? false;
+    }
+
+    #[Computed]
+    public function totalPapelera(): int
+    {
+        return Material::onlyTrashed()->count();
+    }
+
+    #[Computed]
     public function filtrosAplicados(): int
     {
         return ($this->filtroPedido !== '' ? 1 : 0) + ($this->filtroFamilia !== '' ? 1 : 0);
@@ -261,7 +280,11 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = Material::query()->with(['numeroPedido', 'familia']);
+        $modoPapelera = $this->verPapelera && $this->puedeVerPapelera;
+
+        $query = $modoPapelera
+            ? Material::onlyTrashed()->with(['numeroPedido', 'familia'])
+            : Material::query()->with(['numeroPedido', 'familia']);
 
         if ($this->filtroPedido !== '') {
             $query->where('numero_pedido_id', $this->filtroPedido);

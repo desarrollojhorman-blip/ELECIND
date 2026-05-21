@@ -104,7 +104,19 @@
       "Bash(xargs grep -i \"new Pdf\\\\|new mPdf\\\\|PDF::\")",
       "Bash(xargs grep -l \"albaranes.*pdf\\\\|descargar.*pdf\\\\|exportar.*pdf\" -i)",
       "Bash(xargs grep -l \"albaranPDF\\\\|AlbaranPDF\\\\|PDFAlbaran\")",
-      "PowerShell(D:\\\\xampp\\\\php\\\\php.exe -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Http\\\\Controllers\\\\Clientes\\\\ExportarPdfController.php\")"
+      "PowerShell(D:\\\\xampp\\\\php\\\\php.exe -l \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Http\\\\Controllers\\\\Clientes\\\\ExportarPdfController.php\")",
+      "Bash(D:/xampp/php/php.exe -l app/Livewire/Usuarios/Ver.php)",
+      "Bash(D:/xampp/php/php.exe -r \"echo '';\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\({...p.dependencies,...p.devDependencies}, null, 2\\)\\)\")",
+      "Bash(D:/xampp/php/php.exe -l app/Livewire/Usuarios/Editar.php)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Usuarios\\\\Editar.php\")",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Clientes\\\\Editar.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Usuarios\\\\Editar.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Clientes\\\\Editar.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Ver.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Editar.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Models\\\\Material.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Index.php\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"

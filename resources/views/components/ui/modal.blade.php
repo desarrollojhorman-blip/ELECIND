@@ -1,6 +1,7 @@
 @props([
     'show' => false,
     'title' => null,
+    'badge' => null,
     'size' => 'lg',
     'closeAction' => null,
 ])
@@ -22,8 +23,11 @@
              wire:click.stop>
             @if ($title || $closeAction)
                 <div class="flex shrink-0 items-center justify-between rounded-t-lg border-b border-accent-200 bg-accent-100 px-5 py-3">
-                    <h3 class="text-base font-semibold text-primary-800">
+                    <h3 class="flex items-center gap-2 text-base font-semibold text-primary-800">
                         {{ $title }}
+                        @if ($badge !== null)
+                            <span class="font-mono text-base font-normal text-slate-400">#{{ $badge }}</span>
+                        @endif
                     </h3>
                     @if ($closeAction)
                         <button type="button"

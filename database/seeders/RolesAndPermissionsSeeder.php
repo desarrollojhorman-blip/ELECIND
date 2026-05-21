@@ -64,7 +64,6 @@ class RolesAndPermissionsSeeder extends Seeder
             ->whereIn('ambito', ['web', 'ambos'])
             ->whereNotIn('name', [
                 'usuarios.crear_superadmin',
-                'usuarios.eliminar',       // sólo superadmin elimina usuarios
                 'albaranes.invalidar_firma', // sólo superadmin borra firmas (auditoría legal)
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios

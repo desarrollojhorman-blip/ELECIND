@@ -16,7 +16,7 @@
 
             <x-slot:leftActions>
                 @can('create', App\Models\Material::class)
-                    <x-ui.button variant="success" wire:click="abrirCrear" icon="heroicon-o-plus">
+                    <x-ui.button as="a" href="{{ route('materiales.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
                 @endcan
@@ -37,6 +37,19 @@
                         Imprimir lista
                     </x-ui.actions-menu-item>
                 </x-ui.actions-menu>
+
+                @if ($this->puedeVerPapelera)
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <input type="checkbox"
+                               wire:model.live="verPapelera"
+                               class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                        <x-heroicon-o-archive-box class="size-4" />
+                        <span>Papelera</span>
+                        @if ($this->totalPapelera > 0)
+                            <span class="text-xs font-semibold text-slate-500">({{ $this->totalPapelera }})</span>
+                        @endif
+                    </label>
+                @endif
             </x-slot:leftActions>
 
             <div class="grid gap-3 md:grid-cols-2">
@@ -87,6 +100,22 @@
     </div>
 
     {{-- Tabla --}}
+    @if ($verPapelera && $this->puedeVerPapelera)
+        <div class="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <x-heroicon-o-archive-box class="mt-0.5 size-4 shrink-0" />
+            <p class="flex-1">
+                <strong>Modo Papelera</strong> — viendo
+                {{ $this->totalPapelera }}
+                {{ $this->totalPapelera === 1 ? 'material eliminado' : 'materiales eliminados' }}.
+            </p>
+            <button type="button"
+                    wire:click="$set('verPapelera', false)"
+                    class="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
+                Salir
+            </button>
+        </div>
+    @endif
+
     <div class="mb-3 flex items-center justify-between">
         <div class="flex shrink-0 items-center gap-2">
             <span class="text-xs text-slate-500">Filas:</span>
@@ -166,11 +195,11 @@
                                 @endcan
                             @else
                                 @can('view', $material)
-                                    <x-ui.icon-button wire:click="abrirVer({{ $material->id }})"
+                                    <x-ui.icon-button as="a" href="{{ route('materiales.ver', $material) }}" wire:navigate
                                         icon="heroicon-o-eye" variant="secondary" tooltip="Ver" />
                                 @endcan
                                 @can('update', $material)
-                                    <x-ui.icon-button wire:click="abrirEditar({{ $material->id }})"
+                                    <x-ui.icon-button as="a" href="{{ route('materiales.editar', $material) }}" wire:navigate
                                         icon="heroicon-o-pencil-square" variant="info" tooltip="Editar" />
                                 @endcan
                                 @can('delete', $material)

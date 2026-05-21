@@ -3,9 +3,11 @@
 namespace App\Livewire\Conceptos;
 
 use App\Livewire\Forms\ConceptoForm;
+use App\Models\Albaran;
 use App\Models\Concepto;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -190,6 +192,34 @@ class Index extends Component
         $concepto->restore();
 
         session()->flash('status', "Concepto «{$concepto->nombre}» restaurado.");
+    }
+
+    #[Computed]
+    public function albaranesDelConcepto(): Collection
+    {
+        if (! $this->form->id) {
+            return collect();
+        }
+
+        return Albaran::where('concepto_id', $this->form->id)
+            ->with(['proyecto:id,nombre', 'cliente:id,nombre'])
+            ->orderBy('fecha', 'desc')
+            ->get(['id', 'numero', 'fecha', 'proyecto_id', 'cliente_id', 'estado']);
+    }
+
+    #[Computed]
+    public function proyectosDelConcepto(): Collection
+    {
+        if (! $this->form->id) {
+            return collect();
+        }
+
+        return Concepto::withTrashed()->find($this->form->id)
+            ?->proyectos()
+            ->with('cliente:id,nombre')
+            ->orderBy('nombre')
+            ->get(['proyectos.id', 'nombre', 'codigo', 'cliente_id', 'estado'])
+            ?? collect();
     }
 
     #[Computed]

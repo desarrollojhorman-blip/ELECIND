@@ -19,17 +19,21 @@ use App\Livewire\Clientes\Ver as ClientesVer;
 use App\Livewire\Conceptos\Index as ConceptosIndex;
 use App\Livewire\Configuracion\Ajustes as ConfiguracionAjustes;
 use App\Livewire\Empresa\Edit as EmpresaEdit;
+use App\Livewire\Materiales\Editar as MaterialesEditar;
 use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
 use App\Livewire\Materiales\Index as MaterialesIndex;
 use App\Livewire\Materiales\NumeroPedidos\Index as NumeroPedidosIndex;
+use App\Livewire\Materiales\Ver as MaterialesVer;
 use App\Livewire\Perfil\MiPerfil;
 use App\Livewire\Proyectos\Editar as ProyectosEditar;
 use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Roles\Index as RolesIndex;
+use App\Livewire\Usuarios\Editar as UsuariosEditar;
 use App\Livewire\Usuarios\Importar as UsuariosImportar;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
+use App\Livewire\Usuarios\Ver as UsuariosVer;
 use Illuminate\Support\Facades\Route;
 
 // API ligera — accesible desde móvil y web (solo necesita auth)
@@ -140,9 +144,25 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->middleware('can:materiales.ver')
         ->name('materiales.index');
 
+    Route::get('/materiales/crear', MaterialesEditar::class)
+        ->middleware('can:materiales.crear')
+        ->name('materiales.crear');
+
+    Route::get('/materiales/{material}', MaterialesVer::class)
+        ->middleware('can:materiales.ver')
+        ->name('materiales.ver');
+
+    Route::get('/materiales/{material}/editar', MaterialesEditar::class)
+        ->middleware('can:materiales.modificar')
+        ->name('materiales.editar');
+
     Route::get('/usuarios', UsuariosIndex::class)
         ->middleware('can:usuarios.ver_todos')
         ->name('usuarios.index');
+
+    Route::get('/usuarios/crear', UsuariosEditar::class)
+        ->middleware('can:usuarios.ver_todos')
+        ->name('usuarios.crear');
 
     Route::get('/usuarios/importar', UsuariosImportar::class)
         ->middleware('can:usuarios.importar')
@@ -156,6 +176,14 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->where('orientacion', 'vertical|horizontal')
         ->middleware('can:usuarios.exportar')
         ->name('usuarios.exportar.pdf');
+
+    Route::get('/usuarios/{usuario}', UsuariosVer::class)
+        ->middleware('can:usuarios.ver_todos')
+        ->name('usuarios.ver');
+
+    Route::get('/usuarios/{usuario}/editar', UsuariosEditar::class)
+        ->middleware('can:usuarios.ver_todos')
+        ->name('usuarios.editar');
 
     Route::get('/conceptos', ConceptosIndex::class)
         ->middleware('can:conceptos.ver')

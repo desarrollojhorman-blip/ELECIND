@@ -154,7 +154,7 @@
         :show="$modalAbierto"
         :title="$form->id ? 'Editar concepto' : 'Nuevo concepto'"
         close-action="cerrarModal"
-        size="md">
+        :size="$form->id ? 'lg' : 'md'">
 
         <form wire:submit="guardar" id="form-concepto" class="space-y-4">
             <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
@@ -167,6 +167,121 @@
 
             <x-ui.checkbox wire:model="form.activo" label="Concepto activo" />
         </form>
+
+        @if ($form->id)
+            <div class="mt-5 border-t border-slate-200 pt-4 space-y-3">
+
+                {{-- Albaranes vinculados --}}
+                <div x-data="{ abierto: false }">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Albaranes vinculados
+                            <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+                                {{ $this->albaranesDelConcepto->count() }}
+                            </span>
+                        </h4>
+                        <button type="button" x-on:click="abierto = !abierto"
+                                class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                x-bind:title="abierto ? 'Plegar' : 'Desplegar'">
+                            <x-heroicon-o-chevron-down x-bind:class="abierto ? 'rotate-180' : ''"
+                                                       class="size-4 transition-transform" />
+                        </button>
+                    </div>
+
+                    <div x-show="abierto" x-cloak x-transition class="mt-2">
+                        @if ($this->albaranesDelConcepto->isEmpty())
+                            <p class="text-sm text-slate-400">No hay albaranes vinculados a este concepto.</p>
+                        @else
+                            <div class="overflow-hidden rounded-md border border-slate-200">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left">Número</th>
+                                            <th class="px-3 py-2 text-left">Fecha</th>
+                                            <th class="px-3 py-2 text-left">Proyecto</th>
+                                            <th class="px-3 py-2 text-left">Estado</th>
+                                            <th class="px-3 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach ($this->albaranesDelConcepto as $albaran)
+                                            <tr wire:key="alb-conc-{{ $albaran->id }}" class="hover:bg-slate-50">
+                                                <td class="px-3 py-2 font-mono text-xs text-slate-700">{{ $albaran->numero ?? '#'.$albaran->id }}</td>
+                                                <td class="px-3 py-2 text-slate-500">{{ $albaran->fecha?->format('d/m/Y') ?? '—' }}</td>
+                                                <td class="px-3 py-2 text-slate-700">{{ $albaran->proyecto?->nombre ?? '—' }}</td>
+                                                <td class="px-3 py-2">
+                                                    @php $est = $albaran->estado instanceof \BackedEnum ? $albaran->estado->value : (string) $albaran->estado; @endphp
+                                                    <x-ui.badge :tone="match($est) { 'firmado','facturado' => 'success', 'pendiente' => 'warning', default => 'neutral' }" dot>
+                                                        {{ ucfirst($est) }}
+                                                    </x-ui.badge>
+                                                </td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <x-ui.icon-button as="a" href="{{ route('albaranes.ver', $albaran) }}" wire:navigate
+                                                        icon="heroicon-o-arrow-top-right-on-square" variant="info" tooltip="Ver albarán" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Proyectos vinculados --}}
+                <div x-data="{ abierto: false }">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Proyectos vinculados
+                            <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+                                {{ $this->proyectosDelConcepto->count() }}
+                            </span>
+                        </h4>
+                        <button type="button" x-on:click="abierto = !abierto"
+                                class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                x-bind:title="abierto ? 'Plegar' : 'Desplegar'">
+                            <x-heroicon-o-chevron-down x-bind:class="abierto ? 'rotate-180' : ''"
+                                                       class="size-4 transition-transform" />
+                        </button>
+                    </div>
+
+                    <div x-show="abierto" x-cloak x-transition class="mt-2">
+                        @if ($this->proyectosDelConcepto->isEmpty())
+                            <p class="text-sm text-slate-400">No hay proyectos vinculados a este concepto.</p>
+                        @else
+                            <div class="overflow-hidden rounded-md border border-slate-200">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left">Proyecto</th>
+                                            <th class="px-3 py-2 text-left">Código</th>
+                                            <th class="px-3 py-2 text-left">Cliente</th>
+                                            <th class="px-3 py-2 text-left">Estado</th>
+                                            <th class="px-3 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach ($this->proyectosDelConcepto as $proyecto)
+                                            <tr wire:key="proy-conc-{{ $proyecto->id }}" class="hover:bg-slate-50">
+                                                <td class="px-3 py-2 font-medium text-slate-800">{{ $proyecto->nombre }}</td>
+                                                <td class="px-3 py-2 font-mono text-xs text-slate-500">{{ $proyecto->codigo ?? '—' }}</td>
+                                                <td class="px-3 py-2 text-slate-500">{{ $proyecto->cliente?->nombre ?? '—' }}</td>
+                                                <td class="px-3 py-2 text-slate-500">{{ $proyecto->estado ? ucfirst($proyecto->estado) : '—' }}</td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <x-ui.icon-button as="a" href="{{ route('proyectos.ver', $proyecto) }}" wire:navigate
+                                                        icon="heroicon-o-arrow-top-right-on-square" variant="info" tooltip="Ver proyecto" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+        @endif
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cerrarModal">

@@ -3,6 +3,7 @@
 namespace App\Livewire\Clientes;
 
 use App\Livewire\Forms\ClienteForm;
+use App\Models\Albaran;
 use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\User;
@@ -135,6 +136,10 @@ class Editar extends Component
 
     public string $dirUsuarios = 'asc';
 
+    public string $ordenAlbaranes = 'fecha';
+
+    public string $dirAlbaranes = 'desc';
+
     public function ordenarProyectos(string $campo): void
     {
         if ($this->ordenProyectos === $campo) {
@@ -152,6 +157,16 @@ class Editar extends Component
         } else {
             $this->ordenUsuarios = $campo;
             $this->dirUsuarios = 'asc';
+        }
+    }
+
+    public function ordenarAlbaranes(string $campo): void
+    {
+        if ($this->ordenAlbaranes === $campo) {
+            $this->dirAlbaranes = $this->dirAlbaranes === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->ordenAlbaranes = $campo;
+            $this->dirAlbaranes = 'asc';
         }
     }
 
@@ -206,6 +221,31 @@ class Editar extends Component
         return $this->dirUsuarios === 'desc'
             ? $usuarios->sortByDesc($clave, SORT_NATURAL | SORT_FLAG_CASE)->values()
             : $usuarios->sortBy($clave, SORT_NATURAL | SORT_FLAG_CASE)->values();
+    }
+
+    /** @return Collection<int, Albaran> */
+    #[Computed]
+    public function albaranesDelCliente(): Collection
+    {
+        if ($this->cliente === null) {
+            return collect();
+        }
+
+        $albaranes = Albaran::query()
+            ->where('cliente_id', $this->cliente->id)
+            ->with(['proyecto:id,nombre'])
+            ->get(['id', 'numero', 'fecha', 'estado', 'proyecto_id', 'cliente_id', 'creado_por']);
+
+        $clave = match ($this->ordenAlbaranes) {
+            'numero'   => fn (Albaran $a): string => (string) ($a->numero ?? ''),
+            'proyecto' => fn (Albaran $a): string => (string) ($a->proyecto?->nombre ?? ''),
+            'estado'   => fn (Albaran $a): string => $a->estado instanceof \BackedEnum ? $a->estado->value : (string) $a->estado,
+            default    => fn (Albaran $a): string => (string) ($a->fecha ?? ''),
+        };
+
+        return $this->dirAlbaranes === 'desc'
+            ? $albaranes->sortByDesc($clave, SORT_NATURAL | SORT_FLAG_CASE)->values()
+            : $albaranes->sortBy($clave, SORT_NATURAL | SORT_FLAG_CASE)->values();
     }
 
     public function render(): View
