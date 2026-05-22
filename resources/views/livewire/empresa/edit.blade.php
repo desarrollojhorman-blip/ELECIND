@@ -13,9 +13,8 @@
             <span class="text-sm font-medium text-slate-700">Guardando…</span>
         </div>
     </div>
-
+  
     <div class="space-y-5">
-
         {{-- ─── Datos fiscales y de contacto ─── --}}
         <x-ui.card>
             <h3 class="mb-3 text-sm font-semibold text-slate-900">Datos fiscales y de contacto</h3>
@@ -174,4 +173,5 @@
         </div>
 
     </div>
+
 </div>

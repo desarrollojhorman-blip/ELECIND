@@ -66,7 +66,7 @@
             'permission' => null,
             'children' => [
                 [
-                    'label' => 'Nº Pedido',
+                    'label' => 'Pedidos',
                     'route' => 'materiales.pedidos',
                     'key' => 'pedidos',
                     'permission' => 'pedidos.ver',

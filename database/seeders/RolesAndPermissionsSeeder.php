@@ -67,6 +67,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'albaranes.invalidar_firma', // sólo superadmin borra firmas (auditoría legal)
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
+                'conceptos.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de conceptos
                 'usuarios.gestionar_tarifas', // por defecto solo superadmin ve/modifica las tasas (dato sensible)
                 'materiales.gestionar_precios', // por defecto solo superadmin ve/modifica los precios (dato sensible)
             ])
@@ -187,6 +188,9 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'conceptos.crear', 'ambito' => 'web', 'descripcion' => 'Crear conceptos', 'categoria' => 'conceptos'],
             ['name' => 'conceptos.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar conceptos', 'categoria' => 'conceptos'],
             ['name' => 'conceptos.eliminar', 'ambito' => 'web', 'descripcion' => 'Eliminar conceptos', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.gestionar_papelera', 'ambito' => 'web', 'descripcion' => 'Ver papelera de conceptos y restaurar eliminados', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar conceptos a Excel/PDF', 'categoria' => 'conceptos'],
+            ['name' => 'conceptos.importar', 'ambito' => 'web', 'descripcion' => 'Importar conceptos desde Excel/CSV', 'categoria' => 'conceptos'],
 
             // ─────────────── Stock ───────────────
             ['name' => 'stock.entrada', 'ambito' => 'web', 'descripcion' => 'Registrar entradas de stock', 'categoria' => 'stock'],

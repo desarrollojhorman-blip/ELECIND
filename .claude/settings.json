@@ -78,7 +78,15 @@
       "Bash(php -l app/Observers/AlbaranObserver.php)",
       "Bash(php -l app/Providers/AppServiceProvider.php)",
       "Bash(php -l app/Livewire/Forms/MaterialForm.php)",
-      "Bash(./vendor/bin/pint database/factories/UserFactory.php database/factories/MaterialFactory.php database/seeders/AdminUsersSeeder.php)"
+      "Bash(./vendor/bin/pint database/factories/UserFactory.php database/factories/MaterialFactory.php database/seeders/AdminUsersSeeder.php)",
+      "Bash(php -l app/Livewire/Pedidos/Editar.php)",
+      "Bash(php -l app/Livewire/Pedidos/Ver.php)",
+      "Bash(php -l app/Livewire/Materiales/NumeroPedidos/Index.php)",
+      "Bash(php -l routes/web.php)",
+      "Bash(./vendor/bin/pint app/Livewire/Pedidos/Editar.php app/Livewire/Pedidos/Ver.php app/Livewire/Materiales/NumeroPedidos/Index.php routes/web.php)",
+      "PowerShell(php artisan view:cache)",
+      "PowerShell(php artisan db:seed --class=RolesAndPermissionsSeeder --force)",
+      "PowerShell(php artisan route:clear)"
     ],
     "additionalDirectories": [
       "\\tmp",

@@ -1,4 +1,12 @@
-<div>
+<div x-data
+     x-on:descargar.window="
+        const a = document.createElement('a');
+        a.href = $event.detail.url;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+     ">
     <x-ui.page-header title="Conceptos" subtitle="Catálogo global de conceptos asignables a proyectos." />
 
     {{-- Toolbar --}}
@@ -22,24 +30,97 @@
                 @endcan
 
                 <x-ui.actions-menu label="Acciones" icon="heroicon-o-bars-3">
-                    <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Pronto">
-                        Importar desde Excel/CSV
-                    </x-ui.actions-menu-item>
+                    @can('conceptos.importar')
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray"
+                                                href="{{ route('conceptos.importar') }}" wire:navigate>
+                            Importar Excel
+                        </x-ui.actions-menu-item>
+                    @else
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-up-tray" disabled badge="Sin permiso">
+                            Importar Excel
+                        </x-ui.actions-menu-item>
+                    @endcan
                     <x-ui.actions-menu-divider />
-                    <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Pronto">
-                        Exportar a Excel
-                    </x-ui.actions-menu-item>
+                    @can('conceptos.exportar')
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray"
+                                                wire:click="exportarExcel"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarExcel">
+                            <span wire:loading.remove wire:target="exportarExcel">Exportar a Excel</span>
+                            <span wire:loading wire:target="exportarExcel" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
+                                                wire:click="exportarPdf('vertical')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarPdf('vertical')">
+                            <span wire:loading.remove wire:target="exportarPdf('vertical')">PDF Vertical</span>
+                            <span wire:loading wire:target="exportarPdf('vertical')" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down"
+                                                wire:click="exportarPdf('horizontal')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="exportarPdf('horizontal')">
+                            <span wire:loading.remove wire:target="exportarPdf('horizontal')">PDF Horizontal</span>
+                            <span wire:loading wire:target="exportarPdf('horizontal')" class="inline-flex items-center gap-2">
+                                <x-heroicon-o-arrow-path class="size-3 animate-spin" />
+                                Generando…
+                            </span>
+                        </x-ui.actions-menu-item>
+                    @else
+                        <x-ui.actions-menu-item icon="heroicon-o-arrow-down-tray" disabled badge="Sin permiso">
+                            Exportar a Excel
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Sin permiso">
+                            PDF Vertical
+                        </x-ui.actions-menu-item>
+                        <x-ui.actions-menu-item icon="heroicon-o-document-arrow-down" disabled badge="Sin permiso">
+                            PDF Horizontal
+                        </x-ui.actions-menu-item>
+                    @endcan
                 </x-ui.actions-menu>
+
+                {{-- Toggle Papelera: solo visible con `conceptos.gestionar_papelera`. --}}
+                @if ($this->puedeVerPapelera)
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <input type="checkbox"
+                               wire:model.live="verPapelera"
+                               class="rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                        <x-heroicon-o-archive-box class="size-4" />
+                        <span>Papelera</span>
+                        @if ($this->totalPapelera > 0)
+                            <span class="text-xs font-semibold text-slate-500">({{ $this->totalPapelera }})</span>
+                        @endif
+                    </label>
+                @endif
             </x-slot:leftActions>
 
             <div class="grid gap-3 md:grid-cols-2">
                 <x-ui.field label="Estado">
-                    <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
-                        <option value="activos">Activos</option>
-                        <option value="inactivos">Inactivos</option>
-                        <option value="todos">Todos</option>
-                        <option value="papelera">En papelera</option>
-                    </x-ui.select>
+                    {{-- Dos bloques: directivas Blade dentro de los atributos
+                         de un <x-componente> rompen el parser. --}}
+                    @if ($verPapelera && $this->puedeVerPapelera)
+                        <x-ui.select wire:key="estado-{{ $resetKey }}"
+                                     wire:model.live="filtroEstado"
+                                     disabled>
+                            <option value="">Todos</option>
+                            <option value="activos">Activos</option>
+                            <option value="inactivos">Inactivos</option>
+                        </x-ui.select>
+                        <p class="text-xs text-slate-400">Ignorado en modo Papelera.</p>
+                    @else
+                        <x-ui.select wire:key="estado-{{ $resetKey }}"
+                                     wire:model.live="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="activos">Activos</option>
+                            <option value="inactivos">Inactivos</option>
+                        </x-ui.select>
+                    @endif
                 </x-ui.field>
             </div>
 
@@ -76,14 +157,18 @@
         </div>
         {{ $conceptos->links() }}
     </div>
-    <x-ui.data-table :colspan="5" empty="No hay conceptos que coincidan con los filtros aplicados.">
+    <x-ui.data-table :colspan="7" empty="No hay conceptos que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
+                <x-ui.sortable-header column="id" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    ID
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre
                 </x-ui.sortable-header>
                 <x-ui.sortable-header>Descripción</x-ui.sortable-header>
                 <x-ui.sortable-header>Proyectos</x-ui.sortable-header>
+                <x-ui.sortable-header>Albaranes</x-ui.sortable-header>
                 <x-ui.sortable-header column="activo" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Estado
                 </x-ui.sortable-header>
@@ -94,6 +179,7 @@
         <x-slot:rows>
             @foreach ($conceptos as $concepto)
                 <tr wire:key="concepto-{{ $concepto->id }}" class="transition-colors hover:bg-slate-50">
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ $concepto->id }}</td>
                     <td class="px-4 py-3">
                         <div class="font-medium text-slate-900">{{ $concepto->nombre }}</div>
                     </td>
@@ -107,18 +193,43 @@
                     <td class="px-4 py-3 text-slate-600">
                         <x-ui.badge tone="neutral">{{ $concepto->proyectos_count }}</x-ui.badge>
                     </td>
+                    <td class="px-4 py-3 text-slate-600">
+                        <x-ui.badge tone="neutral">{{ $concepto->albaranes_count }}</x-ui.badge>
+                    </td>
                     <td class="px-4 py-3">
                         @if ($concepto->trashed())
                             <x-ui.badge tone="danger" dot>Eliminado</x-ui.badge>
-                        @elseif ($concepto->activo)
-                            <x-ui.badge tone="success" dot>Activo</x-ui.badge>
                         @else
-                            <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
+                            @can('update', $concepto)
+                                <button type="button"
+                                        wire:click="toggleActivo({{ $concepto->id }})"
+                                        class="group inline-flex items-center"
+                                        title="{{ $concepto->activo ? 'Pulsa para desactivar (saldrá de los selectores)' : 'Pulsa para activar' }}">
+                                    @if ($concepto->activo)
+                                        <x-ui.badge tone="success" dot class="cursor-pointer transition-opacity group-hover:opacity-70">Activo</x-ui.badge>
+                                    @else
+                                        <x-ui.badge tone="neutral" dot class="cursor-pointer transition-opacity group-hover:opacity-70">Inactivo</x-ui.badge>
+                                    @endif
+                                </button>
+                            @else
+                                @if ($concepto->activo)
+                                    <x-ui.badge tone="success" dot>Activo</x-ui.badge>
+                                @else
+                                    <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
+                                @endif
+                            @endcan
                         @endif
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
                             @if ($concepto->trashed())
+                                @can('view', $concepto)
+                                    <x-ui.icon-button
+                                        wire:click="abrirVer({{ $concepto->id }})"
+                                        icon="heroicon-o-eye"
+                                        variant="ghost"
+                                        tooltip="Ver" />
+                                @endcan
                                 @can('restore', $concepto)
                                     <x-ui.icon-button
                                         wire:click="restaurar({{ $concepto->id }})"
@@ -127,6 +238,13 @@
                                         tooltip="Restaurar" />
                                 @endcan
                             @else
+                                @can('view', $concepto)
+                                    <x-ui.icon-button
+                                        wire:click="abrirVer({{ $concepto->id }})"
+                                        icon="heroicon-o-eye"
+                                        variant="ghost"
+                                        tooltip="Ver" />
+                                @endcan
                                 @can('update', $concepto)
                                     <x-ui.icon-button
                                         wire:click="abrirEditar({{ $concepto->id }})"
@@ -134,7 +252,10 @@
                                         variant="info"
                                         tooltip="Editar" />
                                 @endcan
-                                @can('delete', $concepto)
+                                @can('conceptos.eliminar')
+                                    {{-- @can('conceptos.eliminar') en lugar de @can('delete'): el botón se muestra
+                                         a todo el que tenga permiso. El chequeo de dependencias va al pulsar
+                                         (Policy + Gate::inspect). --}}
                                     <x-ui.icon-button
                                         wire:click="confirmarEliminar({{ $concepto->id }})"
                                         icon="heroicon-o-trash"
@@ -149,23 +270,35 @@
         </x-slot:rows>
     </x-ui.data-table>
 
-    {{-- Modal crear/editar --}}
+    {{-- Modal crear/editar/ver --}}
     <x-ui.modal
         :show="$modalAbierto"
-        :title="$form->id ? 'Editar concepto' : 'Nuevo concepto'"
+        :title="$soloLectura ? 'Ver concepto' : ($form->id ? 'Editar concepto' : 'Nuevo concepto')"
         close-action="cerrarModal"
         :size="$form->id ? 'lg' : 'md'">
 
         <form wire:submit="guardar" id="form-concepto" class="space-y-4">
             <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                <x-ui.input wire:model="form.nombre" autofocus />
+                @if ($soloLectura)
+                    <x-ui.input wire:model="form.nombre" readonly />
+                @else
+                    <x-ui.input wire:model="form.nombre" autofocus />
+                @endif
             </x-ui.field>
 
             <x-ui.field label="Descripción" :error="$errors->first('form.descripcion')">
-                <x-ui.textarea wire:model="form.descripcion" rows="3" />
+                @if ($soloLectura)
+                    <x-ui.textarea wire:model="form.descripcion" rows="3" readonly />
+                @else
+                    <x-ui.textarea wire:model="form.descripcion" rows="3" />
+                @endif
             </x-ui.field>
 
-            <x-ui.checkbox wire:model="form.activo" label="Concepto activo" />
+            @if ($soloLectura)
+                <x-ui.checkbox wire:model="form.activo" label="Concepto activo" disabled />
+            @else
+                <x-ui.checkbox wire:model="form.activo" label="Concepto activo" />
+            @endif
         </form>
 
         @if ($form->id)
@@ -285,11 +418,13 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cerrarModal">
-                Cancelar
+                {{ $soloLectura ? 'Cerrar' : 'Cancelar' }}
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-concepto" wire:loading.attr="disabled">
-                Guardar
-            </x-ui.button>
+            @unless ($soloLectura)
+                <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-concepto" wire:loading.attr="disabled">
+                    Guardar
+                </x-ui.button>
+            @endunless
         </x-slot:footer>
     </x-ui.modal>
 
@@ -304,13 +439,28 @@
             <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
                 <x-heroicon-o-exclamation-triangle class="size-5" />
             </div>
-            <div>
+            <div class="space-y-2">
                 <p class="text-sm text-slate-700">
                     Esta acción enviará el concepto a la <strong>papelera</strong>.
                 </p>
-                <p class="mt-1 text-sm text-slate-500">
-                    Las asignaciones a proyectos se mantienen pero el concepto dejará de aparecer en los selectores.
-                </p>
+
+                @if ($confirmarEliminarProyectosCount > 0)
+                    <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        <p class="font-medium">
+                            Se quitará de
+                            {{ $confirmarEliminarProyectosCount }}
+                            {{ $confirmarEliminarProyectosCount === 1 ? 'proyecto' : 'proyectos' }}.
+                        </p>
+                        <p class="mt-0.5 text-amber-700">
+                            Los proyectos no se borran; solo dejan de tener este concepto disponible.
+                            Si quieres seguir conservándolo, mejor <strong>desactívalo</strong> desde Editar.
+                        </p>
+                    </div>
+                @else
+                    <p class="text-sm text-slate-500">
+                        El concepto dejará de aparecer en los selectores.
+                    </p>
+                @endif
             </div>
         </div>
 

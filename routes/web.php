@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\ProyectoOpcionesController;
 use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExcel;
 use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
+use App\Http\Controllers\Conceptos\ExportarExcelController as ConceptosExportarExcel;
+use App\Http\Controllers\Conceptos\ExportarPdfController as ConceptosExportarPdf;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Usuarios\ExportarExcelController as UsuariosExportarExcel;
 use App\Http\Controllers\Usuarios\ExportarPdfController as UsuariosExportarPdf;
@@ -16,6 +18,7 @@ use App\Livewire\Clientes\Editar as ClientesEditar;
 use App\Livewire\Clientes\Importar as ClientesImportar;
 use App\Livewire\Clientes\Index as ClientesIndex;
 use App\Livewire\Clientes\Ver as ClientesVer;
+use App\Livewire\Conceptos\Importar as ConceptosImportar;
 use App\Livewire\Conceptos\Index as ConceptosIndex;
 use App\Livewire\Configuracion\Ajustes as ConfiguracionAjustes;
 use App\Livewire\Empresa\Edit as EmpresaEdit;
@@ -24,6 +27,8 @@ use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
 use App\Livewire\Materiales\Index as MaterialesIndex;
 use App\Livewire\Materiales\NumeroPedidos\Index as NumeroPedidosIndex;
 use App\Livewire\Materiales\Ver as MaterialesVer;
+use App\Livewire\Pedidos\Editar as PedidosEditar;
+use App\Livewire\Pedidos\Ver as PedidosVer;
 use App\Livewire\Perfil\MiPerfil;
 use App\Livewire\Proyectos\Editar as ProyectosEditar;
 use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
@@ -136,6 +141,18 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->middleware('can:pedidos.ver')
         ->name('materiales.pedidos');
 
+    Route::get('/materiales/pedidos/crear', PedidosEditar::class)
+        ->middleware('can:pedidos.crear')
+        ->name('pedidos.crear');
+
+    Route::get('/materiales/pedidos/{pedido}', PedidosVer::class)
+        ->middleware('can:pedidos.ver')
+        ->name('pedidos.ver');
+
+    Route::get('/materiales/pedidos/{pedido}/editar', PedidosEditar::class)
+        ->middleware('can:pedidos.modificar')
+        ->name('pedidos.editar');
+
     Route::get('/materiales/familias', FamiliasIndex::class)
         ->middleware('can:materiales.familias.ver')
         ->name('materiales.familias');
@@ -188,6 +205,19 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/conceptos', ConceptosIndex::class)
         ->middleware('can:conceptos.ver')
         ->name('conceptos.index');
+
+    Route::get('/conceptos/importar', ConceptosImportar::class)
+        ->middleware('can:conceptos.importar')
+        ->name('conceptos.importar');
+
+    Route::get('/conceptos/exportar/excel', ConceptosExportarExcel::class)
+        ->middleware('can:conceptos.exportar')
+        ->name('conceptos.exportar.excel');
+
+    Route::get('/conceptos/exportar/pdf/{orientacion}', ConceptosExportarPdf::class)
+        ->where('orientacion', 'vertical|horizontal')
+        ->middleware('can:conceptos.exportar')
+        ->name('conceptos.exportar.pdf');
 
     Route::get('/configuracion/empresa', EmpresaEdit::class)
         ->middleware('can:configuracion.ver')
