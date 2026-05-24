@@ -45,12 +45,12 @@
             Albarán
         </button>
 
-        @foreach ([
+        @foreach (array_values(array_filter([
             ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $albaran?->lineasPersonal->count()],
-            ['key' => 'materiales',   'label' => 'Materiales',   'count' => $albaran?->lineasMaterial->count()],
+            \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $albaran?->lineasMaterial->count()] : false,
             ['key' => 'firmas',       'label' => 'Firmas',       'count' => null],
             ['key' => 'archivos',     'label' => 'Archivos',     'count' => $albaran?->archivos->count()],
-        ] as $t)
+        ])) as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
                       title="Guarda primero el albarán para acceder a esta sección">
@@ -210,6 +210,7 @@
     </div>
 
     {{-- ═══ Tab: Materiales ═══ --}}
+    @if(\App\Support\Modulos::materialesAvanzado())
     <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
         <div class="flex items-center justify-between px-6 py-4">
             <div>
@@ -280,6 +281,7 @@
             </div>
         @endif
     </div>
+    @endif
 
     {{-- ═══ Tab: Firmas ═══ --}}
     <div x-show="tab === 'firmas'"
@@ -633,6 +635,7 @@
         </x-slot:footer>
     </x-ui.modal>
 
+    @if(\App\Support\Modulos::materialesAvanzado())
     {{-- Modal añadir / editar material --}}
     <x-ui.modal
         :show="$modalMaterialAbierto"
@@ -689,6 +692,7 @@
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
+    @endif
 
     {{-- Modal subir archivo --}}
     <x-ui.modal

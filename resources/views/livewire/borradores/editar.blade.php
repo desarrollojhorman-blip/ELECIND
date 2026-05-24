@@ -44,10 +44,10 @@
                 Borrador
             </button>
 
-            @foreach ([
+            @foreach (array_values(array_filter([
                 ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => count($form->lineasPersonal)],
-                ['key' => 'materiales',   'label' => 'Materiales',   'count' => count($form->lineasMaterial)],
-            ] as $t)
+                \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => count($form->lineasMaterial)] : false,
+            ])) as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
                         :class="tab === '{{ $t['key'] }}'
@@ -239,6 +239,7 @@
         </div>
 
         {{-- ═══ Tab: Materiales ═══ --}}
+        @if(\App\Support\Modulos::materialesAvanzado())
         <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
             <div class="flex items-center justify-between px-6 py-4">
                 <div>
@@ -298,6 +299,7 @@
                 </div>
             @endif
         </div>
+        @endif
     </div>
 
     {{-- Modal confirmar eliminación --}}

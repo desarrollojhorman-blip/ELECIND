@@ -125,6 +125,7 @@
             Añadir compañero
         </button>
 
+        @if(\App\Support\Modulos::materialesAvanzado())
         {{-- ─── Materiales ───────────────────────────────────────── --}}
         <x-mobile.section-title :hint="count($form->materiales).' añadidos'">Materiales</x-mobile.section-title>
 
@@ -170,6 +171,7 @@
             <x-heroicon-o-plus class="size-4" />
             Añadir material
         </button>
+        @endif
     </form>
 
     {{-- ─── Bottom bar ───────────────────────────────────────── --}}

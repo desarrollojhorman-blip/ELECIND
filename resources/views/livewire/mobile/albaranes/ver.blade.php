@@ -84,6 +84,7 @@
             @endforelse
         </div>
 
+        @if(\App\Support\Modulos::materialesAvanzado())
         {{-- Materiales --}}
         <x-mobile.section-title :hint="$albaran->lineasMaterial->count().' líneas'">Materiales</x-mobile.section-title>
         <div class="space-y-2">
@@ -105,6 +106,7 @@
                 <p class="py-3 text-center text-xs text-slate-400">Sin materiales.</p>
             @endforelse
         </div>
+        @endif
 
         @if ($puedeEliminar)
             <div class="mt-6">

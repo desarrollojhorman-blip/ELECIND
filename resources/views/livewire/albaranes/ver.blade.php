@@ -34,12 +34,12 @@
                 Albarán
             </button>
 
-            @foreach ([
+            @foreach (array_values(array_filter([
                 ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $albaran->lineasPersonal->count()],
-                ['key' => 'materiales',   'label' => 'Materiales',   'count' => $albaran->lineasMaterial->count()],
+                \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $albaran->lineasMaterial->count()] : false,
                 ['key' => 'firmas',       'label' => 'Firmas',       'count' => $albaran->firmas->count()],
                 ['key' => 'archivos',     'label' => 'Archivos',     'count' => $albaran->archivos->count()],
-            ] as $t)
+            ])) as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
                         :class="tab === '{{ $t['key'] }}'
@@ -151,6 +151,7 @@
         </div>
 
         {{-- ═══ Tab: Materiales ═══ --}}
+        @if(\App\Support\Modulos::materialesAvanzado())
         <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
             <div class="px-6 py-4">
                 <div class="flex items-center gap-2">
@@ -188,6 +189,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         {{-- ═══ Tab: Firmas ═══ --}}
         <div x-show="tab === 'firmas'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
