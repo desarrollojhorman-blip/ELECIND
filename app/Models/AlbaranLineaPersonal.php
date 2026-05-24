@@ -13,6 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $trabajador_id
  * @property string $horas
  * @property string $horas_extra
+ * @property string|null $trabajador_nombre_snapshot
+ * @property string|null $trabajador_apellidos_snapshot
+ * @property string|null $trabajador_numero_empleado_snapshot
+ * @property string|null $trabajador_tasa_hora_snapshot
+ * @property string|null $trabajador_tasa_extra_snapshot
+ * @property string|null $trabajador_tasa_festivo_snapshot
  */
 class AlbaranLineaPersonal extends Model
 {
@@ -26,6 +32,12 @@ class AlbaranLineaPersonal extends Model
         'trabajador_id',
         'horas',
         'horas_extra',
+        'trabajador_nombre_snapshot',
+        'trabajador_apellidos_snapshot',
+        'trabajador_numero_empleado_snapshot',
+        'trabajador_tasa_hora_snapshot',
+        'trabajador_tasa_extra_snapshot',
+        'trabajador_tasa_festivo_snapshot',
     ];
 
     protected function casts(): array
@@ -33,6 +45,9 @@ class AlbaranLineaPersonal extends Model
         return [
             'horas' => 'decimal:2',
             'horas_extra' => 'decimal:2',
+            'trabajador_tasa_hora_snapshot' => 'decimal:3',
+            'trabajador_tasa_extra_snapshot' => 'decimal:3',
+            'trabajador_tasa_festivo_snapshot' => 'decimal:3',
         ];
     }
 

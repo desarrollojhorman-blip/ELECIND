@@ -40,6 +40,7 @@ class Empresa extends Model
         'plantilla_pdf_config',
         'archivo_tamano_max_mb',
         'archivo_cantidad_max',
+        'modulo_materiales_avanzado',
     ];
 
     protected function casts(): array
@@ -55,6 +56,7 @@ class Empresa extends Model
             'logo_albaran_zoom' => 'integer',
             'logo_app_ratio' => 'float',
             'logo_app_zoom' => 'integer',
+            'modulo_materiales_avanzado' => 'boolean',
         ];
     }
 
@@ -74,6 +76,7 @@ class Empresa extends Model
                 'color_texto_encabezado' => '#ffffff',
                 'plantilla_numeracion_albaran' => 'ALB-{YYYY}-{NNNN}',
                 'token_caducidad_dias' => 7,
+                'modulo_materiales_avanzado' => true,
             ]);
         }
 

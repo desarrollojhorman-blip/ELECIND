@@ -56,6 +56,21 @@ class Albaran extends Model
         'firma_trabajador_otro_correo',
         'firma_responsable_otro_nombre',
         'firma_responsable_otro_correo',
+        // Snapshots cabecera
+        'cliente_codigo_snapshot',
+        'cliente_nombre_snapshot',
+        'cliente_cif_snapshot',
+        'proyecto_codigo_snapshot',
+        'proyecto_nombre_snapshot',
+        'concepto_nombre_snapshot',
+        'creador_username_snapshot',
+        'creador_nombre_snapshot',
+        'creador_apellidos_snapshot',
+        'creador_numero_empleado_snapshot',
+        'responsable_username_snapshot',
+        'responsable_nombre_snapshot',
+        'responsable_apellidos_snapshot',
+        'responsable_numero_empleado_snapshot',
     ];
 
     protected function casts(): array

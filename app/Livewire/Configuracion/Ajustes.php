@@ -5,6 +5,7 @@ namespace App\Livewire\Configuracion;
 use App\Models\Empresa;
 use App\Support\AjustesFields;
 use App\Support\Branding;
+use App\Support\Modulos;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,10 @@ class Ajustes extends Component
 
     public ?array $debug_guardar = null;
 
+    // ── Módulos ──────────────────────────────────────────────────────────────
+
+    public bool $modulo_materiales_avanzado = true;
+
     // ────────────────────────────────────────────────────────────────────────
 
     public function mount(): void
@@ -88,6 +93,8 @@ class Ajustes extends Component
         $this->color_primario = $empresa->color_primario ?? '#334155';
         $this->color_secundario = $empresa->color_secundario ?? '#f1f5f9';
         $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
+
+        $this->modulo_materiales_avanzado = $empresa->modulo_materiales_avanzado ?? true;
     }
 
     /**
@@ -165,8 +172,24 @@ class Ajustes extends Component
         $this->color_primario = $empresa->color_primario ?? '#334155';
         $this->color_secundario = $empresa->color_secundario ?? '#f1f5f9';
         $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
+        $this->modulo_materiales_avanzado = $empresa->modulo_materiales_avanzado ?? true;
         $this->nuevoLogoApp = null;
         $this->eliminarLogoApp = false;
+    }
+
+    public function toggleModuloMateriales(): void
+    {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403);
+
+        $empresa = Empresa::actual();
+        $empresa->modulo_materiales_avanzado = $this->modulo_materiales_avanzado;
+        $empresa->save();
+
+        Modulos::limpiarCache();
+
+        $estado = $this->modulo_materiales_avanzado ? 'activado' : 'desactivado';
+        session()->flash('status', "Módulo de materiales {$estado} correctamente.");
+        $this->redirectRoute('configuracion.ajustes', navigate: false);
     }
 
     public function guardar(): void

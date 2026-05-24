@@ -21,6 +21,16 @@
                         {{ $t['label'] }}
                     </button>
                 @endforeach
+                @role('superadmin')
+                    <button type="button"
+                            @click="tab = 'modulos'"
+                            :class="tab === 'modulos'
+                                ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                                : 'text-slate-500 hover:text-slate-700'"
+                            class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+                        Módulos
+                    </button>
+                @endrole
             </div>
 
             {{-- ═══ Tab: Identidad visual ═══ --}}
@@ -261,6 +271,47 @@
             </div>
 
 
+            {{-- ═══ Tab: Módulos (solo superadmin) ═══ --}}
+            @role('superadmin')
+            <div x-show="tab === 'modulos'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                <h3 class="mb-1 text-sm font-semibold text-slate-900">Módulos opcionales</h3>
+                <p class="mb-6 text-xs text-slate-500">
+                    Los módulos permiten activar o desactivar funcionalidades completas de la aplicación.
+                    Los datos nunca se eliminan al desactivar un módulo.
+                </p>
+
+                <div class="max-w-lg space-y-4">
+                    <div class="flex items-start gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-slate-800">Módulo de materiales</p>
+                            <p class="mt-1 text-xs text-slate-500">
+                                Cuando está <strong>activo</strong>: pedidos, familias, stock, precios y líneas de material en albaranes.<br>
+                                Cuando está <strong>inactivo</strong>: todo el bloque de materiales se oculta; los albaranes solo registran horas de trabajadores.
+                            </p>
+                        </div>
+                        <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+                            <input type="checkbox"
+                                   wire:model="modulo_materiales_avanzado"
+                                   class="peer sr-only">
+                            <div class="peer h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-primary-600
+                                        after:absolute after:left-[2px] after:top-[2px] after:size-5 after:rounded-full after:bg-white
+                                        after:shadow after:transition-transform after:content-[''] peer-checked:after:translate-x-full"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <x-ui.button variant="info" type="button"
+                                     wire:click="toggleModuloMateriales"
+                                     wire:loading.attr="disabled"
+                                     wire:target="toggleModuloMateriales">
+                            <span wire:loading.remove wire:target="toggleModuloMateriales">Aplicar</span>
+                            <span wire:loading wire:target="toggleModuloMateriales">Guardando…</span>
+                        </x-ui.button>
+                    </div>
+                </div>
+            </div>
+            @endrole
+
             {{-- ═══ AVISO GENERAL DE VALIDACIÓN (sin duplicar errores por campo) ═══ --}}
             @if ($errors->any())
                 <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -270,8 +321,8 @@
 
 
 
-            {{-- ═══ BOTONES GLOBALES (siempre visibles, derecha) ═══ --}}
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+            {{-- ═══ BOTONES GLOBALES (ocultos en tab Módulos, que guarda directamente) ═══ --}}
+            <div x-show="tab !== 'modulos'" class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
                 <x-ui.button variant="neutral" type="button" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
                     Deshacer
                 </x-ui.button>

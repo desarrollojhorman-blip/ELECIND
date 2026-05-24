@@ -66,6 +66,9 @@ class User extends Authenticatable
             'activo' => 'boolean',
             'preferencias_notificaciones' => 'array',
             'snapshot_data' => 'array',
+            'tasa_hora' => 'decimal:3',
+            'tasa_extra' => 'decimal:3',
+            'tasa_festivo' => 'decimal:3',
         ];
     }
 

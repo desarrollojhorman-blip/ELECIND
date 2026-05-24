@@ -58,7 +58,7 @@
                 ],
             ],
         ],
-        [
+        ...(\App\Support\Modulos::materialesAvanzado() ? [[
             'label' => 'Materiales',
             'icon' => 'heroicon-o-cube',
             'route' => null,
@@ -84,7 +84,7 @@
                     'permission' => 'materiales.ver',
                 ],
             ],
-        ],
+        ]] : []),
         [
             'label' => 'Clientes',
             'icon' => 'heroicon-o-building-office-2',

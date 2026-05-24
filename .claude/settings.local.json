@@ -116,7 +116,25 @@
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Ver.php\")",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Editar.php\")",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Models\\\\Material.php\")",
-      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Index.php\")"
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Materiales\\\\Index.php\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Recurse -Depth 0)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" | Select-Object Name, @{Name='Type';Expression={if\\($_.PSIsContainer\\){'DIR'}else{'FILE'}}})",
+      "Bash(cd /d \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\")",
+      "Bash(dir /b)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" | Where-Object { $_.PSIsContainer -eq $false } | Select-Object Name | Sort-Object Name)",
+      "PowerShell(@\\(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" | Where-Object { -not $_.PSIsContainer }\\) | ForEach-Object { $_.Name })",
+      "Bash(awk '{print $NF}')",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\" | Select-Object Name, @{Name=\"Type\"; Expression={if \\($_.PSIsContainer\\) {\"DIR\"} else {\"FILE\"}}} | Sort-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\resources\" | Select-Object Name, @{Name=\"Type\"; Expression={if \\($_.PSIsContainer\\) {\"DIR\"} else {\"FILE\"}}} | Sort-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" | Where-Object { $_.PSIsContainer } | Select-Object Name | Sort-Object Name)",
+      "Bash(awk '{print $5 \" \" $9}')",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Recurse -Name)",
+      "Bash(Select-String -Pattern \"\\(AppServiceProvider|FortifyServiceProvider|AlbaranLineaPersonalObserver|AlbaranLineaMaterialObserver|UserFields|UserForm|Editar\\)\")",
+      "Bash(dir \"D:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\database\\\\migrations\" /B /O:N)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" migrate:fresh --seed --force)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Livewire\\\\Configuracion\\\\Ajustes.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Support\\\\Modulos.php\")",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" -l \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\app\\\\Models\\\\Empresa.php\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\CLIENTES\\ELECIND\\storage\\framework\\views"
