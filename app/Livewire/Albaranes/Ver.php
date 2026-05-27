@@ -51,7 +51,7 @@ class Ver extends Component
         $this->albaran->delete();
 
         session()->flash('status', "Albarán «{$numero}» enviado a papelera.");
-        $this->redirectRoute('albaranes.index', navigate: true);
+        $this->redirectRoute('albaranes.index', navigate: false);
     }
 
     public function render(): View

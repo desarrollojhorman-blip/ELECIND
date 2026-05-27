@@ -20,10 +20,21 @@
         </x-slot:actionsLeft>
 
         <x-slot:actionsRight>
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                Deshacer
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-pedido" wire:loading.attr="disabled">
+            <x-ui.button variant="info" type="submit" form="form-pedido" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
@@ -70,7 +81,7 @@
                 <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Cabecera</h3>
                 <div class="grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Nº pedido" required :error="$errors->first('form.numero')">
-                        <x-ui.input wire:model.live.debounce.500ms="form.numero" autofocus />
+                        <x-ui.input wire:model.blur="form.numero" autofocus />
                     </x-ui.field>
 
                     <x-ui.field label="Fecha" required :error="$errors->first('form.fecha')">
@@ -84,6 +95,11 @@
                     <x-ui.field label="Descripción" :error="$errors->first('form.descripcion')" class="md:col-span-2">
                         <x-ui.textarea wire:model="form.descripcion" rows="2" />
                     </x-ui.field>
+                </div>
+
+                {{-- Pedido activo: standalone al final de la cabecera. --}}
+                <div class="mt-4 border-t border-slate-100 pt-4">
+                    <x-ui.checkbox wire:model="form.activo" label="Pedido activo" />
                 </div>
             </div>
 
@@ -157,8 +173,6 @@
                                             <x-ui.select wire:model="lineas.{{ $i }}.unidad_medida">
                                                 <option value="ud">ud</option>
                                                 <option value="m">m</option>
-                                                <option value="m2">m²</option>
-                                                <option value="m3">m³</option>
                                                 <option value="kg">kg</option>
                                                 <option value="l">l</option>
                                             </x-ui.select>
@@ -293,8 +307,17 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

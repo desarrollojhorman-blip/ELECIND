@@ -23,6 +23,9 @@ class NumeroPedidoForm extends Form
     #[Validate]
     public ?string $proveedor = null;
 
+    #[Validate]
+    public bool $activo = true;
+
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -36,6 +39,7 @@ class NumeroPedidoForm extends Form
             'descripcion' => ['nullable', 'string', 'max:2000'],
             'fecha' => ['required', 'date'],
             'proveedor' => ['nullable', 'string', 'max:255'],
+            'activo' => ['boolean'],
         ];
     }
 
@@ -49,6 +53,7 @@ class NumeroPedidoForm extends Form
             'descripcion' => 'descripción',
             'fecha' => 'fecha',
             'proveedor' => 'proveedor',
+            'activo' => 'activo',
         ];
     }
 
@@ -59,6 +64,7 @@ class NumeroPedidoForm extends Form
         $this->descripcion = $pedido->descripcion;
         $this->fecha = $pedido->fecha->format('Y-m-d');
         $this->proveedor = $pedido->proveedor;
+        $this->activo = (bool) $pedido->activo;
     }
 
     public function save(): NumeroPedido

@@ -21,6 +21,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tipos_proyecto.crear',
             'tipos_proyecto.modificar',
             'tipos_proyecto.eliminar',
+            'borradores.crear', // reemplazado por borradores.crear_movil + borradores.crear_web
         ])->delete();
 
         $permisos = $this->catalogoPermisos();
@@ -68,14 +69,17 @@ class RolesAndPermissionsSeeder extends Seeder
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
                 'conceptos.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de conceptos
-                'usuarios.gestionar_tarifas', // por defecto solo superadmin ve/modifica las tasas (dato sensible)
+                'usuarios.gestionar_tarifas',   // por defecto solo superadmin ve/modifica las tasas (dato sensible)
                 'materiales.gestionar_precios', // por defecto solo superadmin ve/modifica los precios (dato sensible)
+                'api_tokens.gestionar',         // por defecto solo superadmin gestiona los tokens de API externos
             ])
             ->pluck('name')
             ->all());
 
         // Trabajador: permisos móviles operativos.
         $trabajador->syncPermissions([
+            'borradores.ver_propios',
+            'borradores.crear_movil',
             'albaranes.ver_propios',
             'albaranes.crear_movil',
             'albaranes.firmar',
@@ -103,11 +107,12 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         return [
             // ─────────────── Borradores ───────────────
-            ['name' => 'borradores.ver_todos',  'ambito' => 'web', 'descripcion' => 'Ver todos los borradores de la empresa', 'categoria' => 'borradores'],
-            ['name' => 'borradores.ver_propios', 'ambito' => 'ambos', 'descripcion' => 'Ver SOLO mis borradores', 'categoria' => 'borradores'],
-            ['name' => 'borradores.crear',       'ambito' => 'ambos', 'descripcion' => 'Crear borradores', 'categoria' => 'borradores'],
-            ['name' => 'borradores.modificar',   'ambito' => 'web', 'descripcion' => 'Modificar borradores de otros', 'categoria' => 'borradores'],
-            ['name' => 'borradores.convertir',   'ambito' => 'web', 'descripcion' => 'Convertir borradores a albarán oficial', 'categoria' => 'borradores'],
+            ['name' => 'borradores.ver_todos',   'ambito' => 'web',   'descripcion' => 'Ver todos los borradores de la empresa',        'categoria' => 'borradores'],
+            ['name' => 'borradores.ver_propios', 'ambito' => 'ambos', 'descripcion' => 'Ver SOLO mis borradores',                            'categoria' => 'borradores'],
+            ['name' => 'borradores.crear_movil', 'ambito' => 'movil', 'descripcion' => 'Crear borradores desde móvil (parte personalizado)', 'categoria' => 'borradores'],
+            ['name' => 'borradores.crear_web',   'ambito' => 'web',   'descripcion' => 'Crear borradores desde web',                         'categoria' => 'borradores'],
+            ['name' => 'borradores.modificar',   'ambito' => 'web',   'descripcion' => 'Modificar borradores de otros',                      'categoria' => 'borradores'],
+            ['name' => 'borradores.convertir',   'ambito' => 'web',   'descripcion' => 'Convertir borradores a albarán oficial',             'categoria' => 'borradores'],
 
             // ─────────────── Albaranes ───────────────
             ['name' => 'albaranes.ver_todos', 'ambito' => 'ambos', 'descripcion' => 'Ver albaranes de TODA la empresa (no solo los propios)', 'categoria' => 'albaranes'],
@@ -209,8 +214,9 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'incidencias.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar incidencias', 'categoria' => 'incidencias'],
 
             // ─────────────── Configuración ───────────────
-            ['name' => 'configuracion.ver', 'ambito' => 'web', 'descripcion' => 'Ver configuración (empresa y ajustes)', 'categoria' => 'configuracion'],
-            ['name' => 'configuracion.editar', 'ambito' => 'web', 'descripcion' => 'Editar configuración (empresa y ajustes)', 'categoria' => 'configuracion'],
+            ['name' => 'configuracion.ver',    'ambito' => 'web', 'descripcion' => 'Ver configuración (empresa, ajustes, licencias y logs)',       'categoria' => 'configuracion'],
+            ['name' => 'configuracion.editar', 'ambito' => 'web', 'descripcion' => 'Editar configuración (empresa y ajustes)',                     'categoria' => 'configuracion'],
+            ['name' => 'api_tokens.gestionar', 'ambito' => 'web', 'descripcion' => 'Crear, editar y eliminar tokens de API externos (dato sensible)', 'categoria' => 'configuracion'],
 
             // ─────────────── Roles y permisos ───────────────
             ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar roles personalizados', 'categoria' => 'roles'],

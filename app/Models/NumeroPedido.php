@@ -26,12 +26,14 @@ class NumeroPedido extends Model
         'descripcion',
         'fecha',
         'proveedor',
+        'activo',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha' => 'date',
+            'activo' => 'boolean',
         ];
     }
 

@@ -6,7 +6,6 @@ use App\Models\Albaran;
 use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Empresa;
-use App\Models\NumeroPedido;
 use App\Models\Proyecto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +27,7 @@ class NumeracionService
 {
     public const PLANTILLA_DEFECTO = 'ALB-{YYYY}-{NNNN}';
 
-    public const PLANTILLA_DEFECTO_PEDIDO = 'PED-{YYYY}-{NNNN}';
-
-    public const PLANTILLA_DEFECTO_PROYECTO = 'PROY-{NNNN}';
+    public const PREFIJO_PROYECTO_DEFECTO = 'PR';
 
     public const PLANTILLA_DEFECTO_BORRADOR = 'BOR-{NNNN}';
 
@@ -102,58 +99,40 @@ class NumeracionService
 return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
     }
 
-    // ── Nº Pedido ────────────────────────────────────────────────────────────
+    // ── Código Proyecto ───────────────────────────────────────────────────────
 
-    public function siguienteNumeroPedido(?Carbon $fecha = null): string
+    /**
+     * @return array{codigo: string, secuencial: int}
+     */
+    public function siguienteProyecto(): array
     {
-        $fecha = $fecha ?? Carbon::now();
-        $plantilla = $this->plantillaPedido();
+        $prefijo = $this->prefijoProyecto();
+        $anyo = now()->format('y');
 
-        return DB::transaction(function () use ($fecha, $plantilla): string {
-            $secuencial = NumeroPedido::query()
+        return DB::transaction(function () use ($prefijo, $anyo): array {
+            $secuencial = (int) Proyecto::query()
                 ->withTrashed()
-                ->whereYear('fecha', $fecha->year)
                 ->lockForUpdate()
-                ->count() + 1;
+                ->max('codigo_secuencial') + 1;
 
-            return $this->aplicarPlantilla($plantilla, $fecha, $secuencial);
+            return [
+                'codigo'     => "{$anyo}{$prefijo}-{$secuencial}-",
+                'secuencial' => $secuencial,
+            ];
         });
     }
-
-    public function plantillaPedido(): string
-    {
-        $empresa = Empresa::query()->first();
-        $plantilla = $empresa?->plantilla_numeracion_pedido;
-
-        return ($plantilla !== null && $plantilla !== '')
-            ? $plantilla
-            : self::PLANTILLA_DEFECTO_PEDIDO;
-    }
-
-    // ── Código Proyecto ───────────────────────────────────────────────────────
 
     public function siguienteNumeroProyecto(): string
     {
-        $plantilla = $this->plantillaProyecto();
-
-        return DB::transaction(function () use ($plantilla): string {
-            $secuencial = Proyecto::query()
-                ->withTrashed()
-                ->lockForUpdate()
-                ->count() + 1;
-
-            return $this->aplicarPlantillaCliente($plantilla, $secuencial);
-        });
+        return $this->siguienteProyecto()['codigo'];
     }
 
-    public function plantillaProyecto(): string
+    public function prefijoProyecto(): string
     {
         $empresa = Empresa::query()->first();
-        $plantilla = $empresa?->plantilla_numeracion_proyecto;
+        $prefijo = $empresa?->prefijo_proyecto ?? '';
 
-        return ($plantilla !== null && $plantilla !== '')
-            ? $plantilla
-            : self::PLANTILLA_DEFECTO_PROYECTO;
+        return ($prefijo !== '') ? strtoupper(trim($prefijo)) : self::PREFIJO_PROYECTO_DEFECTO;
     }
 
     // ── Nº Borrador ──────────────────────────────────────────────────────────

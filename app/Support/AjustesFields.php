@@ -53,6 +53,12 @@ class AjustesFields
                 'min:1',
                 'max:100',
             ],
+            'prefijo_10' => [
+                'required',
+                'string',
+                'max:10',
+                'regex:/^[A-Za-z0-9]+$/',
+            ],
         ];
     }
 
@@ -99,15 +105,10 @@ class AjustesFields
                 'validation' => 'template_60',
                 'help' => 'Ej: ALB-{YYYY}-{NNNN}. Usa {YYYY}, {NNNN}, {MM}, {DD}',
             ],
-            'plantilla_numeracion_pedido' => [
+            'prefijo_proyecto' => [
                 'type' => 'text',
-                'validation' => 'template_60',
-                'help' => 'Ej: PED-{YYYY}-{NNNN}. Máx. 60 caracteres.',
-            ],
-            'plantilla_numeracion_proyecto' => [
-                'type' => 'text',
-                'validation' => 'template_60',
-                'help' => 'Ej: PROY-{NNNN}. Máx. 60 caracteres.',
+                'validation' => 'prefijo_10',
+                'help' => 'Solo letras y números (ej: PR, OBRA). Máx. 10 caracteres.',
             ],
 
             // ──────────────────────────────────────────────────────────────

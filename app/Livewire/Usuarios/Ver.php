@@ -66,7 +66,7 @@ class Ver extends Component
         $username = $this->usuario->username;
         $this->usuario->delete();
         session()->flash('status', "Usuario «{$username}» eliminado correctamente.");
-        $this->redirectRoute('usuarios.index', navigate: true);
+        $this->redirectRoute('usuarios.index', navigate: false);
     }
 
     public function ordenarProyectos(string $campo): void

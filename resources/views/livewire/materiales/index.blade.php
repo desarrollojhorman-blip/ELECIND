@@ -132,7 +132,7 @@
         </div>
         {{ $materiales->links() }}
     </div>
-    <x-ui.data-table :colspan="6" empty="No hay materiales que coincidan con los filtros aplicados.">
+    <x-ui.data-table :colspan="7" empty="No hay materiales que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
                 <x-ui.sortable-header column="numero_pedido_id" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
@@ -149,6 +149,9 @@
                 </x-ui.sortable-header>
                 <x-ui.sortable-header column="stock" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Stock
+                </x-ui.sortable-header>
+                <x-ui.sortable-header column="activo" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
+                    Estado
                 </x-ui.sortable-header>
                 <x-ui.sortable-header align="center">Acciones</x-ui.sortable-header>
             </tr>
@@ -186,12 +189,31 @@
                             {{ rtrim(rtrim(number_format((float) $material->stock, 2, ',', ''), '0'), ',') }}
                         </span>
                     </td>
+                    <td class="px-4 py-3 text-center">
+                        @if ($material->activo)
+                            <x-ui.badge tone="success" dot>Activo</x-ui.badge>
+                        @else
+                            <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
+                        @endif
+                    </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
                             @if ($material->trashed())
                                 @can('restore', $material)
-                                    <x-ui.icon-button wire:click="restaurar({{ $material->id }})"
-                                        icon="heroicon-o-arrow-uturn-left" variant="success" tooltip="Restaurar" />
+                                    <x-ui.icon-button
+                                        wire:click="restaurar({{ $material->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="restaurar({{ $material->id }})"
+                                        variant="success"
+                                        tooltip="Restaurar">
+                                        <span wire:loading.remove wire:target="restaurar({{ $material->id }})">
+                                            <x-heroicon-o-arrow-uturn-left class="size-4" />
+                                        </span>
+                                        <svg wire:loading wire:target="restaurar({{ $material->id }})" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                    </x-ui.icon-button>
                                 @endcan
                             @else
                                 @can('view', $material)
@@ -223,24 +245,26 @@
         <form wire:submit="guardar" id="form-material" class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Nº Pedido" required :error="$errors->first('form.numero_pedido_id')">
-                    <x-ui.select wire:model="form.numero_pedido_id" :disabled="$modoSoloLectura">
-                        <option value="">— Selecciona un pedido —</option>
-                        @foreach ($this->pedidosDisponibles as $ped)
-                            <option value="{{ $ped->id }}">
-                                {{ $ped->numero }}{{ $ped->proveedor ? ' ('.$ped->proveedor.')' : '' }}
-                            </option>
-                        @endforeach
-                    </x-ui.select>
+                    <x-ui.searchable-select
+                        wire:key="pedido-select-{{ $modalKey }}"
+                        wire-model="form.numero_pedido_id"
+                        :value="$form->numero_pedido_id"
+                        :options="$this->pedidosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->numero.($p->proveedor ? ' ('.$p->proveedor.')' : '')])->all()"
+                        placeholder="— Selecciona un pedido —"
+                        :disabled="$modoSoloLectura"
+                    />
                 </x-ui.field>
 
                 <x-ui.field label="Familia" :error="$errors->first('form.familia_id')"
                             hint="Opcional. Da de alta familias en Materiales > Familias.">
-                    <x-ui.select wire:model="form.familia_id" :disabled="$modoSoloLectura">
-                        <option value="">— Sin familia —</option>
-                        @foreach ($this->familiasDisponibles as $fam)
-                            <option value="{{ $fam->id }}">{{ $fam->nombre }}</option>
-                        @endforeach
-                    </x-ui.select>
+                    <x-ui.searchable-select
+                        wire:key="familia-select-{{ $modalKey }}"
+                        wire-model="form.familia_id"
+                        :value="$form->familia_id"
+                        :options="$this->familiasDisponibles->map(fn($f) => ['value' => $f->id, 'label' => $f->id.' · '.$f->nombre])->all()"
+                        placeholder="— Sin familia —"
+                        :disabled="$modoSoloLectura"
+                    />
                 </x-ui.field>
             </div>
 
@@ -281,20 +305,38 @@
         close-action="cancelarEliminar"
         size="sm">
 
-        <div class="flex gap-3">
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
-                <x-heroicon-o-exclamation-triangle class="size-5" />
+        @if ($errorEliminar)
+            <div class="flex gap-3 rounded-md border border-red-200 bg-red-50 p-3">
+                <x-heroicon-o-no-symbol class="mt-0.5 size-5 shrink-0 text-red-500" />
+                <p class="text-sm text-red-700">{{ $errorEliminar }}</p>
             </div>
-            <p class="text-sm text-slate-700">
-                Esta acción enviará el material a la <strong>papelera</strong> (eliminación lógica).
-            </p>
-        </div>
+        @else
+            <div class="flex gap-3">
+                <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+                    <x-heroicon-o-exclamation-triangle class="size-5" />
+                </div>
+                <p class="text-sm text-slate-700">
+                    Esta acción enviará el material a la <strong>papelera</strong> (eliminación lógica).
+                </p>
+            </div>
+        @endif
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
-                Eliminar
-            </x-ui.button>
+            @if (!$errorEliminar)
+                <x-ui.button variant="danger"
+                             wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})"
+                             wire:loading.attr="disabled"
+                             wire:target="eliminar">
+                    <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                    <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                    <span wire:loading wire:target="eliminar">Eliminando…</span>
+                </x-ui.button>
+            @endif
         </x-slot:footer>
     </x-ui.modal>
 </div>

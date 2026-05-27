@@ -28,9 +28,7 @@ class Ajustes extends Component
 
     public string $plantilla_numeracion_albaran = 'ALB-{YYYY}-{NNNN}';
 
-    public string $plantilla_numeracion_pedido = 'PED-{YYYY}-{NNNN}';
-
-    public string $plantilla_numeracion_proyecto = 'PROY-{NNNN}';
+    public string $prefijo_proyecto = 'PR';
 
     public int $token_caducidad_dias = 7;
 
@@ -66,11 +64,25 @@ class Ajustes extends Component
 
     public string $color_texto_encabezado = self::COLOR_TEXTO_ENCABEZADO_DEFAULT;
 
-    public ?array $debug_guardar = null;
-
     // ── Módulos ──────────────────────────────────────────────────────────────
 
     public bool $modulo_materiales_avanzado = true;
+
+    // ── Correo SMTP ──────────────────────────────────────────────────────────
+
+    public string $mail_host = '';
+
+    public string $mail_port = '587';
+
+    public string $mail_encryption = 'tls';
+
+    public string $mail_username = '';
+
+    public string $mail_password = '';
+
+    public string $mail_from_address = '';
+
+    public string $mail_from_name = '';
 
     // ────────────────────────────────────────────────────────────────────────
 
@@ -80,8 +92,7 @@ class Ajustes extends Component
 
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
-        $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
-        $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
+        $this->prefijo_proyecto = $empresa->prefijo_proyecto ?? 'PR';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
         $this->archivo_tamano_max_mb = $empresa->archivo_tamano_max_mb ?? 10;
         $this->archivo_cantidad_max = $empresa->archivo_cantidad_max ?? 20;
@@ -95,6 +106,14 @@ class Ajustes extends Component
         $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
 
         $this->modulo_materiales_avanzado = $empresa->modulo_materiales_avanzado ?? true;
+
+        $this->mail_host          = $empresa->mail_host ?? '';
+        $this->mail_port          = (string) ($empresa->mail_port ?? '587');
+        $this->mail_encryption    = $empresa->mail_encryption ?? 'tls';
+        $this->mail_username      = $empresa->mail_username ?? '';
+        $this->mail_password      = $empresa->mail_password ?? '';
+        $this->mail_from_address  = $empresa->mail_from_address ?? '';
+        $this->mail_from_name     = $empresa->mail_from_name ?? '';
     }
 
     /**
@@ -128,8 +147,7 @@ class Ajustes extends Component
     {
         return [
             'plantilla_numeracion_albaran' => 'Numero de albaran',
-            'plantilla_numeracion_pedido' => 'Numero de pedido',
-            'plantilla_numeracion_proyecto' => 'Codigo de proyecto',
+            'prefijo_proyecto' => 'Prefijo de proyecto',
             'token_caducidad_dias' => 'Caducidad del token de firma',
             'archivo_tamano_max_mb' => 'Tamano maximo por archivo',
             'archivo_cantidad_max' => 'Cantidad maxima de archivos por albaran',
@@ -163,7 +181,6 @@ class Ajustes extends Component
         $this->resetValidation();
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
-        $this->plantilla_numeracion_pedido = $empresa->plantilla_numeracion_pedido ?? 'PED-{YYYY}-{NNNN}';
         $this->plantilla_numeracion_proyecto = $empresa->plantilla_numeracion_proyecto ?? 'PROY-{NNNN}';
         $this->token_caducidad_dias = $empresa->token_caducidad_dias ?? 7;
         $this->archivo_tamano_max_mb = $empresa->archivo_tamano_max_mb ?? 10;
@@ -173,6 +190,13 @@ class Ajustes extends Component
         $this->color_secundario = $empresa->color_secundario ?? '#f1f5f9';
         $this->color_texto_encabezado = $empresa->color_texto_encabezado ?? '#ffffff';
         $this->modulo_materiales_avanzado = $empresa->modulo_materiales_avanzado ?? true;
+        $this->mail_host         = $empresa->mail_host ?? '';
+        $this->mail_port         = (string) ($empresa->mail_port ?? '587');
+        $this->mail_encryption   = $empresa->mail_encryption ?? 'tls';
+        $this->mail_username     = $empresa->mail_username ?? '';
+        $this->mail_password     = $empresa->mail_password ?? '';
+        $this->mail_from_address = $empresa->mail_from_address ?? '';
+        $this->mail_from_name    = $empresa->mail_from_name ?? '';
         $this->nuevoLogoApp = null;
         $this->eliminarLogoApp = false;
     }
@@ -192,6 +216,75 @@ class Ajustes extends Component
         $this->redirectRoute('configuracion.ajustes', navigate: false);
     }
 
+    public function guardarCorreo(): void
+    {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403);
+
+        $this->validate([
+            'mail_host'         => ['required', 'string', 'max:255'],
+            'mail_port'         => ['required', 'integer', 'in:25,465,587,2525'],
+            'mail_encryption'   => ['required', 'string', 'in:tls,ssl,starttls,none'],
+            'mail_username'     => ['required', 'string', 'max:255'],
+            'mail_password'     => ['nullable', 'string', 'max:500'],
+            'mail_from_address' => ['required', 'email', 'max:255'],
+            'mail_from_name'    => ['required', 'string', 'max:255'],
+        ]);
+
+        $empresa = Empresa::actual();
+        $empresa->mail_host         = $this->mail_host;
+        $empresa->mail_port         = (int) $this->mail_port;
+        $empresa->mail_encryption   = $this->mail_encryption === 'none' ? null : $this->mail_encryption;
+        $empresa->mail_username     = $this->mail_username;
+        $empresa->mail_password     = $this->mail_password !== '' ? $this->mail_password : $empresa->mail_password;
+        $empresa->mail_from_address = $this->mail_from_address;
+        $empresa->mail_from_name    = $this->mail_from_name;
+        $empresa->save();
+
+        session()->flash('correo_status', 'Configuración de correo guardada correctamente.');
+    }
+
+    public function probarConexionCorreo(): void
+    {
+        abort_unless(auth()->user()->hasRole('superadmin'), 403);
+
+        $this->validate([
+            'mail_host'         => ['required', 'string'],
+            'mail_port'         => ['required', 'integer'],
+            'mail_encryption'   => ['required', 'string'],
+            'mail_username'     => ['required', 'string'],
+            'mail_from_address' => ['required', 'email'],
+        ]);
+
+        config(['mail.mailers.prueba_smtp' => [
+            'transport'  => 'smtp',
+            'host'       => $this->mail_host,
+            'port'       => (int) $this->mail_port,
+            'encryption' => $this->mail_encryption === 'none' ? null : $this->mail_encryption,
+            'username'   => $this->mail_username,
+            'password'   => $this->mail_password,
+            'timeout'    => 15,
+        ]]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::mailer('prueba_smtp')
+                ->raw(
+                    'Este es un correo de prueba enviado desde la configuración SMTP de la aplicación.',
+                    function ($m) {
+                        $m->to(auth()->user()->email)
+                          ->from(
+                              $this->mail_from_address ?: $this->mail_username,
+                              $this->mail_from_name ?: null
+                          )
+                          ->subject('Prueba de correo · ' . (\App\Support\Branding::nombre()));
+                    }
+                );
+
+            session()->flash('correo_status', 'Correo de prueba enviado a ' . auth()->user()->email . '. Revisa tu bandeja.');
+        } catch (\Exception $e) {
+            $this->addError('mail_host', 'Error de conexión: ' . $e->getMessage());
+        }
+    }
+
     public function guardar(): void
     {
         // ─ Aplicar valores por defecto si los colores están vacíos
@@ -205,43 +298,7 @@ class Ajustes extends Component
             $this->color_texto_encabezado = self::COLOR_TEXTO_ENCABEZADO_DEFAULT;
         }
 
-        $this->debug_guardar = [
-            'momento' => now()->format('Y-m-d H:i:s'),
-            'fase' => 'invocado',
-            'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
-            'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
-            'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
-            'token_caducidad_dias' => $this->token_caducidad_dias,
-            'archivo_cantidad_max' => $this->archivo_cantidad_max,
-            'color_primario' => $this->color_primario,
-            'color_secundario' => $this->color_secundario,
-            'color_texto_encabezado' => $this->color_texto_encabezado,
-            'origen' => 'Livewire::guardar()',
-        ];
-
-        // [AJUSTES DEBUG] — rastro temporal para diagnosticar el botón Guardar.
-        \Log::info('[AJUSTES DEBUG] guardar() INVOCADO', [
-            'user_id' => auth()->id(),
-            'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
-            'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
-            'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
-            'token_caducidad_dias' => $this->token_caducidad_dias,
-            'archivo_cantidad_max' => $this->archivo_cantidad_max,
-            'color_primario' => $this->color_primario,
-            'color_secundario' => $this->color_secundario,
-            'color_texto_encabezado' => $this->color_texto_encabezado,
-        ]);
-
-        try {
-            $this->validate();
-            $this->debug_guardar['fase'] = 'validado';
-            \Log::info('[AJUSTES DEBUG] validate() OK');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->debug_guardar['fase'] = 'error_validacion';
-            $this->debug_guardar['errores'] = $e->errors();
-            \Log::warning('[AJUSTES DEBUG] validate() FALLÓ', ['errors' => $e->errors()]);
-            throw $e;
-        }
+        $this->validate();
 
         $empresa = Empresa::actual();
 
@@ -265,8 +322,7 @@ class Ajustes extends Component
 
         $empresa->fill([
             'plantilla_numeracion_albaran' => $this->plantilla_numeracion_albaran,
-            'plantilla_numeracion_pedido' => $this->plantilla_numeracion_pedido,
-            'plantilla_numeracion_proyecto' => $this->plantilla_numeracion_proyecto,
+            'prefijo_proyecto' => strtoupper(trim($this->prefijo_proyecto)),
             'token_caducidad_dias' => $this->token_caducidad_dias,
             'archivo_tamano_max_mb' => $this->archivo_tamano_max_mb,
             'archivo_cantidad_max' => $this->archivo_cantidad_max,
@@ -277,19 +333,6 @@ class Ajustes extends Component
         ]);
 
         $empresa->save();
-        $this->debug_guardar['fase'] = 'guardado';
-        $this->debug_guardar['persistido'] = [
-            'empresa_id' => $empresa->id,
-            'plantilla_numeracion_albaran' => $empresa->plantilla_numeracion_albaran,
-            'plantilla_numeracion_pedido' => $empresa->plantilla_numeracion_pedido,
-            'plantilla_numeracion_proyecto' => $empresa->plantilla_numeracion_proyecto,
-            'token_caducidad_dias' => $empresa->token_caducidad_dias,
-            'archivo_cantidad_max' => $empresa->archivo_cantidad_max,
-            'color_primario' => $empresa->color_primario,
-            'color_secundario' => $empresa->color_secundario,
-            'color_texto_encabezado' => $empresa->color_texto_encabezado,
-        ];
-        \Log::info('[AJUSTES DEBUG] empresa->save() EJECUTADO', ['empresa_id' => $empresa->id]);
 
         $this->logo_app_path = $empresa->logo_app_path;
         $this->logo_app_ratio = $empresa->logo_app_ratio;
@@ -298,23 +341,14 @@ class Ajustes extends Component
 
         Branding::limpiarCache();
 
-        session()->flash('status', 'Ajustes guardados correctamente. [' . now()->format('H:i:s') . ']');
+        session()->flash('status', 'Ajustes guardados correctamente.');
         $this->redirectRoute('configuracion.ajustes');
     }
 
     public function render(): View
     {
-        // Mostrar solo líneas relevantes de Ajustes en la vista para depuración
-        $logPath = storage_path('logs/laravel.log');
-        $logLines = [];
-        if (file_exists($logPath)) {
-            $lines = file($logPath);
-            $ajustesLines = array_values(array_filter($lines, static fn (string $line): bool => str_contains($line, '[AJUSTES DEBUG]')));
-            $logLines = array_slice($ajustesLines, -30); // Últimas 30 líneas de Ajustes
-        }
         return view('livewire.configuracion.ajustes', [
-            'laravel_log' => $logLines,
-            'fieldsConfig' => AjustesFields::class,  // Pasar la clase para usarla en Blade
+            'fieldsConfig' => AjustesFields::class,
         ]);
     }
 }

@@ -25,7 +25,7 @@ class FamiliaMaterialForm extends Form
         return [
             'nombre' => [
                 'required', 'string', 'max:255',
-                Rule::unique('familias_material', 'nombre')->ignore($this->id)->whereNull('deleted_at'),
+                Rule::unique('familias_material', 'nombre')->ignore($this->id),
             ],
             'descripcion' => ['nullable', 'string', 'max:255'],
         ];

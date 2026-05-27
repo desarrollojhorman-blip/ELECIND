@@ -28,10 +28,10 @@ class Index extends Component
     public string $buscar = '';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'nombre';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
-    public string $ordenDireccion = 'asc';
+    public string $ordenDireccion = 'desc';
 
     #[Url(as: 'pp')]
     public int $porPagina = 25;
@@ -46,6 +46,8 @@ class Index extends Component
 
     /** Id del material seleccionado en el select para añadir a la familia. */
     public ?int $materialAAsignar = null;
+
+    public int $materialSelectKey = 0;
 
     public function mount(): void
     {
@@ -100,7 +102,7 @@ class Index extends Component
     public function abrirVer(int $id): void
     {
         /** @var FamiliaMaterial $familia */
-        $familia = FamiliaMaterial::withTrashed()->findOrFail($id);
+        $familia = FamiliaMaterial::findOrFail($id);
         Gate::authorize('view', $familia);
 
         $this->form->fromModel($familia);
@@ -113,7 +115,7 @@ class Index extends Component
     public function abrirEditar(int $id): void
     {
         /** @var FamiliaMaterial $familia */
-        $familia = FamiliaMaterial::withTrashed()->findOrFail($id);
+        $familia = FamiliaMaterial::findOrFail($id);
         Gate::authorize('update', $familia);
 
         $this->form->fromModel($familia);
@@ -135,7 +137,7 @@ class Index extends Component
             Gate::authorize('create', FamiliaMaterial::class);
         } else {
             /** @var FamiliaMaterial $existente */
-            $existente = FamiliaMaterial::withTrashed()->findOrFail($this->form->id);
+            $existente = FamiliaMaterial::findOrFail($this->form->id);
             Gate::authorize('update', $existente);
         }
 
@@ -178,18 +180,7 @@ class Index extends Component
         $familia->delete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Familia «{$familia->nombre}» enviada a papelera.");
-    }
-
-    public function restaurar(int $id): void
-    {
-        /** @var FamiliaMaterial $familia */
-        $familia = FamiliaMaterial::withTrashed()->findOrFail($id);
-        Gate::authorize('restore', $familia);
-
-        $familia->restore();
-
-        session()->flash('status', "Familia «{$familia->nombre}» restaurada.");
+        session()->flash('status', "Familia «{$familia->nombre}» eliminada correctamente.");
     }
 
     // ── Asignación inmediata de materiales a la familia ────────────────
@@ -214,6 +205,7 @@ class Index extends Component
             ->update(['familia_id' => $familia->id]);
 
         $this->materialAAsignar = null;
+        $this->materialSelectKey++;
         unset($this->materialesDeLaFamiliaActual, $this->materialesHuerfanos);
     }
 
@@ -275,6 +267,7 @@ class Index extends Component
     {
         return Material::query()
             ->whereNull('familia_id')
+            ->where('activo', true)
             ->with('numeroPedido:id,numero')
             ->orderBy('descripcion')
             ->get(['id', 'descripcion', 'unidad_medida', 'stock', 'numero_pedido_id', 'familia_id']);

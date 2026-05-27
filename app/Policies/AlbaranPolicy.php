@@ -63,6 +63,19 @@ class AlbaranPolicy
         return $user->can('albaranes.modificar') || $user->can('albaranes.modificar_terminado');
     }
 
+    public function firmar(User $user, Albaran $albaran): bool
+    {
+        if (! $user->can('albaranes.firmar')) {
+            return false;
+        }
+
+        if ($albaran->creado_por === $user->getKey()) {
+            return true;
+        }
+
+        return $albaran->responsable_id === $user->getKey();
+    }
+
     public function restore(User $user, Albaran $albaran): bool
     {
         return $user->can('albaranes.modificar_terminado');

@@ -23,6 +23,14 @@
                 @endforeach
                 @role('superadmin')
                     <button type="button"
+                            @click="tab = 'correo'"
+                            :class="tab === 'correo'
+                                ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
+                                : 'text-slate-500 hover:text-slate-700'"
+                            class="flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm transition-colors">
+                        Correo
+                    </button>
+                    <button type="button"
                             @click="tab = 'modulos'"
                             :class="tab === 'modulos'
                                 ? '-mb-px border border-slate-200 border-b-white bg-white rounded-t-lg text-primary-700 font-semibold'
@@ -123,7 +131,7 @@
                                        class="h-10 w-14 cursor-pointer rounded border border-slate-300">
                                 <x-ui.input id="color_primario"
                                             name="color_primario"
-                                            wire:model.live="color_primario"
+                                            wire:model.live.debounce.500ms="color_primario"
                                             placeholder="#334155" class="font-mono" maxlength="{{ $colorPrimarioConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_primario', '#334155')"
@@ -142,7 +150,7 @@
                                        class="h-10 w-14 cursor-pointer rounded border border-slate-300">
                                 <x-ui.input id="color_secundario"
                                             name="color_secundario"
-                                            wire:model.live="color_secundario"
+                                            wire:model.live.debounce.500ms="color_secundario"
                                             placeholder="#f1f5f9" class="font-mono" maxlength="{{ $colorSecundarioConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_secundario', '#f1f5f9')"
@@ -161,7 +169,7 @@
                                        class="h-10 w-14 cursor-pointer rounded border border-slate-300">
                                 <x-ui.input id="color_texto_encabezado"
                                             name="color_texto_encabezado"
-                                            wire:model.live="color_texto_encabezado"
+                                            wire:model.live.debounce.500ms="color_texto_encabezado"
                                             placeholder="#ffffff" class="font-mono" maxlength="{{ $colorTextoEncabezadoConfig['maxLength'] ?? 7 }}" />
                                 <button type="button"
                                         wire:click="$set('color_texto_encabezado', '#ffffff')"
@@ -202,21 +210,21 @@
 
                    @php
                        $plantillaAlbaranConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_albaran');
-                       $plantillaPedidoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_pedido');
-                       $plantillaProyectoConfig = \App\Support\AjustesFields::getField('plantilla_numeracion_proyecto');
+                       $prefijoProyectoConfig  = \App\Support\AjustesFields::getField('prefijo_proyecto');
                    @endphp
 
                 <div class="grid gap-4 md:grid-cols-2">
-                                   <x-ui.field label="Número de albarán" for="plantilla_numeracion_albaran" :error="$errors->first('plantilla_numeracion_albaran')">
-                                       <x-ui.input id="plantilla_numeracion_albaran" name="plantilla_numeracion_albaran" wire:model.live="plantilla_numeracion_albaran" class="font-mono" maxlength="{{ $plantillaAlbaranConfig['maxLength'] ?? 60 }}" />
+                    <x-ui.field label="Número de albarán" for="plantilla_numeracion_albaran" :error="$errors->first('plantilla_numeracion_albaran')">
+                        <x-ui.input id="plantilla_numeracion_albaran" name="plantilla_numeracion_albaran" wire:model.live.debounce.500ms="plantilla_numeracion_albaran" class="font-mono" maxlength="{{ $plantillaAlbaranConfig['maxLength'] ?? 60 }}" />
                     </x-ui.field>
 
-                                   <x-ui.field label="Nº pedido" for="plantilla_numeracion_pedido" :error="$errors->first('plantilla_numeracion_pedido')">
-                                       <x-ui.input id="plantilla_numeracion_pedido" name="plantilla_numeracion_pedido" wire:model.live="plantilla_numeracion_pedido" class="font-mono" maxlength="{{ $plantillaPedidoConfig['maxLength'] ?? 60 }}" />
-                    </x-ui.field>
-
-                                   <x-ui.field label="Código proyecto" for="plantilla_numeracion_proyecto" :error="$errors->first('plantilla_numeracion_proyecto')">
-                                       <x-ui.input id="plantilla_numeracion_proyecto" name="plantilla_numeracion_proyecto" wire:model.live="plantilla_numeracion_proyecto" class="font-mono" maxlength="{{ $plantillaProyectoConfig['maxLength'] ?? 60 }}" />
+                    <x-ui.field label="Prefijo código proyecto" for="prefijo_proyecto" :error="$errors->first('prefijo_proyecto')">
+                        <x-ui.input id="prefijo_proyecto" name="prefijo_proyecto" wire:model.live.debounce.500ms="prefijo_proyecto" class="font-mono uppercase" maxlength="10"
+                                    placeholder="PR" />
+                        <p class="mt-1 text-xs text-slate-500">
+                            {{ $prefijoProyectoConfig['help'] ?? '' }}
+                            Sugerencia generada: <code class="rounded bg-slate-100 px-1 font-mono">{{ now()->format('y') }}{{ strtoupper(trim($prefijo_proyecto)) ?: 'PR' }}-1-</code>
+                        </p>
                     </x-ui.field>
                 </div>
             </div>
@@ -271,6 +279,106 @@
             </div>
 
 
+            {{-- ═══ Tab: Correo (solo superadmin) ═══ --}}
+            @role('superadmin')
+            <div x-show="tab === 'correo'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                <h3 class="mb-1 text-sm font-semibold text-slate-900">Servidor de correo saliente (SMTP)</h3>
+                <p class="mb-6 text-xs text-slate-500">
+                    Credenciales usadas para enviar correos de solicitud de firma. Funciona con Gmail, servidores propios y cualquier proveedor SMTP.
+                </p>
+
+                @if (session('correo_status'))
+                    <div class="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                        {{ session('correo_status') }}
+                    </div>
+                @endif
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <x-ui.field label="Host SMTP" required :error="$errors->first('mail_host')">
+                        <x-ui.input wire:model="mail_host" placeholder="smtp.gmail.com" />
+                        <p class="mt-1 text-xs text-slate-500">Gmail: smtp.gmail.com · Outlook: smtp.office365.com</p>
+                    </x-ui.field>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui.field label="Puerto" required :error="$errors->first('mail_port')">
+                            <x-ui.select wire:model="mail_port">
+                                <option value="587">587 (recomendado)</option>
+                                <option value="465">465</option>
+                                <option value="25">25</option>
+                                <option value="2525">2525</option>
+                            </x-ui.select>
+                        </x-ui.field>
+
+                        <x-ui.field label="Cifrado" required :error="$errors->first('mail_encryption')">
+                            <x-ui.select wire:model="mail_encryption">
+                                <option value="tls">TLS</option>
+                                <option value="ssl">SSL</option>
+                                <option value="starttls">STARTTLS</option>
+                                <option value="none">Ninguno</option>
+                            </x-ui.select>
+                        </x-ui.field>
+                    </div>
+
+                    <x-ui.field label="Usuario" required :error="$errors->first('mail_username')">
+                        <x-ui.input wire:model="mail_username" placeholder="correo@tuempresa.com" autocomplete="off" />
+                    </x-ui.field>
+
+                    <x-ui.field label="Contraseña" :error="$errors->first('mail_password')"
+                                x-data="{ mostrar: false }">
+                        <div class="relative">
+                            <x-ui.input wire:model="mail_password"
+                                        x-bind:type="mostrar ? 'text' : 'password'"
+                                        placeholder="••••••••"
+                                        autocomplete="new-password" />
+                            <button type="button"
+                                    x-on:click="mostrar = !mostrar"
+                                    class="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600">
+                                <x-heroicon-o-eye x-show="!mostrar" class="size-4" />
+                                <x-heroicon-o-eye-slash x-show="mostrar" class="size-4" />
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">Gmail: usa una "contraseña de aplicación", no la de tu cuenta.</p>
+                    </x-ui.field>
+
+                    <x-ui.field label="Correo remitente (From)" required :error="$errors->first('mail_from_address')">
+                        <x-ui.input wire:model="mail_from_address" type="email" placeholder="noreply@tuempresa.com" />
+                    </x-ui.field>
+
+                    <x-ui.field label="Nombre remitente" required :error="$errors->first('mail_from_name')">
+                        <x-ui.input wire:model="mail_from_name" placeholder="ENIA Firma" />
+                    </x-ui.field>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                    <x-ui.button variant="neutral" type="button"
+                                 wire:click="probarConexionCorreo"
+                                 wire:loading.attr="disabled"
+                                 wire:target="probarConexionCorreo">
+                        <x-heroicon-o-paper-airplane wire:loading.remove wire:target="probarConexionCorreo" class="size-4" />
+                        <svg wire:loading wire:target="probarConexionCorreo" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span wire:loading.remove wire:target="probarConexionCorreo">Probar conexión</span>
+                        <span wire:loading wire:target="probarConexionCorreo">Enviando…</span>
+                    </x-ui.button>
+
+                    <x-ui.button variant="info" type="button"
+                                 wire:click="guardarCorreo"
+                                 wire:loading.attr="disabled"
+                                 wire:target="guardarCorreo">
+                        <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardarCorreo" class="size-4" />
+                        <svg wire:loading wire:target="guardarCorreo" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span wire:loading.remove wire:target="guardarCorreo">Guardar</span>
+                        <span wire:loading wire:target="guardarCorreo">Guardando…</span>
+                    </x-ui.button>
+                </div>
+            </div>
+            @endrole
+
             {{-- ═══ Tab: Módulos (solo superadmin) ═══ --}}
             @role('superadmin')
             <div x-show="tab === 'modulos'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
@@ -321,19 +429,30 @@
 
 
 
-            {{-- ═══ BOTONES GLOBALES (ocultos en tab Módulos, que guarda directamente) ═══ --}}
-            <div x-show="tab !== 'modulos'" class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
-                <x-ui.button variant="neutral" type="button" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                    Deshacer
+            {{-- ═══ BOTONES GLOBALES (ocultos en tabs con guardado propio) ═══ --}}
+            <div x-show="tab !== 'modulos' && tab !== 'correo'" class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <x-ui.button variant="neutral" type="button" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                    <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                    <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                    <span wire:loading wire:target="deshacer">Deshaciendo…</span>
                 </x-ui.button>
-                <x-ui.button variant="info" type="button" wire:click="guardar" icon="heroicon-o-arrow-down-tray" wire:target="guardar" wire:loading.attr="disabled">
+                <x-ui.button variant="info" type="button" wire:click="guardar" wire:target="guardar" wire:loading.attr="disabled">
+                    <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                    <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
                     <span wire:loading.remove wire:target="guardar">Guardar</span>
                     <span wire:loading wire:target="guardar">Guardando…</span>
                 </x-ui.button>
             </div>
 
             {{-- Bloqueo global durante guardado --}}
-            <div wire:loading.flex wire:target="guardar" class="fixed inset-0 z-[9999] items-center justify-center bg-black/50">
+            <div wire:loading.flex wire:target="guardar,guardarCorreo" class="fixed inset-0 z-[9999] items-center justify-center bg-black/50">
                 <div class="rounded-lg bg-white px-8 py-8 shadow-2xl">
                     <div class="mb-4 flex justify-center">
                         <div class="size-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>

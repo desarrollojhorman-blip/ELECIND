@@ -44,7 +44,7 @@ class Ver extends Component
         $nombre = $this->proyecto->nombre;
         $this->proyecto->delete();
         session()->flash('status', "Proyecto «{$nombre}» enviado a papelera.");
-        $this->redirectRoute('proyectos.index', navigate: true);
+        $this->redirectRoute('proyectos.index', navigate: false);
     }
 
     /* ───────────────────────── Computeds ────────────────────── */

@@ -14,15 +14,27 @@
                     <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                         Eliminar
                     </x-ui.button>
+
                 @endcan
             @endif
         </x-slot:actionsLeft>
 
         <x-slot:actionsRight>
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                Deshacer
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-usuario" wire:loading.attr="disabled">
+            <x-ui.button variant="info" type="submit" form="form-usuario" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
@@ -82,7 +94,7 @@
                 <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Acceso y rol</h3>
                 <div class="mb-6 grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Usuario" required :error="$errors->first('form.username')">
-                        <x-ui.input wire:model.live.debounce.500ms="form.username" autofocus />
+                        <x-ui.input wire:model.blur="form.username" autofocus />
                     </x-ui.field>
 
                     <x-ui.field label="Contraseña"
@@ -94,7 +106,7 @@
                                     <x-ui.input
                                         wire:key="password-{{ $passwordRenderKey }}"
                                         :type="$mostrarPassword ? 'text' : 'password'"
-                                        wire:model.live="form.password"
+                                        wire:model.blur="form.password"
                                         class="rounded-none border-0 bg-transparent focus:border-0" />
                                 </div>
                                 <button type="button"
@@ -134,15 +146,17 @@
                         </x-ui.select>
                     </x-ui.field>
 
-                    <x-ui.field label="Empresa cliente"
+                    <x-ui.field label="Cliente"
                                 :required="$form->tipo_usuario === 'externo'"
                                 :error="$errors->first('form.cliente_id')">
-                        <x-ui.select wire:model="form.cliente_id" :disabled="$form->tipo_usuario !== 'externo'">
-                            <option value="">— Ninguna —</option>
-                            @foreach ($this->empresasDisponibles as $empresa)
-                                <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
-                            @endforeach
-                        </x-ui.select>
+                        <x-ui.searchable-select
+                            wire:key="empresa-select-{{ $form->tipo_usuario }}"
+                            wire-model="form.cliente_id"
+                            :value="$form->cliente_id"
+                            :options="$this->empresasDisponibles->map(fn($e) => ['value' => $e->id, 'label' => $e->codigo_cliente.' · '.$e->nombre])->all()"
+                            placeholder="— Ninguna —"
+                            :disabled="$form->tipo_usuario !== 'externo'"
+                        />
                     </x-ui.field>
                 </div>
 
@@ -382,7 +396,18 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">Eliminar</x-ui.button>
+            <x-ui.button variant="danger"
+                         wire:click="eliminar"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
+            </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 

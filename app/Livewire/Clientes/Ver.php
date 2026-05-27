@@ -67,7 +67,7 @@ class Ver extends Component
         $nombre = $this->cliente->nombre;
         $this->cliente->delete();
         session()->flash('status', "Cliente «{$nombre}» eliminado correctamente.");
-        $this->redirectRoute('clientes.index', navigate: true);
+        $this->redirectRoute('clientes.index', navigate: false);
     }
 
     public function ordenarProyectos(string $campo): void

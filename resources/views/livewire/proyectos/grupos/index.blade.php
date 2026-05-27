@@ -88,7 +88,15 @@
                     <td class="px-4 py-3 text-sm text-slate-600">
                         {{ $grupo->descripcion ?? '—' }}
                     </td>
-                    <td class="px-4 py-3 text-center text-sm text-slate-700">{{ $grupo->proyectos_count }}</td>
+                    <td class="px-4 py-3 text-center text-sm text-slate-700">
+                        @if ($grupo->proyectos_count)
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                {{ $grupo->proyectos_count }}
+                            </span>
+                        @else
+                            <span class="text-slate-300">0</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-3 text-center">
                         @if ($grupo->trashed())
                             <x-ui.badge tone="danger" dot>Eliminado</x-ui.badge>
@@ -102,8 +110,20 @@
                         <div class="flex items-center justify-end gap-1">
                             @if ($grupo->trashed())
                                 @can('restore', $grupo)
-                                    <x-ui.icon-button wire:click="restaurar({{ $grupo->id }})"
-                                        icon="heroicon-o-arrow-uturn-left" variant="success" tooltip="Restaurar" />
+                                    <x-ui.icon-button
+                                        wire:click="restaurar({{ $grupo->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="restaurar({{ $grupo->id }})"
+                                        variant="success"
+                                        tooltip="Restaurar">
+                                        <span wire:loading.remove wire:target="restaurar({{ $grupo->id }})">
+                                            <x-heroicon-o-arrow-uturn-left class="size-4" />
+                                        </span>
+                                        <svg wire:loading wire:target="restaurar({{ $grupo->id }})" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                    </x-ui.icon-button>
                                 @endcan
                             @else
                                 @can('view', $grupo)
@@ -145,10 +165,7 @@
             </x-ui.field>
 
             <x-ui.field label="Estado" :error="$errors->first('form.activo')">
-                <x-ui.select wire:model="form.activo" :disabled="$modoSoloLectura">
-                    <option value="1">Activo</option>
-                    <option value="0">Desactivado</option>
-                </x-ui.select>
+                <x-ui.checkbox wire:model="form.activo" label="Activo" :disabled="$modoSoloLectura" />
             </x-ui.field>
         </form>
 

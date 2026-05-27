@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Enums\TipoFirma;
-use Database\Factories\AlbaranFirmaFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $albaran_id
+ * @property string $firmable_type
+ * @property int $firmable_id
  * @property TipoFirma $tipo
  * @property int|null $firmado_por_user_id
  * @property int|null $token_id
@@ -21,15 +21,13 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $geolocalizacion
  * @property Carbon $firmado_at
  */
-class AlbaranFirma extends Model
+class Firma extends Model
 {
-    /** @use HasFactory<AlbaranFirmaFactory> */
-    use HasFactory;
-
-    protected $table = 'albaran_firmas';
+    protected $table = 'firmas';
 
     protected $fillable = [
-        'albaran_id',
+        'firmable_type',
+        'firmable_id',
         'tipo',
         'firmado_por_user_id',
         'token_id',
@@ -43,15 +41,15 @@ class AlbaranFirma extends Model
     protected function casts(): array
     {
         return [
-            'tipo' => TipoFirma::class,
+            'tipo'           => TipoFirma::class,
             'geolocalizacion' => 'array',
-            'firmado_at' => 'datetime',
+            'firmado_at'     => 'datetime',
         ];
     }
 
-    public function albaran(): BelongsTo
+    public function firmable(): MorphTo
     {
-        return $this->belongsTo(Albaran::class);
+        return $this->morphTo();
     }
 
     public function firmadoPor(): BelongsTo
@@ -61,6 +59,6 @@ class AlbaranFirma extends Model
 
     public function token(): BelongsTo
     {
-        return $this->belongsTo(AlbaranTokenFirma::class, 'token_id');
+        return $this->belongsTo(TokenFirma::class, 'token_id');
     }
 }

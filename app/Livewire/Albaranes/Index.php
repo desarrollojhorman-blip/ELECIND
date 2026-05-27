@@ -42,7 +42,7 @@ class Index extends Component
     public string $filtroHasta = '';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'fecha';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'desc';

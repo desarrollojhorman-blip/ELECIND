@@ -19,10 +19,21 @@
         </x-slot:actionsLeft>
 
         <x-slot:actionsRight>
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                Deshacer
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-proyecto" wire:loading.attr="disabled">
+            <x-ui.button variant="info" type="submit" form="form-proyecto" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
@@ -47,6 +58,7 @@
             ['key' => 'responsables',  'label' => 'Responsables',  'count' => $proyecto ? $this->responsablesProyecto->count() : null],
             ['key' => 'conceptos',     'label' => 'Conceptos',     'count' => $proyecto ? $this->conceptosProyecto->count() : null],
             ['key' => 'materiales',    'label' => 'Materiales',    'count' => $proyecto ? $this->materialesProyecto->count() : null],
+            ['key' => 'albaranes',     'label' => 'Albaranes',     'count' => $proyecto ? $this->albaranesDelProyecto->count() : null],
         ] as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
@@ -76,66 +88,54 @@
     <form wire:submit="guardar" id="form-proyecto" autocomplete="off">
         <div x-show="tab === 'proyecto'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
+                {{-- Fila 1: Código | Grupo --}}
                 <x-ui.field label="Código proyecto" required :error="$errors->first('form.codigo')"
                             hint="Generado automáticamente. Puedes modificarlo si lo necesitas.">
                     <x-ui.input wire:model="form.codigo" class="font-mono" autofocus />
                 </x-ui.field>
 
+                <x-ui.field label="Grupo" :error="$errors->first('form.tipo_proyecto_id')">
+                    <x-ui.searchable-select
+                        wire-model="selectorGrupo"
+                        :value="$selectorGrupo ?: null"
+                        :options="$this->tiposDisponibles->map(fn($t) => ['value' => $t->id, 'label' => $t->nombre])->all()"
+                        placeholder="— Sin grupo —"
+                    />
+                </x-ui.field>
+
+                {{-- Fila 2: Nombre | Cliente --}}
                 <x-ui.field label="Nombre proyecto" required :error="$errors->first('form.nombre')">
                     <x-ui.input wire:model="form.nombre" />
                 </x-ui.field>
 
-                <x-ui.field label="Grupo" :error="$errors->first('form.tipo_proyecto_id')">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1">
-                            <x-ui.select wire:model.live="selectorGrupo">
-                                <option value="">— Sin grupo —</option>
-                                @foreach ($this->tiposDisponibles as $tipo)
-                                    <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                                @endforeach
-                                <option value="__otro__">Otro…</option>
-                            </x-ui.select>
-                        </div>
-                        @can('create', App\Models\TiposProyecto::class)
-                            <x-ui.button type="button" variant="ghost" wire:click="abrirModalTipo">
-                                + Crear tipo
-                            </x-ui.button>
-                        @endcan
-                    </div>
+                <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')">
+                    <x-ui.searchable-select
+                        wire-model="form.cliente_id"
+                        :value="$form->cliente_id"
+                        :options="$this->clientesDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->codigo_cliente.' · '.$c->nombre])->all()"
+                        placeholder="— Selecciona cliente —"
+                    />
                 </x-ui.field>
 
-                <x-ui.field label="Estado" required :error="$errors->first('form.estado')">
-                    <x-ui.select wire:model="form.estado">
-                        <option value="activo">Activo</option>
-                        <option value="cerrado">Cerrado</option>
-                        <option value="archivado">Archivado</option>
-                    </x-ui.select>
-                </x-ui.field>
-
-                @if ($selectorGrupo === '__otro__')
-                    <x-ui.field label="Nombre del nuevo grupo" class="md:col-span-2" :error="$errors->first('nuevoGrupoNombre')">
-                        <x-ui.input wire:model="nuevoGrupoNombre"
-                                    placeholder="Escribe el nombre del nuevo grupo" />
-                    </x-ui.field>
-                @endif
-
+                {{-- Fila 3: Fecha inicio | Fecha fin --}}
                 <x-ui.field label="Fecha inicio" :error="$errors->first('form.fecha_inicio')">
-                    <x-ui.input type="date" wire:model="form.fecha_inicio" />
+                    <x-ui.date-input wireModel="form.fecha_inicio" placeholder="dd/mm/aaaa" />
                 </x-ui.field>
 
                 <x-ui.field label="Fecha fin" :error="$errors->first('form.fecha_fin')">
-                    <x-ui.input type="date" wire:model="form.fecha_fin" />
+                    <x-ui.date-input wireModel="form.fecha_fin" placeholder="dd/mm/aaaa" />
                 </x-ui.field>
 
-                <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')" class="md:col-span-2">
-                    <x-ui.select wire:model="form.cliente_id">
-                        <option value="">— Selecciona cliente —</option>
-                        @foreach ($this->clientesDisponibles as $cliente)
-                            <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                        @endforeach
+                {{-- Fila 4: Estado (media columna) --}}
+                <x-ui.field label="Estado" required :error="$errors->first('form.estado')">
+                    <x-ui.select wire:model="form.estado">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="cerrado">Cerrado</option>
                     </x-ui.select>
                 </x-ui.field>
 
+                {{-- Fila 5: Observaciones --}}
                 <x-ui.field label="Descripción" :error="$errors->first('form.descripcion')" class="md:col-span-2">
                     <x-ui.textarea wire:model="form.descripcion" rows="3" />
                 </x-ui.field>
@@ -172,12 +172,19 @@
                     <x-ui.searchable-select
                         wire:key="trabajador-select-{{ $trabajadorSelectKey }}"
                         wire-model="trabajadorAAgregar"
-                        :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                        :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim(($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->nombre.' '.$u->apellidos))])"
                         placeholder="— Selecciona trabajador —"
                     />
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="agregarTrabajador" icon="heroicon-o-plus">
-                    Añadir
+                <x-ui.button type="button" variant="success" wire:click="agregarTrabajador"
+                             wire:loading.attr="disabled" wire:target="agregarTrabajador">
+                    <x-heroicon-o-plus wire:loading.remove wire:target="agregarTrabajador" class="size-4" />
+                    <svg wire:loading wire:target="agregarTrabajador" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="agregarTrabajador">Añadir</span>
+                    <span wire:loading wire:target="agregarTrabajador">Añadiendo…</span>
                 </x-ui.button>
             </div>
             @error('trabajadorAAgregar')
@@ -189,8 +196,10 @@
             <table class="w-full text-sm">
                 <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                     <tr>
-                        <th class="px-6 py-2.5">Nombre</th>
-                        <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
+                        <x-ui.sortable-header column="nombre" :current-column="$ordenTrabajadoresColumna" :current-direction="$ordenTrabajadoresDireccion" action="ordenarTrabajadoresPor">
+                            Nombre
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -234,12 +243,19 @@
                     <x-ui.searchable-select
                         wire:key="responsable-select-{{ $responsableSelectKey }}"
                         wire-model="responsableAAgregar"
-                        :options="$this->responsablesProyectoDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                        :options="$this->responsablesProyectoDisponibles->map(fn($u) => ['value' => $u->id, 'label' => $u->id.' · '.trim($u->nombre.' '.$u->apellidos)])"
                         placeholder="— Selecciona responsable —"
                     />
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="agregarResponsableProyecto" icon="heroicon-o-plus">
-                    Añadir
+                <x-ui.button type="button" variant="success" wire:click="agregarResponsableProyecto"
+                             wire:loading.attr="disabled" wire:target="agregarResponsableProyecto">
+                    <x-heroicon-o-plus wire:loading.remove wire:target="agregarResponsableProyecto" class="size-4" />
+                    <svg wire:loading wire:target="agregarResponsableProyecto" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="agregarResponsableProyecto">Añadir</span>
+                    <span wire:loading wire:target="agregarResponsableProyecto">Añadiendo…</span>
                 </x-ui.button>
             </div>
             @error('responsableAAgregar')
@@ -251,8 +267,10 @@
             <table class="w-full text-sm">
                 <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                     <tr>
-                        <th class="px-6 py-2.5">Nombre</th>
-                        <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
+                        <x-ui.sortable-header column="nombre" :current-column="$ordenResponsablesColumna" :current-direction="$ordenResponsablesDireccion" action="ordenarResponsablesPor">
+                            Nombre
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -296,12 +314,19 @@
                     <x-ui.searchable-select
                         wire:key="concepto-select-{{ $conceptoSelectKey }}"
                         wire-model="conceptoAAgregar"
-                        :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
+                        :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->id.' · '.$c->nombre])"
                         placeholder="— Selecciona concepto —"
                     />
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="agregarConceptoProyecto" icon="heroicon-o-plus">
-                    Añadir
+                <x-ui.button type="button" variant="success" wire:click="agregarConceptoProyecto"
+                             wire:loading.attr="disabled" wire:target="agregarConceptoProyecto">
+                    <x-heroicon-o-plus wire:loading.remove wire:target="agregarConceptoProyecto" class="size-4" />
+                    <svg wire:loading wire:target="agregarConceptoProyecto" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="agregarConceptoProyecto">Añadir</span>
+                    <span wire:loading wire:target="agregarConceptoProyecto">Añadiendo…</span>
                 </x-ui.button>
             </div>
             @error('conceptoAAgregar')
@@ -313,8 +338,10 @@
             <table class="w-full text-sm">
                 <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                     <tr>
-                        <th class="px-6 py-2.5">Concepto</th>
-                        <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
+                        <x-ui.sortable-header column="nombre" :current-column="$ordenConceptosColumna" :current-direction="$ordenConceptosDireccion" action="ordenarConceptosPor">
+                            Concepto
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -358,12 +385,19 @@
                     <x-ui.searchable-select
                         wire:key="material-select-{{ $materialSelectKey }}"
                         wire-model="materialAAgregar"
-                        :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | stock: '.$m->stock.' '.$m->unidad_medida])"
+                        :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => ($m->numeroPedido?->numero ? $m->numeroPedido->numero.' · ' : '').$m->descripcion.' · '.$m->stock.' '.$m->unidad_medida])"
                         placeholder="— Selecciona material —"
                     />
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="agregarMaterialProyecto" icon="heroicon-o-plus">
-                    Añadir
+                <x-ui.button type="button" variant="success" wire:click="agregarMaterialProyecto"
+                             wire:loading.attr="disabled" wire:target="agregarMaterialProyecto">
+                    <x-heroicon-o-plus wire:loading.remove wire:target="agregarMaterialProyecto" class="size-4" />
+                    <svg wire:loading wire:target="agregarMaterialProyecto" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="agregarMaterialProyecto">Añadir</span>
+                    <span wire:loading wire:target="agregarMaterialProyecto">Añadiendo…</span>
                 </x-ui.button>
             </div>
             @error('materialAAgregar')
@@ -375,9 +409,13 @@
             <table class="w-full text-sm">
                 <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                     <tr>
-                        <th class="px-6 py-2.5">Material</th>
-                        <th class="w-36 px-6 py-2.5">Stock</th>
-                        <th class="w-20 px-6 py-2.5 text-right">Acciones</th>
+                        <x-ui.sortable-header column="descripcion" :current-column="$ordenMaterialesColumna" :current-direction="$ordenMaterialesDireccion" action="ordenarMaterialesPor">
+                            Material
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header column="stock" :current-column="$ordenMaterialesColumna" :current-direction="$ordenMaterialesDireccion" action="ordenarMaterialesPor" class="w-36">
+                            Stock
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -399,33 +437,66 @@
             </div>
         @endif
     </div>
+    {{-- ═══ Tab: Albaranes ═══ --}}
+    <div x-show="tab === 'albaranes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <div class="px-6 py-4">
+            <p class="text-sm font-semibold text-slate-900">Albaranes del proyecto</p>
+            <p class="text-xs text-slate-500">Solo lectura. Para crear o editar un albarán ve a la sección de Albaranes.</p>
+        </div>
+
+        @if ($this->albaranesDelProyecto->isNotEmpty())
+            <table class="w-full text-sm">
+                <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                    <tr>
+                        <x-ui.sortable-header column="numero" :current-column="$ordenAlbaranesColumna" :current-direction="$ordenAlbaranesDireccion" action="ordenarAlbaranesPor">
+                            Nº Albarán
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header column="fecha" :current-column="$ordenAlbaranesColumna" :current-direction="$ordenAlbaranesDireccion" action="ordenarAlbaranesPor">
+                            Fecha
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header column="estado" :current-column="$ordenAlbaranesColumna" :current-direction="$ordenAlbaranesDireccion" action="ordenarAlbaranesPor">
+                            Estado
+                        </x-ui.sortable-header>
+                        <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ($this->albaranesDelProyecto as $albaran)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-3 font-mono font-medium text-slate-800">
+                                {{ $albaran->numero ?? '#'.$albaran->id }}
+                            </td>
+                            <td class="px-6 py-3 text-slate-500">
+                                {{ $albaran->fecha?->format('d/m/Y') ?? '—' }}
+                            </td>
+                            <td class="px-6 py-3">
+                                <x-ui.badge :tone="$albaran->estado->tono()" dot>
+                                    {{ $albaran->estado->etiqueta() }}
+                                </x-ui.badge>
+                            </td>
+                            <td class="px-6 py-3 text-right">
+                                @can('albaranes.ver_todos')
+                                    <x-ui.icon-button
+                                        as="a"
+                                        href="{{ route('albaranes.ver', $albaran) }}"
+                                        wire:navigate
+                                        icon="heroicon-o-eye"
+                                        variant="neutral"
+                                        tooltip="Ver albarán" />
+                                @endcan
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <div class="px-6 py-8 text-center text-sm text-slate-400">
+                Este proyecto no tiene albaranes asociados.
+            </div>
+        @endif
+    </div>
+
     </div>{{-- /tabs + contenido --}}
-
-    {{-- Modal: crear tipo de proyecto al vuelo --}}
-    <x-ui.modal :show="$modalTipoAbierto"
-        title="Crear nuevo tipo de proyecto"
-        close-action="cerrarModalTipo"
-        size="sm">
-
-        <form wire:submit="guardarTipo" id="form-tipo-rapido" class="space-y-4">
-            <x-ui.field label="Nombre" required :error="$errors->first('tipoForm.nombre')">
-                <x-ui.input wire:model="tipoForm.nombre" autofocus
-                            placeholder="Ej. Marzo, Mantenimiento, Aluan-2026…" />
-            </x-ui.field>
-            <x-ui.field label="Descripción (opcional)" :error="$errors->first('tipoForm.descripcion')">
-                <x-ui.textarea wire:model="tipoForm.descripcion" rows="2" />
-            </x-ui.field>
-            <p class="text-xs text-slate-500">Al guardar, el tipo se selecciona automáticamente en el proyecto.</p>
-        </form>
-
-        <x-slot:footer>
-            <x-ui.button variant="neutral" wire:click="cerrarModalTipo">Cancelar</x-ui.button>
-            <x-ui.button variant="success" type="submit" form="form-tipo-rapido"
-                         wire:loading.attr="disabled">
-                Crear tipo
-            </x-ui.button>
-        </x-slot:footer>
-    </x-ui.modal>
 
     {{-- Modal confirmar eliminación --}}
     <x-ui.modal
@@ -450,8 +521,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

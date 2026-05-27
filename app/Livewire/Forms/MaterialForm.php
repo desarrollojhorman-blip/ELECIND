@@ -32,6 +32,9 @@ class MaterialForm extends Form
     #[Validate]
     public ?string $precio_venta = null;
 
+    #[Validate]
+    public bool $activo = true;
+
     /**
      * @return array<string, array<int, mixed>>
      */
@@ -45,6 +48,7 @@ class MaterialForm extends Form
             'stock' => ['required', 'numeric', 'min:0'],
             'precio_coste' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'precio_venta' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'activo' => ['boolean'],
         ];
     }
 
@@ -61,6 +65,7 @@ class MaterialForm extends Form
             'stock' => 'stock',
             'precio_coste' => 'precio coste',
             'precio_venta' => 'precio venta',
+            'activo' => 'activo',
         ];
     }
 
@@ -74,6 +79,7 @@ class MaterialForm extends Form
         $this->stock = (float) $material->stock;
         $this->precio_coste = $material->precio_coste !== null ? (string) $material->precio_coste : null;
         $this->precio_venta = $material->precio_venta !== null ? (string) $material->precio_venta : null;
+        $this->activo = (bool) $material->activo;
     }
 
     public function save(): Material
@@ -90,6 +96,7 @@ class MaterialForm extends Form
         $datos['precio_venta'] = $this->precio_venta === null || $this->precio_venta === ''
             ? null
             : (float) str_replace(',', '.', $this->precio_venta);
+        $datos['activo'] = $this->activo;
 
         if ($this->id === null) {
             $material = new Material;

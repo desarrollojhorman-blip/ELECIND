@@ -43,7 +43,7 @@ class MaterialFactory extends Factory
             'numero_pedido_id' => NumeroPedido::factory(),
             'descripcion' => $descripcion.' '.fake()->bothify('#?'),
             'unidad_medida' => $unidad,
-            'stock' => fake()->randomFloat(2, 0, 500),
+            'stock' => fake()->numberBetween(0, 500),
             'precio_coste' => $coste,
             'precio_venta' => $venta,
         ];

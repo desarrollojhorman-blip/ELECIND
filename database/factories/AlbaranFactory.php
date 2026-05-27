@@ -30,7 +30,13 @@ class AlbaranFactory extends Factory
             'creado_por' => User::factory()->trabajador(),
             'responsable_id' => null,
             'estado' => EstadoAlbaran::BORRADOR,
-            'tipo_hora' => $faker->randomElement(TipoHora::cases()),
+            'tipo_hora' => $faker->randomElement([
+                TipoHora::LABORAL, TipoHora::LABORAL, TipoHora::LABORAL, TipoHora::LABORAL,
+                TipoHora::LABORAL, TipoHora::LABORAL,
+                TipoHora::LABORAL_NOCHE, TipoHora::LABORAL_NOCHE,
+                TipoHora::FESTIVO, TipoHora::FESTIVO,
+                TipoHora::FESTIVO_NOCHE,
+            ]),
             'observaciones' => $faker->boolean(35) ? $faker->sentence(8) : null,
             'snapshot_data' => null,
         ];

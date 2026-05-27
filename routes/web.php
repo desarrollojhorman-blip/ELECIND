@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ProyectoOpcionesController;
+use App\Http\Controllers\Albaranes\ExportarPdfController as AlbaranesExportarPdf;
 use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExcel;
 use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
 use App\Http\Controllers\Conceptos\ExportarExcelController as ConceptosExportarExcel;
@@ -9,10 +10,12 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Usuarios\ExportarExcelController as UsuariosExportarExcel;
 use App\Http\Controllers\Usuarios\ExportarPdfController as UsuariosExportarPdf;
 use App\Livewire\Albaranes\Editar as AlbaranesEditar;
+use App\Livewire\Firma\FirmarAlbaran;
 use App\Livewire\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Albaranes\Ver as AlbaranesVer;
 use App\Livewire\Borradores\Editar as BorradoresEditar;
 use App\Livewire\Borradores\Index as BorradoresIndex;
+use App\Livewire\Horas\Index as HorasIndex;
 use App\Livewire\Borradores\Ver as BorradoresVer;
 use App\Livewire\Clientes\Editar as ClientesEditar;
 use App\Livewire\Clientes\Importar as ClientesImportar;
@@ -21,6 +24,9 @@ use App\Livewire\Clientes\Ver as ClientesVer;
 use App\Livewire\Conceptos\Importar as ConceptosImportar;
 use App\Livewire\Conceptos\Index as ConceptosIndex;
 use App\Livewire\Configuracion\Ajustes as ConfiguracionAjustes;
+use App\Livewire\Configuracion\Api as ConfiguracionApi;
+use App\Livewire\Configuracion\Licencias as ConfiguracionLicencias;
+use App\Livewire\Configuracion\Logs as ConfiguracionLogs;
 use App\Livewire\Empresa\Edit as EmpresaEdit;
 use App\Livewire\Materiales\Editar as MaterialesEditar;
 use App\Livewire\Materiales\Familias\Index as FamiliasIndex;
@@ -47,6 +53,9 @@ Route::middleware('auth')->group(function (): void {
         ->name('api.proyecto.opciones');
 });
 
+// Página pública de firma — accesible sin autenticación
+Route::get('/firmar/{token}', FirmarAlbaran::class)->name('albaranes.firmar');
+
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -56,12 +65,15 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         return view('web.dashboard');
     })->name('web.dashboard');
 
+    Route::get('/horas', HorasIndex::class)
+        ->name('horas.index');
+
     Route::get('/borradores', BorradoresIndex::class)
         ->middleware('can:borradores.ver_todos')
         ->name('borradores.index');
 
     Route::get('/borradores/crear', BorradoresEditar::class)
-        ->middleware('can:borradores.crear')
+        ->middleware('can:borradores.crear_web')
         ->name('borradores.crear');
 
     Route::get('/borradores/{borrador}', BorradoresVer::class)
@@ -87,6 +99,10 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/albaranes/{albaran}/editar', AlbaranesEditar::class)
         ->middleware('can:albaranes.ver_todos')
         ->name('albaranes.editar');
+
+    Route::get('/albaranes/{albaran}/pdf', AlbaranesExportarPdf::class)
+        ->middleware('can:albaranes.ver_todos')
+        ->name('albaranes.pdf');
 
     Route::get('/clientes', ClientesIndex::class)
         ->middleware('can:clientes.ver')
@@ -137,41 +153,43 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->middleware('can:proyectos.ver')
         ->name('proyectos.editar');
 
-    Route::get('/materiales/pedidos', NumeroPedidosIndex::class)
-        ->middleware('can:pedidos.ver')
-        ->name('materiales.pedidos');
+    Route::middleware('modulo.materiales')->group(function (): void {
+        Route::get('/materiales/pedidos', NumeroPedidosIndex::class)
+            ->middleware('can:pedidos.ver')
+            ->name('materiales.pedidos');
 
-    Route::get('/materiales/pedidos/crear', PedidosEditar::class)
-        ->middleware('can:pedidos.crear')
-        ->name('pedidos.crear');
+        Route::get('/materiales/pedidos/crear', PedidosEditar::class)
+            ->middleware('can:pedidos.crear')
+            ->name('pedidos.crear');
 
-    Route::get('/materiales/pedidos/{pedido}', PedidosVer::class)
-        ->middleware('can:pedidos.ver')
-        ->name('pedidos.ver');
+        Route::get('/materiales/pedidos/{pedido}', PedidosVer::class)
+            ->middleware('can:pedidos.ver')
+            ->name('pedidos.ver');
 
-    Route::get('/materiales/pedidos/{pedido}/editar', PedidosEditar::class)
-        ->middleware('can:pedidos.modificar')
-        ->name('pedidos.editar');
+        Route::get('/materiales/pedidos/{pedido}/editar', PedidosEditar::class)
+            ->middleware('can:pedidos.modificar')
+            ->name('pedidos.editar');
 
-    Route::get('/materiales/familias', FamiliasIndex::class)
-        ->middleware('can:materiales.familias.ver')
-        ->name('materiales.familias');
+        Route::get('/materiales/familias', FamiliasIndex::class)
+            ->middleware('can:materiales.familias.ver')
+            ->name('materiales.familias');
 
-    Route::get('/materiales', MaterialesIndex::class)
-        ->middleware('can:materiales.ver')
-        ->name('materiales.index');
+        Route::get('/materiales', MaterialesIndex::class)
+            ->middleware('can:materiales.ver')
+            ->name('materiales.index');
 
-    Route::get('/materiales/crear', MaterialesEditar::class)
-        ->middleware('can:materiales.crear')
-        ->name('materiales.crear');
+        Route::get('/materiales/crear', MaterialesEditar::class)
+            ->middleware('can:materiales.crear')
+            ->name('materiales.crear');
 
-    Route::get('/materiales/{material}', MaterialesVer::class)
-        ->middleware('can:materiales.ver')
-        ->name('materiales.ver');
+        Route::get('/materiales/{material}', MaterialesVer::class)
+            ->middleware('can:materiales.ver')
+            ->name('materiales.ver');
 
-    Route::get('/materiales/{material}/editar', MaterialesEditar::class)
-        ->middleware('can:materiales.modificar')
-        ->name('materiales.editar');
+        Route::get('/materiales/{material}/editar', MaterialesEditar::class)
+            ->middleware('can:materiales.modificar')
+            ->name('materiales.editar');
+    });
 
     Route::get('/usuarios', UsuariosIndex::class)
         ->middleware('can:usuarios.ver_todos')
@@ -230,6 +248,18 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/configuracion/roles', RolesIndex::class)
         ->middleware('can:roles.gestionar')
         ->name('configuracion.roles');
+
+    Route::get('/configuracion/api', ConfiguracionApi::class)
+        ->middleware('can:configuracion.ver')
+        ->name('configuracion.api');
+
+    Route::get('/configuracion/logs', ConfiguracionLogs::class)
+        ->middleware('can:configuracion.ver')
+        ->name('configuracion.logs');
+
+    Route::get('/configuracion/licencias', ConfiguracionLicencias::class)
+        ->middleware('can:configuracion.ver')
+        ->name('configuracion.licencias');
 
     Route::get('/perfil', MiPerfil::class)
         ->name('perfil.mi-perfil');

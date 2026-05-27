@@ -58,7 +58,7 @@ class Ver extends Component
         $this->borrador->delete();
 
         session()->flash('status', "Borrador «{$numero}» eliminado.");
-        $this->redirectRoute('borradores.index', navigate: true);
+        $this->redirectRoute('borradores.index', navigate: false);
     }
 
     /* ── Convertir a albarán ───────────────────────────────────── */

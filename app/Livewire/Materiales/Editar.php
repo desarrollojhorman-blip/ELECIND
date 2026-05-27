@@ -91,7 +91,7 @@ class Editar extends Component
         $descripcion = $this->material->descripcion;
         $this->material->delete();
         session()->flash('status', "Material «{$descripcion}» enviado a papelera.");
-        $this->redirectRoute('materiales.index', navigate: true);
+        $this->redirectRoute('materiales.index', navigate: false);
     }
 
     public function ordenarAlbaranes(string $campo): void
@@ -119,6 +119,7 @@ class Editar extends Component
     public function pedidosDisponibles(): Collection
     {
         return NumeroPedido::query()
+            ->where('activo', true)
             ->orderBy('fecha', 'desc')
             ->orderBy('numero')
             ->get(['id', 'numero', 'proveedor']);

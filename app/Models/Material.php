@@ -8,12 +8,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Material extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'materiales';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('material')
+            ->logOnly(['descripcion', 'unidad_medida', 'stock', 'precio_coste', 'precio_venta', 'activo', 'numero_pedido_id', 'familia_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $_e) => "Material: {$this->descripcion}");
+    }
 
     protected $fillable = [
         'numero_pedido_id',
@@ -23,6 +35,7 @@ class Material extends Model
         'stock',
         'precio_coste',
         'precio_venta',
+        'activo',
     ];
 
     protected function casts(): array
@@ -31,6 +44,7 @@ class Material extends Model
             'stock' => 'decimal:2',
             'precio_coste' => 'decimal:2',
             'precio_venta' => 'decimal:2',
+            'activo' => 'boolean',
         ];
     }
 

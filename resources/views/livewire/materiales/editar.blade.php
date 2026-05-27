@@ -19,10 +19,21 @@
         </x-slot:actionsLeft>
 
         <x-slot:actionsRight>
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                Deshacer
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-material" wire:loading.attr="disabled">
+            <x-ui.button variant="info" type="submit" form="form-material" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
@@ -79,24 +90,22 @@
             <div x-show="tab === 'material'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
                 <div class="grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Nº Pedido" required :error="$errors->first('form.numero_pedido_id')">
-                        <x-ui.select wire:model="form.numero_pedido_id">
-                            <option value="">— Selecciona un pedido —</option>
-                            @foreach ($this->pedidosDisponibles as $ped)
-                                <option value="{{ $ped->id }}">
-                                    {{ $ped->numero }}{{ $ped->proveedor ? ' ('.$ped->proveedor.')' : '' }}
-                                </option>
-                            @endforeach
-                        </x-ui.select>
+                        <x-ui.searchable-select
+                            wire-model="form.numero_pedido_id"
+                            :value="$form->numero_pedido_id"
+                            :options="$this->pedidosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->numero.($p->proveedor ? ' ('.$p->proveedor.')' : '')])->all()"
+                            placeholder="— Selecciona un pedido —"
+                        />
                     </x-ui.field>
 
                     <x-ui.field label="Familia" :error="$errors->first('form.familia_id')"
                                 hint="Opcional.">
-                        <x-ui.select wire:model="form.familia_id">
-                            <option value="">— Sin familia —</option>
-                            @foreach ($this->familiasDisponibles as $fam)
-                                <option value="{{ $fam->id }}">{{ $fam->nombre }}</option>
-                            @endforeach
-                        </x-ui.select>
+                        <x-ui.searchable-select
+                            wire-model="form.familia_id"
+                            :value="$form->familia_id"
+                            :options="$this->familiasDisponibles->map(fn($f) => ['value' => $f->id, 'label' => $f->id.' · '.$f->nombre])->all()"
+                            placeholder="— Sin familia —"
+                        />
                     </x-ui.field>
 
                     <x-ui.field label="Descripción" required :error="$errors->first('form.descripcion')" class="md:col-span-2">
@@ -139,6 +148,11 @@
                         </x-ui.field>
                     </div>
                 @endcan
+
+                {{-- Material activo: standalone al final. --}}
+                <div class="mt-6 border-t border-slate-100 pt-4">
+                    <x-ui.checkbox wire:model="form.activo" label="Material activo" />
+                </div>
             </div>
         </form>
 
@@ -283,7 +297,18 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">Eliminar</x-ui.button>
+            <x-ui.button variant="danger"
+                         wire:click="eliminar"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
+            </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 </div>

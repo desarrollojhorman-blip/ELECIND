@@ -113,6 +113,7 @@ class Crear extends Component
         $puedeVerTodos = Auth::user()?->can('albaranes.ver_todos') ?? false;
 
         $query = Proyecto::query()
+            ->with('cliente:id,nombre')
             ->where('estado', 'activo')
             ->orderBy('nombre');
 
@@ -123,7 +124,7 @@ class Crear extends Component
             });
         }
 
-        return $query->get(['id', 'nombre', 'cliente_id', 'responsable_principal_id']);
+        return $query->get(['id', 'nombre', 'codigo', 'cliente_id', 'responsable_principal_id']);
     }
 
     /** @return Collection<int, Concepto> */
@@ -151,18 +152,59 @@ class Crear extends Component
 
         $proyecto = Proyecto::query()->find($this->form->proyecto_id);
 
-        return $proyecto
-            ? $proyecto->usuarios()->where('users.activo', true)->orderBy('nombre')->get(['users.id', 'users.nombre', 'users.apellidos'])
-            : collect();
+        if ($proyecto === null) {
+            return collect();
+        }
+
+        return $proyecto->usuarios()
+            ->where('users.activo', true)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'responsable'))
+            ->orderBy('nombre')
+            ->get(['users.id', 'users.nombre', 'users.apellidos']);
+    }
+
+    /** @return Collection<int, User> */
+    #[Computed]
+    public function usuariosProyecto(): Collection
+    {
+        if ($this->form->proyecto_id === null) {
+            return collect();
+        }
+
+        $proyecto = Proyecto::query()->find($this->form->proyecto_id);
+
+        if ($proyecto === null) {
+            return collect();
+        }
+
+        return $proyecto->usuarios()
+            ->where('users.activo', true)
+            ->orderBy('nombre')
+            ->get(['users.id', 'users.nombre', 'users.apellidos']);
     }
 
     /** @return Collection<int, User> */
     #[Computed]
     public function companerosDisponibles(): Collection
     {
+        if ($this->form->proyecto_id === null) {
+            return collect();
+        }
+
+        $proyecto = Proyecto::query()->find($this->form->proyecto_id);
+
+        if ($proyecto === null) {
+            return collect();
+        }
+
         $myId = (int) Auth::id();
 
-        return $this->responsablesDisponibles->filter(fn ($u) => $u->id !== $myId)->values();
+        return $proyecto->usuarios()
+            ->where('users.activo', true)
+            ->where('users.id', '!=', $myId)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'trabajador'))
+            ->orderBy('nombre')
+            ->get(['users.id', 'users.nombre', 'users.apellidos']);
     }
 
     /**
@@ -184,6 +226,7 @@ class Crear extends Component
         }
 
         return $proyecto->materiales()
+            ->where('activo', true)
             ->orderBy('descripcion')
             ->get(['materiales.id', 'materiales.descripcion', 'materiales.unidad_medida', 'materiales.stock']);
     }

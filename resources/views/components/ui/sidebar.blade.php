@@ -10,13 +10,6 @@
             'permission' => null,
         ],
         [
-            'label' => 'Control de Horas',
-            'icon' => 'heroicon-o-clock',
-            'route' => null,
-            'key' => 'horas',
-            'permission' => null,
-        ],
-        [
             'label' => 'Proyectos',
             'icon' => 'heroicon-o-folder',
             'route' => null,
@@ -24,16 +17,16 @@
             'permission' => null,
             'children' => [
                 [
-                    'label' => 'Grupo proyectos',
-                    'route' => 'proyectos.grupos',
-                    'key' => 'proyectos_grupos',
-                    'permission' => 'grupos_proyecto.ver',
-                ],
-                [
                     'label' => 'Proyectos',
                     'route' => 'proyectos.index',
                     'key' => 'proyectos_lista',
                     'permission' => 'proyectos.ver',
+                ],
+                [
+                    'label' => 'Grupo proyectos',
+                    'route' => 'proyectos.grupos',
+                    'key' => 'proyectos_grupos',
+                    'permission' => 'grupos_proyecto.ver',
                 ],
             ],
         ],
@@ -57,6 +50,20 @@
                     'permission' => 'albaranes.ver_todos',
                 ],
             ],
+        ],
+        [
+            'label' => 'Clientes',
+            'icon' => 'heroicon-o-building-office-2',
+            'route' => 'clientes.index',
+            'key' => 'clientes',
+            'permission' => 'clientes.ver',
+        ],
+        [
+            'label' => 'Usuarios',
+            'icon' => 'heroicon-o-users',
+            'route' => 'usuarios.index',
+            'key' => 'usuarios',
+            'permission' => 'usuarios.ver_todos',
         ],
         ...(\App\Support\Modulos::materialesAvanzado() ? [[
             'label' => 'Materiales',
@@ -86,13 +93,6 @@
             ],
         ]] : []),
         [
-            'label' => 'Clientes',
-            'icon' => 'heroicon-o-building-office-2',
-            'route' => 'clientes.index',
-            'key' => 'clientes',
-            'permission' => 'clientes.ver',
-        ],
-        [
             'label' => 'Conceptos',
             'icon' => 'heroicon-o-tag',
             'route' => 'conceptos.index',
@@ -100,11 +100,11 @@
             'permission' => 'conceptos.ver',
         ],
         [
-            'label' => 'Usuarios',
-            'icon' => 'heroicon-o-users',
-            'route' => 'usuarios.index',
-            'key' => 'usuarios',
-            'permission' => 'usuarios.ver_todos',
+            'label' => 'Control de Horas',
+            'icon' => 'heroicon-o-clock',
+            'route' => 'horas.index',
+            'key' => 'horas',
+            'permission' => null,
         ],
         [
             'label' => 'Ausencias',
@@ -144,6 +144,24 @@
                     'route' => 'configuracion.roles',
                     'key' => 'roles',
                     'permission' => 'roles.gestionar',
+                ],
+                [
+                    'label' => 'API',
+                    'route' => 'configuracion.api',
+                    'key' => 'api',
+                    'permission' => 'configuracion.ver',
+                ],
+                [
+                    'label' => 'Logs',
+                    'route' => 'configuracion.logs',
+                    'key' => 'logs',
+                    'permission' => 'configuracion.ver',
+                ],
+                [
+                    'label' => 'Licencias',
+                    'route' => 'configuracion.licencias',
+                    'key' => 'licencias',
+                    'permission' => 'configuracion.ver',
                 ],
             ],
         ],

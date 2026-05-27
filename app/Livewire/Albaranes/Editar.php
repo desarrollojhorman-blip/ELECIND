@@ -6,7 +6,10 @@ use App\Enums\EstadoAlbaran;
 use App\Enums\TipoHora;
 use App\Livewire\Forms\AlbaranForm;
 use App\Models\Albaran;
+use App\Mail\SolicitudFirmaEmail;
+use App\Models\TokenFirma;
 use App\Models\Concepto;
+use App\Models\Empresa;
 use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\User;
@@ -14,7 +17,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -34,23 +39,23 @@ class Editar extends Component
 
     public ?int $confirmarEliminarId = null;
 
-    // ── Modal trabajador ─────────────────────────────────────────────────────
-    public bool $modalTrabajadorAbierto = false;
+    // ── Inline trabajador ────────────────────────────────────────────────────
+    // null = ninguna fila en edición; 0 = fila nueva; >0 = id de línea existente
     public ?int $editandoLineaPersonalId = null;
     public ?int $modalTrabajadorUserId = null;
     public string $modalTrabajadorHoras = '8.00';
     public string $modalTrabajadorHorasExtra = '0.00';
     public ?int $confirmarEliminarLineaPersonalId = null;
 
-    // ── Modal material ────────────────────────────────────────────────────────
-    public bool $modalMaterialAbierto = false;
+    // ── Inline material ───────────────────────────────────────────────────────
+    // null = ninguna fila en edición; 0 = fila nueva; >0 = id de línea existente
     public ?int $editandoLineaMaterialId = null;
     public ?int $modalMaterialId = null;
     public string $modalMaterialCantidad = '1.00';
     public ?int $confirmarEliminarLineaMaterialId = null;
 
-    // ── Modal archivo ─────────────────────────────────────────────────────────
-    public bool $modalArchivoAbierto = false;
+    // ── Inline archivo ───────────────────────────────────────────────────────
+    public bool $subiendoArchivo = false;
     public string $modalArchivoNombre = '';
     public ?TemporaryUploadedFile $modalArchivoFichero = null;
     public ?int $confirmarEliminarArchivoId = null;
@@ -92,10 +97,10 @@ class Editar extends Component
 
     public function abrirModalTrabajador(?int $lineaId = null): void
     {
-        $this->modalTrabajadorUserId    = null;
-        $this->modalTrabajadorHoras     = '8.00';
+        $this->modalTrabajadorUserId     = null;
+        $this->modalTrabajadorHoras      = '8.00';
         $this->modalTrabajadorHorasExtra = '0.00';
-        $this->editandoLineaPersonalId  = null;
+        $this->editandoLineaPersonalId   = 0; // 0 = fila nueva
 
         if ($lineaId !== null && $this->albaran !== null) {
             $linea = $this->albaran->lineasPersonal->find($lineaId);
@@ -108,12 +113,12 @@ class Editar extends Component
         }
 
         $this->resetErrorBag();
-        $this->modalTrabajadorAbierto = true;
     }
 
     public function cerrarModalTrabajador(): void
     {
-        $this->modalTrabajadorAbierto = false;
+        $this->editandoLineaPersonalId = null;
+        $this->resetErrorBag();
     }
 
     public function guardarTrabajador(): void
@@ -127,7 +132,7 @@ class Editar extends Component
             'modalTrabajadorHoras.required'  => 'Las horas son obligatorias.',
         ]);
 
-        if ($this->editandoLineaPersonalId !== null) {
+        if ($this->editandoLineaPersonalId > 0) {
             $linea = $this->albaran?->lineasPersonal()->find($this->editandoLineaPersonalId);
             $linea?->update([
                 'trabajador_id' => $this->modalTrabajadorUserId,
@@ -143,7 +148,7 @@ class Editar extends Component
         }
 
         $this->albaran?->load('lineasPersonal.trabajador');
-        $this->modalTrabajadorAbierto = false;
+        $this->editandoLineaPersonalId = null;
     }
 
     public function confirmarEliminarTrabajador(int $lineaId): void
@@ -174,9 +179,9 @@ class Editar extends Component
 
     public function abrirModalMaterial(?int $lineaId = null): void
     {
-        $this->modalMaterialId       = null;
-        $this->modalMaterialCantidad = '1.00';
-        $this->editandoLineaMaterialId = null;
+        $this->modalMaterialId         = null;
+        $this->modalMaterialCantidad   = '1.00';
+        $this->editandoLineaMaterialId = 0; // 0 = fila nueva
 
         if ($lineaId !== null && $this->albaran !== null) {
             $linea = $this->albaran->lineasMaterial->find($lineaId);
@@ -188,12 +193,12 @@ class Editar extends Component
         }
 
         $this->resetErrorBag();
-        $this->modalMaterialAbierto = true;
     }
 
     public function cerrarModalMaterial(): void
     {
-        $this->modalMaterialAbierto = false;
+        $this->editandoLineaMaterialId = null;
+        $this->resetErrorBag();
     }
 
     public function guardarMaterial(): void
@@ -207,7 +212,7 @@ class Editar extends Component
             'modalMaterialCantidad.min'      => 'La cantidad debe ser mayor que 0.',
         ]);
 
-        if ($this->editandoLineaMaterialId !== null) {
+        if ($this->editandoLineaMaterialId > 0) {
             $linea = $this->albaran?->lineasMaterial()->find($this->editandoLineaMaterialId);
             $linea?->update([
                 'material_id' => $this->modalMaterialId,
@@ -221,7 +226,7 @@ class Editar extends Component
         }
 
         $this->albaran?->load('lineasMaterial.material');
-        $this->modalMaterialAbierto = false;
+        $this->editandoLineaMaterialId = null;
     }
 
     public function confirmarEliminarMaterial(int $lineaId): void
@@ -255,13 +260,14 @@ class Editar extends Component
         $this->modalArchivoNombre  = '';
         $this->modalArchivoFichero = null;
         $this->resetErrorBag();
-        $this->modalArchivoAbierto = true;
+        $this->subiendoArchivo = true;
     }
 
     public function cerrarModalArchivo(): void
     {
-        $this->modalArchivoAbierto = false;
+        $this->subiendoArchivo     = false;
         $this->modalArchivoFichero = null;
+        $this->modalArchivoNombre  = '';
     }
 
     public function guardarArchivo(): void
@@ -306,8 +312,9 @@ class Editar extends Component
         ]);
 
         $this->albaran->load('archivos');
-        $this->modalArchivoAbierto = false;
+        $this->subiendoArchivo     = false;
         $this->modalArchivoFichero = null;
+        $this->modalArchivoNombre  = '';
     }
 
     public function confirmarEliminarArchivo(int $archivoId): void
@@ -337,7 +344,7 @@ class Editar extends Component
         $this->confirmarEliminarArchivoId = null;
     }
 
-    public function guardar(): void
+public function guardar(): void
     {
         $esNuevo = $this->albaran === null;
 
@@ -377,8 +384,99 @@ class Editar extends Component
             return;
         }
 
-        // TODO: generar tokens y enviar correos cuando el sistema de firma esté listo.
-        session()->flash('status', 'Notificaciones enviadas correctamente.');
+        $empresa = Empresa::actual();
+
+        if (! $empresa->mail_host) {
+            $this->addError('firma', 'Configura el servidor de correo en Ajustes → Correo antes de enviar notificaciones.');
+            return;
+        }
+
+        // Configurar mailer con las credenciales de la empresa
+        config(['mail.mailers.empresa_smtp' => [
+            'transport'  => 'smtp',
+            'host'       => $empresa->mail_host,
+            'port'       => $empresa->mail_port,
+            'encryption' => $empresa->mail_encryption,
+            'username'   => $empresa->mail_username,
+            'password'   => $empresa->mail_password,
+            'timeout'    => 15,
+        ]]);
+
+        $enviados = 0;
+        $caducidadDias = $empresa->token_caducidad_dias ?? 7;
+
+        if ($trabajador) {
+            $email  = $this->form->firma_trabajador_otro_correo;
+            $nombre = $this->form->firma_trabajador_otro_nombre;
+
+            if (! $email && $this->form->firma_trabajador_user_id) {
+                $user   = User::find($this->form->firma_trabajador_user_id);
+                $email  = $user?->email;
+                $nombre = $user ? trim($user->nombre . ' ' . $user->apellidos) : null;
+            }
+
+            if ($email) {
+                $this->enviarTokenFirma('trabajador', $email, $nombre, $caducidadDias, $empresa);
+                $enviados++;
+            } else {
+                $this->addError('firma', 'El empleado firmante no tiene correo configurado.');
+            }
+        }
+
+        if ($responsable) {
+            $email  = $this->form->firma_responsable_otro_correo;
+            $nombre = $this->form->firma_responsable_otro_nombre;
+
+            if (! $email && $this->form->responsable_id) {
+                $user   = User::find($this->form->responsable_id);
+                $email  = $user?->email;
+                $nombre = $user ? trim($user->nombre . ' ' . $user->apellidos) : null;
+            }
+
+            if ($email) {
+                $this->enviarTokenFirma('responsable', $email, $nombre, $caducidadDias, $empresa);
+                $enviados++;
+            } else {
+                $this->addError('firma', 'El responsable firmante no tiene correo configurado.');
+            }
+        }
+
+        $this->albaran->load('tokensFirma');
+
+        if ($enviados > 0) {
+            session()->flash('status', $enviados === 1 ? 'Notificación enviada correctamente.' : 'Notificaciones enviadas correctamente.');
+        }
+    }
+
+    private function enviarTokenFirma(string $tipo, string $email, ?string $nombre, int $caducidadDias, Empresa $empresa): void
+    {
+        // Invalidar tokens anteriores activos del mismo tipo
+        $this->albaran->tokensFirma()
+            ->where('tipo_firmante', $tipo)
+            ->whereNull('usado_at')
+            ->whereNull('invalidado_at')
+            ->update(['invalidado_at' => now()]);
+
+        /** @var TokenFirma $tokenFirma */
+        $tokenFirma = $this->albaran->tokensFirma()->create([
+            'tipo_firmante'       => $tipo,
+            'token'               => Str::random(64),
+            'email_destino'       => $email,
+            'nombre_destino'      => $nombre,
+            'caduca_at'           => now()->addDays($caducidadDias),
+            'generado_por_user_id' => Auth::id(),
+        ]);
+
+        $tokenFirma->load([
+            'firmable.proyecto',
+            'firmable.cliente',
+            'firmable.concepto',
+            'firmable.lineasPersonal.trabajador',
+        ]);
+
+        Mail::mailer('empresa_smtp')
+            ->to($email, $nombre)
+            ->send(new SolicitudFirmaEmail($tokenFirma));
     }
 
     public function eliminar(): void
@@ -392,7 +490,7 @@ class Editar extends Component
         $this->albaran->delete();
 
         session()->flash('status', "Albarán «{$numero}» enviado a papelera.");
-        $this->redirectRoute('albaranes.index', navigate: true);
+        $this->redirectRoute('albaranes.index', navigate: false);
     }
 
     /* ───────────────────────── Computeds ────────────────────── */
@@ -429,6 +527,35 @@ class Editar extends Component
 
     /** @return Collection<int, User> */
     #[Computed]
+    public function firmantesInternosDisponibles(): Collection
+    {
+        if ($this->form->proyecto_id === null) {
+            return collect();
+        }
+
+        $ids = array_filter(array_unique([
+            $this->albaran?->creado_por,
+            (int) Auth::id(),
+        ]));
+
+        return User::query()
+            ->where('activo', true)
+            ->where(function ($q) use ($ids) {
+                $q->where(function ($q2) {
+                    $q2->role('trabajador')
+                        ->whereHas('proyectos', fn ($q3) => $q3->where('proyectos.id', $this->form->proyecto_id));
+                });
+                if ($ids) {
+                    $q->orWhereIn('id', $ids);
+                }
+            })
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get(['id', 'numero_empleado', 'nombre', 'apellidos']);
+    }
+
+    /** @return Collection<int, User> */
+    #[Computed]
     public function responsablesDisponibles(): Collection
     {
         if ($this->form->proyecto_id === null) {
@@ -437,6 +564,7 @@ class Editar extends Component
 
         return User::query()
             ->where('activo', true)
+            ->role('responsable')
             ->whereHas('proyectos', fn ($q) => $q->where('proyectos.id', $this->form->proyecto_id))
             ->orderBy('nombre')
             ->orderBy('apellidos')
@@ -451,14 +579,19 @@ class Editar extends Component
             return collect();
         }
 
+        $yaEnParte = $this->albaran?->lineasPersonal
+            ->when($this->editandoLineaPersonalId > 0, fn ($c) => $c->where('id', '!=', $this->editandoLineaPersonalId))
+            ->pluck('trabajador_id')
+            ->all() ?? [];
+
         return User::query()
             ->where('activo', true)
-            ->whereHas('proyectos', fn ($q) => $q
-                ->where('proyectos.id', $this->form->proyecto_id)
-                ->where('proyecto_usuario.rol_en_proyecto', 'trabajador'))
+            ->role('trabajador')
+            ->whereHas('proyectos', fn ($q) => $q->where('proyectos.id', $this->form->proyecto_id))
+            ->when($yaEnParte, fn ($q) => $q->whereNotIn('id', $yaEnParte))
             ->orderBy('nombre')
             ->orderBy('apellidos')
-            ->get(['id', 'nombre', 'apellidos']);
+            ->get(['id', 'numero_empleado', 'nombre', 'apellidos']);
     }
 
     /** @return Collection<int, Material> */
@@ -471,7 +604,7 @@ class Editar extends Component
 
         /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()
-            ->with('materiales:id,descripcion,unidad_medida,stock')
+            ->with(['materiales' => fn ($q) => $q->where('activo', true)->with('numeroPedido:id,numero')->select('materiales.id', 'materiales.numero_pedido_id', 'materiales.descripcion', 'materiales.unidad_medida', 'materiales.stock')])
             ->find($this->form->proyecto_id);
 
         if ($proyecto === null) {
@@ -485,7 +618,7 @@ class Editar extends Component
     {
         $titulo   = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
         $tiposHora = TipoHora::cases();
-        $estados   = EstadoAlbaran::cases();
+        $estados   = array_values(array_filter(EstadoAlbaran::cases(), fn ($e) => $e !== EstadoAlbaran::BORRADOR));
 
         $tokenTrabajador   = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'trabajador')->sortByDesc('created_at')->first();
         $tokenResponsable  = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'responsable')->sortByDesc('created_at')->first();

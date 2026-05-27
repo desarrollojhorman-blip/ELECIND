@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureMobileAccess;
+use App\Http\Middleware\EnsureModuloMateriales;
 use App\Http\Middleware\EnsureWebAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,8 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'ensure.web.access' => EnsureWebAccess::class,
-            'ensure.mobile.access' => EnsureMobileAccess::class,
+            'ensure.web.access'      => EnsureWebAccess::class,
+            'ensure.mobile.access'   => EnsureMobileAccess::class,
+            'modulo.materiales'      => EnsureModuloMateriales::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

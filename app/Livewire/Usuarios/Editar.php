@@ -121,7 +121,7 @@ class Editar extends Component
             ? "Usuario «{$usuario->username}» creado correctamente."
             : "Usuario «{$usuario->username}» actualizado correctamente.");
 
-        $this->redirectRoute('usuarios.editar', ['usuario' => $usuario->getKey()], navigate: true);
+        $this->redirectRoute('usuarios.editar', ['usuario' => $usuario->getKey()], navigate: false);
     }
 
     /* ── Duplicados ─────────────────────────────────────────────────────── */
@@ -225,7 +225,7 @@ class Editar extends Component
         $username = $this->usuario->username;
         $this->usuario->delete();
         session()->flash('status', "Usuario «{$username}» eliminado correctamente.");
-        $this->redirectRoute('usuarios.index', navigate: true);
+        $this->redirectRoute('usuarios.index', navigate: false);
     }
 
     public function ordenarProyectos(string $campo): void
@@ -282,7 +282,7 @@ class Editar extends Component
         return Cliente::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+            ->get(['id', 'codigo_cliente', 'nombre']);
     }
 
     /** @return Collection<int, Proyecto> */

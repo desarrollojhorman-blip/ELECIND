@@ -31,10 +31,10 @@ class Index extends Component
     public string $filtroEstado = 'todos';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'nombre';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
-    public string $ordenDireccion = 'asc';
+    public string $ordenDireccion = 'desc';
 
     #[Url(as: 'pp')]
     public int $porPagina = 25;

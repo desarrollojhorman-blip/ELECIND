@@ -32,8 +32,4 @@ class FamiliaMaterialPolicy
         return $user->can('materiales.familias.eliminar');
     }
 
-    public function restore(User $user, FamiliaMaterial $familia): bool
-    {
-        return $user->can('materiales.familias.modificar');
-    }
 }

@@ -10,8 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -28,14 +31,24 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $snapshot_data
  * @property-read EloquentCollection<int, AlbaranLineaPersonal> $lineasPersonal
  * @property-read EloquentCollection<int, AlbaranLineaMaterial> $lineasMaterial
- * @property-read EloquentCollection<int, AlbaranFirma> $firmas
- * @property-read EloquentCollection<int, AlbaranTokenFirma> $tokensFirma
+ * @property-read EloquentCollection<int, Firma> $firmas
+ * @property-read EloquentCollection<int, TokenFirma> $tokensFirma
  * @property-read EloquentCollection<int, AlbaranArchivo> $archivos
  */
 class Albaran extends Model
 {
     /** @use HasFactory<AlbaranFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('albaran')
+            ->logOnly(['numero', 'fecha', 'cliente_id', 'proyecto_id', 'concepto_id', 'creado_por', 'responsable_id', 'estado', 'tipo_hora', 'observaciones'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $_e) => "Albarán #{$this->numero}");
+    }
 
     protected $table = 'albaranes';
 
@@ -71,6 +84,12 @@ class Albaran extends Model
         'responsable_nombre_snapshot',
         'responsable_apellidos_snapshot',
         'responsable_numero_empleado_snapshot',
+        // Parte personalizado
+        'es_personalizado',
+        'cliente_texto',
+        'proyecto_texto',
+        'concepto_texto',
+        'responsable_texto',
     ];
 
     protected function casts(): array
@@ -80,6 +99,7 @@ class Albaran extends Model
             'estado' => EstadoAlbaran::class,
             'tipo_hora' => TipoHora::class,
             'snapshot_data' => 'array',
+            'es_personalizado' => 'boolean',
         ];
     }
 
@@ -123,14 +143,14 @@ class Albaran extends Model
         return $this->hasMany(AlbaranLineaMaterial::class);
     }
 
-    public function firmas(): HasMany
+    public function firmas(): MorphMany
     {
-        return $this->hasMany(AlbaranFirma::class);
+        return $this->morphMany(Firma::class, 'firmable');
     }
 
-    public function tokensFirma(): HasMany
+    public function tokensFirma(): MorphMany
     {
-        return $this->hasMany(AlbaranTokenFirma::class);
+        return $this->morphMany(TokenFirma::class, 'firmable');
     }
 
     public function archivos(): HasMany

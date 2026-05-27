@@ -166,9 +166,23 @@
 
         {{-- Acciones --}}
         <div class="flex justify-end gap-2 pt-2">
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left" type="button">Deshacer</x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="button" wire:click="guardar" wire:loading.attr="disabled" wire:target="guardar">
-                Guardar
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer" type="button">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
+            </x-ui.button>
+            <x-ui.button variant="info" type="button" wire:click="guardar" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="guardar">Guardar</span>
+                <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
         </div>
 

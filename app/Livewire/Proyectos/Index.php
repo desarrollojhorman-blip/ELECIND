@@ -26,7 +26,7 @@ class Index extends Component
     #[Url(as: 'q')]
     public string $buscar = '';
 
-    /** Estados: todos | activo | cerrado | archivado | papelera */
+    /** Estados: todos | activo | inactivo | cerrado | papelera */
     #[Url(as: 'estado')]
     public string $filtroEstado = 'todos';
 
@@ -40,10 +40,10 @@ class Index extends Component
     public ?int $filtroResponsable = null;
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'nombre';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
-    public string $ordenDireccion = 'asc';
+    public string $ordenDireccion = 'desc';
 
     #[Url(as: 'pp')]
     public int $porPagina = 25;
@@ -142,7 +142,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['nombre', 'codigo', 'estado', 'fecha_inicio', 'created_at'];
+        $columnasPermitidas = ['nombre', 'codigo', 'estado', 'fecha_inicio', 'albaranes_count'];
         if (! \in_array($columna, $columnasPermitidas, true)) {
             return;
         }
@@ -259,11 +259,13 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = Proyecto::query()->with(['cliente:id,nombre', 'tipoProyecto:id,nombre', 'responsablePrincipal:id,nombre,apellidos']);
+        $query = Proyecto::query()
+            ->with(['cliente:id,nombre', 'tipoProyecto:id,nombre'])
+            ->withCount('albaranes');
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();
-        } elseif (\in_array($this->filtroEstado, ['activo', 'cerrado', 'archivado'], true)) {
+        } elseif (\in_array($this->filtroEstado, ['activo', 'inactivo', 'cerrado'], true)) {
             $query->where('estado', $this->filtroEstado);
         }
 

@@ -27,7 +27,7 @@ class BorradorPolicy
 
     public function create(User $user): bool
     {
-        return $user->can('borradores.crear');
+        return $user->can('borradores.crear_movil') || $user->can('borradores.crear_web');
     }
 
     public function update(User $user, Borrador $borrador): bool

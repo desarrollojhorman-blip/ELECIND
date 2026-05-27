@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Proyecto;
+use App\Services\NumeracionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
@@ -55,7 +56,7 @@ class ProyectoForm extends Form
             'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
             'tipo_proyecto_id' => ['nullable', 'integer', 'exists:tipos_proyectos,id'],
             'responsable_principal_id' => ['nullable', 'integer', 'exists:users,id'],
-            'estado' => ['required', Rule::in(['activo', 'cerrado', 'archivado'])],
+            'estado' => ['required', Rule::in(['activo', 'inactivo', 'cerrado'])],
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
             'descripcion' => ['nullable', 'string', 'max:2000'],
@@ -99,7 +100,7 @@ class ProyectoForm extends Form
         $this->cliente_id = $proyecto->cliente_id;
         $this->tipo_proyecto_id = $proyecto->tipo_proyecto_id;
         $this->responsable_principal_id = $proyecto->responsable_principal_id;
-        $this->estado = $proyecto->estado === 'borrador' ? 'activo' : $proyecto->estado;
+        $this->estado = $proyecto->estado;
         $this->fecha_inicio = $proyecto->fecha_inicio
             ? Carbon::parse($proyecto->fecha_inicio)->format('Y-m-d')
             : null;
@@ -117,6 +118,8 @@ class ProyectoForm extends Form
         unset($datos['id']);
 
         if ($this->id === null) {
+            $resultado = app(NumeracionService::class)->siguienteProyecto();
+            $datos['codigo_secuencial'] = $resultado['secuencial'];
             $proyecto = new Proyecto;
         } else {
             /** @var Proyecto $proyecto */

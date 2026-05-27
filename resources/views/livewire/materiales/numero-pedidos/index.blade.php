@@ -38,7 +38,7 @@
         {{ $pedidos->links() }}
     </div>
 
-    <x-ui.data-table :colspan="6" empty="No hay pedidos que coincidan con la búsqueda.">
+    <x-ui.data-table :colspan="7" empty="No hay pedidos que coincidan con la búsqueda.">
         <x-slot:head>
             <tr>
                 <x-ui.sortable-header column="numero" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
@@ -52,6 +52,9 @@
                 </x-ui.sortable-header>
                 <x-ui.sortable-header>Descripción</x-ui.sortable-header>
                 <x-ui.sortable-header align="center">Materiales</x-ui.sortable-header>
+                <x-ui.sortable-header column="activo" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
+                    Estado
+                </x-ui.sortable-header>
                 <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
             </tr>
         </x-slot:head>
@@ -67,6 +70,13 @@
                         <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
                             {{ $pedido->materiales_count }}
                         </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        @if ($pedido->activo)
+                            <x-ui.badge tone="success" dot>Activo</x-ui.badge>
+                        @else
+                            <x-ui.badge tone="neutral" dot>Inactivo</x-ui.badge>
+                        @endif
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
@@ -123,8 +133,17 @@
         </div>
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

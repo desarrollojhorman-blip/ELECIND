@@ -5,22 +5,12 @@
 
         <div class="space-y-3">
             <x-mobile.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
-                <select wire:model.live="form.proyecto_id"
-                        class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white">
-                    <option value="">— Selecciona proyecto —</option>
-                    @foreach($this->proyectosDisponibles as $p)
-                        <option value="{{ $p->id }}">{{ $p->nombre }}</option>
-                    @endforeach
-                </select>
+                <x-ui.searchable-select
+                    wire-model="form.proyecto_id"
+                    :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->cliente->nombre.' · '.$p->nombre.($p->codigo ? ' ('.$p->codigo.')' : '')])"
+                    placeholder="— Selecciona proyecto —"
+                />
             </x-mobile.field>
-
-            @if ($form->cliente_id)
-                <x-mobile.field label="Cliente">
-                    <p class="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
-                        {{ \App\Models\Cliente::find($form->cliente_id)?->nombre ?? '—' }}
-                    </p>
-                </x-mobile.field>
-            @endif
 
             <x-mobile.field label="Concepto" :error="$errors->first('form.concepto_id')">
                 <select wire:model="form.concepto_id"
@@ -32,7 +22,7 @@
                 </select>
             </x-mobile.field>
 
-            <x-mobile.field label="Responsable del proyecto" :error="$errors->first('form.responsable_id')">
+            <x-mobile.field label="Responsable" :error="$errors->first('form.responsable_id')">
                 <div wire:key="resp-{{ $selectKey }}">
                     <x-ui.searchable-select
                         wire-model="form.responsable_id"
@@ -92,11 +82,14 @@
                     :remove-action="'removeCompanero('.$index.')'"
                     wire:key="comp-{{ $index }}">
                     <div class="space-y-3">
+                        @php
+                            $compOcupados = collect($form->companeros)->forget($index)->pluck('trabajador_id')->filter()->flip()->all();
+                        @endphp
                         <x-mobile.field label="Trabajador" required :error="$errors->first('form.companeros.'.$index.'.trabajador_id')">
                             <div wire:key="comp-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.companeros.{{ $index }}.trabajador_id"
-                                    :options="$this->companerosDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                    :options="$this->companerosDisponibles->reject(fn($u) => isset($compOcupados[$u->id]))->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])->values()"
                                     placeholder="— Selecciona —"
                                 />
                             </div>
@@ -133,6 +126,7 @@
             @foreach ($form->materiales as $index => $material)
                 @php
                     $matSeleccionado = $this->materialesProyecto->firstWhere('id', $material['material_id'] ?? null);
+                    $matOcupados = collect($form->materiales)->forget($index)->pluck('material_id')->filter()->flip()->all();
                 @endphp
                 <x-mobile.line-card
                     :title="'Material #'.($index + 1)"
@@ -143,7 +137,7 @@
                             <div wire:key="mat-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.materiales.{{ $index }}.material_id"
-                                    :options="$this->materialesProyecto->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock,2,',',''),'0'),',').' '.$m->unidad_medida])"
+                                    :options="$this->materialesProyecto->reject(fn($m) => isset($matOcupados[$m->id]))->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock,2,',',''),'0'),',').' '.$m->unidad_medida])->values()"
                                     placeholder="— Selecciona —"
                                 />
                             </div>

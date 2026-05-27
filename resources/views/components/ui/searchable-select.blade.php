@@ -23,6 +23,7 @@
     'placeholder' => '— Selecciona —',
     'disabled'    => false,
     'entangle'    => null,
+    'value'       => null,
 ])
 
 @php
@@ -33,17 +34,19 @@
             'label' => is_array($o) ? $o['label'] : $o->label,
         ])->values()
     );
-    $disabledJs = $disabled ? 'true' : 'false';
+    $disabledJs      = $disabled ? 'true' : 'false';
+    $initialValueJs  = $value !== null ? Js::from((string) $value) : 'null';
 @endphp
 
 <div
     {{ $attributes->only('wire:key') }}
     x-data="{
-        open:     false,
-        search:   '',
-        selected: null,
-        disabled: {{ $disabledJs }},
-        options: {{ $optionsJson }},
+        open:         false,
+        search:       '',
+        selected:     (function() { var v = {{ $initialValueJs }}; var opts = {{ $optionsJson }}; if (v !== null) { return opts.find(function(o) { return String(o.value) === String(v); }) || null; } return null; })(),
+        disabled:     {{ $disabledJs }},
+        initialValue: {{ $initialValueJs }},
+        options:      {{ $optionsJson }},
         get filtered() {
             if (!this.search.trim()) return this.options;
             const q = this.search.toLowerCase();
@@ -64,9 +67,11 @@
             this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
         },
         init() {
-            const v = this.$refs.hiddenInput?.value;
+            const v = this.initialValue !== null
+                ? String(this.initialValue)
+                : (this.$refs.hiddenInput?.value ?? '');
             if (v) {
-                this.selected = this.options.find(o => String(o.value) === String(v)) ?? null;
+                this.selected = this.options.find(o => String(o.value) === v) ?? null;
             }
             this.$watch('open', val => {
                 if (val) this.$nextTick(() => this.$refs.searchInput?.focus());

@@ -4,9 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Empresa extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('empresa')
+            ->logOnly([
+                'nombre', 'nombre_comercial', 'cif', 'direccion', 'codigo_postal', 'poblacion',
+                'provincia', 'telefono', 'email_contacto', 'email_notificaciones',
+                'color_primario', 'color_secundario', 'color_texto_encabezado',
+                'plantilla_numeracion_albaran', 'plantilla_numeracion_cliente', 'prefijo_proyecto',
+                'token_caducidad_dias', 'modulo_materiales_avanzado',
+                'archivo_tamano_max_mb', 'archivo_cantidad_max',
+                'mail_host', 'mail_port', 'mail_encryption', 'mail_username', 'mail_from_address', 'mail_from_name',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $_e) => 'Configuración empresa');
+    }
+
+
     protected $table = 'empresa';
 
     protected $fillable = [
@@ -34,13 +57,19 @@ class Empresa extends Model
         'color_texto_encabezado',
         'plantilla_numeracion_albaran',
         'plantilla_numeracion_cliente',
-        'plantilla_numeracion_pedido',
-        'plantilla_numeracion_proyecto',
+        'prefijo_proyecto',
         'token_caducidad_dias',
         'plantilla_pdf_config',
         'archivo_tamano_max_mb',
         'archivo_cantidad_max',
         'modulo_materiales_avanzado',
+        'mail_host',
+        'mail_port',
+        'mail_encryption',
+        'mail_username',
+        'mail_password',
+        'mail_from_address',
+        'mail_from_name',
     ];
 
     protected function casts(): array
@@ -57,6 +86,8 @@ class Empresa extends Model
             'logo_app_ratio' => 'float',
             'logo_app_zoom' => 'integer',
             'modulo_materiales_avanzado' => 'boolean',
+            'mail_port' => 'integer',
+            'mail_password' => 'encrypted',
         ];
     }
 

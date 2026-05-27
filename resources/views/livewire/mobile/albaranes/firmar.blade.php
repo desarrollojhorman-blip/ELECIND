@@ -53,6 +53,8 @@
                 /* ── Responsable ── */
                 ctxR: null, vacioR: true, dibR: false, posR: {x:0,y:0},
 
+                esTrabajador: {{ $esTrabajador ? 'true' : 'false' }},
+
                 init() {
                     const setup = (ctx) => {
                         ctx.strokeStyle = '#1e293b';
@@ -60,8 +62,10 @@
                         ctx.lineCap     = 'round';
                         ctx.lineJoin    = 'round';
                     };
-                    this.ctxT = this.$refs.canvasT.getContext('2d');
-                    setup(this.ctxT);
+                    if (this.$refs.canvasT) {
+                        this.ctxT = this.$refs.canvasT.getContext('2d');
+                        setup(this.ctxT);
+                    }
                     if (this.$refs.canvasR) {
                         this.ctxR = this.$refs.canvasR.getContext('2d');
                         setup(this.ctxR);
@@ -102,10 +106,17 @@
                 lR() { if (!this.ctxR) return; this.ctxR.clearRect(0, 0, this.$refs.canvasR.width, this.$refs.canvasR.height); this.vacioR = true; $wire.set('firmaResponsableData', ''); },
 
                 /* Envío */
+                get puedeEnviar() {
+                    return this.esTrabajador ? !this.vacioT : !this.vacioR;
+                },
                 enviar() {
-                    if (this.vacioT) return;
-                    $wire.set('firmaTrabajadorData', this.$refs.canvasT.toDataURL('image/png'));
-                    if (this.$refs.canvasR && !this.vacioR) {
+                    if (!this.puedeEnviar) return;
+                    if (this.esTrabajador) {
+                        $wire.set('firmaTrabajadorData', this.$refs.canvasT.toDataURL('image/png'));
+                        if (this.$refs.canvasR && !this.vacioR) {
+                            $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
+                        }
+                    } else {
                         $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
                     }
                     $wire.call('firmar');
@@ -113,60 +124,84 @@
             }"
             class="space-y-4"
         >
-            {{-- Canvas trabajador --}}
+            {{-- ── Campo trabajador ── --}}
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="mb-1 text-sm font-semibold text-slate-800">
-                    Firma del trabajador
-                </p>
+                <p class="mb-1 text-sm font-semibold text-slate-800">Firma del trabajador</p>
                 <p class="mb-3 text-xs text-slate-500">
                     {{ trim($albaran->creador->nombre.' '.$albaran->creador->apellidos) }}
                 </p>
 
-                <div class="relative overflow-hidden rounded-lg border-2 border-dashed border-slate-300 bg-slate-50"
-                     style="touch-action:none">
-                    <canvas x-ref="canvasT" width="600" height="180" class="block w-full"
-                            x-on:mousedown="iT" x-on:mousemove="dT" x-on:mouseup="fT" x-on:mouseleave="fT"
-                            x-on:touchstart="iT" x-on:touchmove="dT" x-on:touchend="fT"></canvas>
-                    <p x-show="vacioT" class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-slate-400 select-none">
-                        Firma aquí
-                    </p>
-                </div>
-
-                @error('firmaTrabajadorData')
-                    <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
-                @enderror
-
-                <button type="button" x-on:click="lT()"
-                        class="mt-2 flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
-                    <x-heroicon-o-arrow-path class="size-3.5" /> Borrar firma
-                </button>
-            </div>
-
-            {{-- Canvas responsable (solo si hay responsable asignado) --}}
-            @if ($albaran->responsable_id)
-                <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <p class="mb-1 text-sm font-semibold text-slate-800">
-                        Firma del responsable
-                    </p>
-                    <p class="mb-3 text-xs text-slate-500">
-                        {{ trim($albaran->responsable->nombre.' '.$albaran->responsable->apellidos) }}
-                        <span class="ml-1 text-slate-400">(opcional si no está presente)</span>
-                    </p>
-
-                    <div class="relative overflow-hidden rounded-lg border-2 border-dashed border-amber-300 bg-amber-50"
+                @if ($esTrabajador && ! $trabajadorYaFirmo)
+                    {{-- Trabajador: canvas activo --}}
+                    <div class="relative overflow-hidden rounded-lg border-2 border-dashed border-slate-300 bg-slate-50"
                          style="touch-action:none">
-                        <canvas x-ref="canvasR" width="600" height="180" class="block w-full"
-                                x-on:mousedown="iR" x-on:mousemove="dR" x-on:mouseup="fR" x-on:mouseleave="fR"
-                                x-on:touchstart="iR" x-on:touchmove="dR" x-on:touchend="fR"></canvas>
-                        <p x-show="vacioR" class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-amber-500 select-none">
+                        <canvas x-ref="canvasT" width="600" height="180" class="block w-full"
+                                x-on:mousedown="iT" x-on:mousemove="dT" x-on:mouseup="fT" x-on:mouseleave="fT"
+                                x-on:touchstart="iT" x-on:touchmove="dT" x-on:touchend="fT"></canvas>
+                        <p x-show="vacioT" class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-slate-400 select-none">
                             Firma aquí
                         </p>
                     </div>
 
-                    <button type="button" x-on:click="lR()"
+                    @error('firmaTrabajadorData')
+                        <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+
+                    <button type="button" x-on:click="lT()"
                             class="mt-2 flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
                         <x-heroicon-o-arrow-path class="size-3.5" /> Borrar firma
                     </button>
+                @else
+                    {{-- Bloqueado: responsable accede, o ya firmado --}}
+                    <div class="flex items-center gap-3 rounded-lg border-2 border-slate-200 bg-slate-50 px-4 py-5">
+                        <x-heroicon-o-lock-closed class="size-5 shrink-0 text-slate-400" />
+                        <p class="text-sm text-slate-500">
+                            @if ($trabajadorYaFirmo)
+                                Ya firmado · no se puede modificar
+                            @else
+                                Solo el trabajador puede firmar este campo
+                            @endif
+                        </p>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ── Campo responsable (solo si hay responsable asignado) ── --}}
+            @if ($albaran->responsable_id)
+                <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <p class="mb-1 text-sm font-semibold text-slate-800">Firma del responsable</p>
+                    <p class="mb-3 text-xs text-slate-500">
+                        {{ trim($albaran->responsable->nombre.' '.$albaran->responsable->apellidos) }}
+                        @if ($esTrabajador && ! $responsableYaFirmo)
+                            <span class="ml-1 text-slate-400">(opcional si no está presente)</span>
+                        @endif
+                    </p>
+
+                    @if (! $responsableYaFirmo)
+                        <div class="relative overflow-hidden rounded-lg border-2 border-dashed border-amber-300 bg-amber-50"
+                             style="touch-action:none">
+                            <canvas x-ref="canvasR" width="600" height="180" class="block w-full"
+                                    x-on:mousedown="iR" x-on:mousemove="dR" x-on:mouseup="fR" x-on:mouseleave="fR"
+                                    x-on:touchstart="iR" x-on:touchmove="dR" x-on:touchend="fR"></canvas>
+                            <p x-show="vacioR" class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-amber-500 select-none">
+                                Firma aquí
+                            </p>
+                        </div>
+
+                        @error('firmaResponsableData')
+                            <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+
+                        <button type="button" x-on:click="lR()"
+                                class="mt-2 flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600">
+                            <x-heroicon-o-arrow-path class="size-3.5" /> Borrar firma
+                        </button>
+                    @else
+                        <div class="flex items-center gap-3 rounded-lg border-2 border-slate-200 bg-slate-50 px-4 py-5">
+                            <x-heroicon-o-lock-closed class="size-5 shrink-0 text-slate-400" />
+                            <p class="text-sm text-slate-500">Ya firmado · no se puede modificar</p>
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -174,8 +209,8 @@
             <button
                 type="button"
                 x-on:click="enviar()"
-                x-bind:disabled="vacioT"
-                :class="vacioT ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
+                x-bind:disabled="!puedeEnviar"
+                :class="!puedeEnviar ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
                 class="flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors"
                 wire:loading.attr="disabled"
             >

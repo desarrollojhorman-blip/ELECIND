@@ -50,7 +50,7 @@ class AlbaranForm extends Form
 
     public string $tipo_hora = 'laboral';
 
-    public string $estado = 'borrador';
+    public string $estado = 'pendiente_firma';
 
     public ?string $observaciones = null;
 
@@ -70,6 +70,28 @@ class AlbaranForm extends Form
      * En modo web ($omitirLineaCreador = true) estos campos se ignoran
      * y todas las líneas de personal van en $companeros.
      * ──────────────────────────────────────────────────────────────── */
+
+    /* ───── Parte personalizado ──────────────────────────────────────── */
+
+    public bool $esPersonalizado = false;
+
+    public bool $clienteOtro = false;
+
+    public string $clienteTexto = '';
+
+    public bool $proyectoOtro = false;
+
+    public string $proyectoTexto = '';
+
+    public bool $conceptoOtro = false;
+
+    public string $conceptoTexto = '';
+
+    public bool $responsableOtro = false;
+
+    public string $responsableTexto = '';
+
+    /* ───────────────────────────────────────────────────────────────── */
 
     public bool $omitirLineaCreador = false;
 
@@ -99,9 +121,26 @@ class AlbaranForm extends Form
     public function rules(): array
     {
         return [
-            'proyecto_id' => ['required', 'integer', 'exists:proyectos,id'],
+            'cliente_id' => $this->esPersonalizado && ! $this->clienteOtro
+                ? ['required', 'integer', 'exists:clientes,id']
+                : ['nullable', 'integer', 'exists:clientes,id'],
+            'clienteTexto' => $this->esPersonalizado && $this->clienteOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
+            'proyecto_id' => $this->esPersonalizado && $this->proyectoOtro
+                ? ['nullable', 'integer', 'exists:proyectos,id']
+                : ['required', 'integer', 'exists:proyectos,id'],
+            'proyectoTexto' => $this->esPersonalizado && $this->proyectoOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
             'concepto_id' => ['nullable', 'integer', 'exists:conceptos,id'],
+            'conceptoTexto' => $this->esPersonalizado && $this->conceptoOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
             'responsable_id' => ['nullable', 'integer', 'exists:users,id'],
+            'responsableTexto' => $this->esPersonalizado && $this->responsableOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
             'fecha' => ['required', 'date'],
             'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
             'estado'    => ['required', Rule::in(array_column(EstadoAlbaran::cases(), 'value'))],
@@ -136,7 +175,12 @@ class AlbaranForm extends Form
     public function messages(): array
     {
         return [
-            'proyecto_id.required' => 'Selecciona un proyecto.',
+            'cliente_id.required'     => 'Selecciona un cliente.',
+            'cliente_texto.required'  => 'Escribe el nombre del cliente.',
+            'proyecto_id.required'    => 'Selecciona un proyecto.',
+            'proyecto_texto.required' => 'Escribe el nombre del proyecto.',
+            'concepto_texto.required' => 'Escribe el tipo de trabajo.',
+            'responsable_texto.required' => 'Escribe el nombre del responsable.',
             'fecha.required' => 'La fecha es obligatoria.',
             'tipo_hora.required' => 'Indica el tipo de hora del parte.',
             'mi_horas.max' => 'Las horas no pueden superar 24.',
@@ -260,10 +304,10 @@ class AlbaranForm extends Form
         }
 
         $this->cliente_id = $proyecto->cliente_id;
-
-        if ($this->responsable_id === null) {
-            $this->responsable_id = $proyecto->responsable_principal_id;
-        }
+        $this->responsable_id = $proyecto->responsable_principal_id;
+        $this->concepto_id = null;
+        $this->companeros = [];
+        $this->materiales = [];
     }
 
     public function save(): Albaran
@@ -284,8 +328,13 @@ class AlbaranForm extends Form
             }
 
             $albaran->fecha = Carbon::parse($this->fecha);
-            $albaran->cliente_id = (int) $this->cliente_id;
+            $albaran->cliente_id = $this->cliente_id ? (int) $this->cliente_id : null;
             $albaran->proyecto_id = $this->proyecto_id;
+            $albaran->es_personalizado = $this->esPersonalizado;
+            $albaran->cliente_texto = $this->esPersonalizado && $this->clienteOtro ? trim($this->clienteTexto) : null;
+            $albaran->proyecto_texto = $this->esPersonalizado && $this->proyectoOtro ? trim($this->proyectoTexto) : null;
+            $albaran->concepto_texto = $this->esPersonalizado && $this->conceptoOtro ? trim($this->conceptoTexto) : null;
+            $albaran->responsable_texto = $this->esPersonalizado && $this->responsableOtro ? trim($this->responsableTexto) : null;
             $albaran->concepto_id = $this->concepto_id;
             $albaran->responsable_id = $this->responsable_id;
             $albaran->firma_trabajador_user_id    = $this->firma_trabajador_user_id;

@@ -3,7 +3,7 @@
 namespace App\Livewire\Proyectos;
 
 use App\Livewire\Forms\ProyectoForm;
-use App\Livewire\Forms\TipoProyectoQuickForm;
+use App\Models\Albaran;
 use App\Models\Concepto;
 use App\Models\Material;
 use App\Models\Proyecto;
@@ -24,14 +24,10 @@ class Editar extends Component
 {
     public ProyectoForm $form;
 
-    public TipoProyectoQuickForm $tipoForm;
-
     public ?Proyecto $proyecto = null;
 
     /** Selector de grupo en UI: '' | id | '__otro__' */
     public string $selectorGrupo = '';
-
-    public ?string $nuevoGrupoNombre = null;
 
     public ?int $trabajadorAAgregar = null;
 
@@ -49,9 +45,27 @@ class Editar extends Component
 
     public int $conceptoSelectKey = 0;
 
-    public bool $modalTipoAbierto = false;
-
     public ?int $confirmarEliminarId = null;
+
+    public string $ordenTrabajadoresColumna = 'nombre';
+
+    public string $ordenTrabajadoresDireccion = 'asc';
+
+    public string $ordenResponsablesColumna = 'nombre';
+
+    public string $ordenResponsablesDireccion = 'asc';
+
+    public string $ordenConceptosColumna = 'nombre';
+
+    public string $ordenConceptosDireccion = 'asc';
+
+    public string $ordenMaterialesColumna = 'descripcion';
+
+    public string $ordenMaterialesDireccion = 'asc';
+
+    public string $ordenAlbaranesColumna = 'fecha';
+
+    public string $ordenAlbaranesDireccion = 'desc';
 
     public function deshacer(): void
     {
@@ -276,39 +290,67 @@ class Editar extends Component
         $this->proyecto->conceptos()->detach($conceptoId);
     }
 
-    /* ───────────── Sub-modal: crear tipo de proyecto al vuelo ───────────── */
+    /* ───────────────────── Ordenación tabs ────────────── */
 
-    public function abrirModalTipo(): void
+    public function ordenarTrabajadoresPor(string $columna): void
     {
-        Gate::authorize('create', TiposProyecto::class);
-
-        $this->tipoForm->reset();
-        $this->resetErrorBag('tipoForm.*');
-        $this->modalTipoAbierto = true;
+        if (! \in_array($columna, ['nombre'], true)) {
+            return;
+        }
+        $this->ordenTrabajadoresDireccion = $this->ordenTrabajadoresColumna === $columna
+            ? ($this->ordenTrabajadoresDireccion === 'asc' ? 'desc' : 'asc')
+            : 'asc';
+        $this->ordenTrabajadoresColumna = $columna;
     }
 
-    public function cerrarModalTipo(): void
+    public function ordenarResponsablesPor(string $columna): void
     {
-        $this->modalTipoAbierto = false;
-        $this->tipoForm->reset();
-        $this->resetErrorBag('tipoForm.*');
+        if (! \in_array($columna, ['nombre'], true)) {
+            return;
+        }
+        $this->ordenResponsablesDireccion = $this->ordenResponsablesColumna === $columna
+            ? ($this->ordenResponsablesDireccion === 'asc' ? 'desc' : 'asc')
+            : 'asc';
+        $this->ordenResponsablesColumna = $columna;
     }
 
-    public function guardarTipo(): void
+    public function ordenarConceptosPor(string $columna): void
     {
-        Gate::authorize('create', TiposProyecto::class);
+        if (! \in_array($columna, ['nombre'], true)) {
+            return;
+        }
+        $this->ordenConceptosDireccion = $this->ordenConceptosColumna === $columna
+            ? ($this->ordenConceptosDireccion === 'asc' ? 'desc' : 'asc')
+            : 'asc';
+        $this->ordenConceptosColumna = $columna;
+    }
 
-        $tipo = $this->tipoForm->save();
+    public function ordenarMaterialesPor(string $columna): void
+    {
+        if (! \in_array($columna, ['descripcion', 'stock'], true)) {
+            return;
+        }
+        $this->ordenMaterialesDireccion = $this->ordenMaterialesColumna === $columna
+            ? ($this->ordenMaterialesDireccion === 'asc' ? 'desc' : 'asc')
+            : 'asc';
+        $this->ordenMaterialesColumna = $columna;
+    }
 
-        // Auto-seleccionar el nuevo tipo en el form principal
-        $this->form->tipo_proyecto_id = (int) $tipo->getKey();
-        $this->selectorGrupo = (string) $tipo->getKey();
-        $this->nuevoGrupoNombre = null;
+    /* ───────────────────── Albaranes ──────────────────── */
 
-        $this->modalTipoAbierto = false;
-        $this->tipoForm->reset();
+    public function ordenarAlbaranesPor(string $columna): void
+    {
+        $permitidas = ['numero', 'fecha', 'estado'];
+        if (! \in_array($columna, $permitidas, true)) {
+            return;
+        }
 
-        session()->flash('status', "Tipo «{$tipo->nombre}» creado y seleccionado.");
+        if ($this->ordenAlbaranesColumna === $columna) {
+            $this->ordenAlbaranesDireccion = $this->ordenAlbaranesDireccion === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->ordenAlbaranesColumna = $columna;
+            $this->ordenAlbaranesDireccion = 'asc';
+        }
     }
 
     /* ───────────────────── Eliminar ───────────────────── */
@@ -339,7 +381,7 @@ class Editar extends Component
         $this->proyecto->delete();
 
         session()->flash('status', "Proyecto «{$nombre}» enviado a papelera.");
-        $this->redirectRoute('proyectos.index', navigate: true);
+        $this->redirectRoute('proyectos.index', navigate: false);
     }
 
     /* ───────────────────────── Computeds ────────────────────── */
@@ -365,7 +407,7 @@ class Editar extends Component
         return \App\Models\Cliente::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+            ->get(['id', 'codigo_cliente', 'nombre']);
     }
 
     /**
@@ -399,7 +441,7 @@ class Editar extends Component
             ->whereNotIn('id', $asignados)
             ->orderBy('nombre')
             ->orderBy('apellidos')
-            ->get(['id', 'nombre', 'apellidos']);
+            ->get(['id', 'numero_empleado', 'nombre', 'apellidos']);
     }
 
     /**
@@ -417,6 +459,7 @@ class Editar extends Component
         return User::query()
             ->where('tipo_usuario', 'externo')
             ->where('activo', true)
+            ->when($this->form->cliente_id, fn ($q) => $q->where('cliente_id', $this->form->cliente_id))
             ->whereNotIn('id', $asignados)
             ->orderBy('nombre')
             ->orderBy('apellidos')
@@ -429,7 +472,7 @@ class Editar extends Component
     #[Computed]
     public function trabajadoresProyecto(): Collection
     {
-        return $this->usuariosProyectoPorRol('trabajador');
+        return $this->usuariosProyectoPorRol('trabajador', $this->ordenTrabajadoresColumna, $this->ordenTrabajadoresDireccion);
     }
 
     /**
@@ -438,7 +481,7 @@ class Editar extends Component
     #[Computed]
     public function responsablesProyecto(): Collection
     {
-        return $this->usuariosProyectoPorRol('responsable');
+        return $this->usuariosProyectoPorRol('responsable', $this->ordenResponsablesColumna, $this->ordenResponsablesDireccion);
     }
 
     /**
@@ -454,7 +497,7 @@ class Editar extends Component
         /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()
             ->with(['materiales' => function ($q): void {
-                $q->orderBy('descripcion');
+                $q->orderBy($this->ordenMaterialesColumna, $this->ordenMaterialesDireccion);
             }])
             ->find($this->proyecto->id);
 
@@ -481,9 +524,11 @@ class Editar extends Component
         $asignados = $this->materialesProyecto->pluck('id')->all();
 
         return Material::query()
+            ->with('numeroPedido:id,numero')
+            ->where('activo', true)
             ->whereNotIn('id', $asignados)
             ->orderBy('descripcion')
-            ->get(['id', 'descripcion', 'unidad_medida', 'stock']);
+            ->get(['id', 'numero_pedido_id', 'descripcion', 'unidad_medida', 'stock']);
     }
 
     /**
@@ -499,7 +544,7 @@ class Editar extends Component
         /** @var Proyecto|null $proyecto */
         $proyecto = Proyecto::query()
             ->with(['conceptos' => function ($q): void {
-                $q->orderBy('nombre');
+                $q->orderBy($this->ordenConceptosColumna, $this->ordenConceptosDireccion);
             }])
             ->find($this->proyecto->id);
 
@@ -541,53 +586,25 @@ class Editar extends Component
         return view('livewire.proyectos.editar', compact('titulo', 'backUrl'));
     }
 
+    /** @return EloquentCollection<int, Albaran> */
+    #[Computed]
+    public function albaranesDelProyecto(): EloquentCollection
+    {
+        if ($this->proyecto === null) {
+            return new EloquentCollection;
+        }
+
+        return Albaran::query()
+            ->where('proyecto_id', $this->proyecto->id)
+            ->orderBy($this->ordenAlbaranesColumna, $this->ordenAlbaranesDireccion)
+            ->orderBy('id', $this->ordenAlbaranesDireccion)
+            ->get(['id', 'numero', 'fecha', 'estado', 'creado_por']);
+    }
+
     /* ───────────────────────── Privados ────────────────────── */
 
     private function resolverGrupoSeleccionado(): void
     {
-        if ($this->selectorGrupo === '__otro__') {
-            $this->validate([
-                'nuevoGrupoNombre' => ['required', 'string', 'max:255'],
-            ], [], [
-                'nuevoGrupoNombre' => 'nuevo grupo',
-            ]);
-
-            $nombre = trim((string) $this->nuevoGrupoNombre);
-
-            $grupoExistente = TiposProyecto::withTrashed()
-                ->where('nombre', $nombre)
-                ->first();
-
-            if ($grupoExistente !== null) {
-                if ($grupoExistente->trashed()) {
-                    $grupoExistente->restore();
-                }
-
-                if (! $grupoExistente->activo) {
-                    $grupoExistente->activo = true;
-                    $grupoExistente->save();
-                }
-
-                $this->form->tipo_proyecto_id = (int) $grupoExistente->getKey();
-                $this->selectorGrupo = (string) $grupoExistente->getKey();
-
-                return;
-            }
-
-            $grupo = TiposProyecto::create([
-                'nombre' => $nombre,
-                'descripcion' => null,
-                'activo' => true,
-            ]);
-
-            $this->form->tipo_proyecto_id = (int) $grupo->getKey();
-            $this->selectorGrupo = (string) $grupo->getKey();
-
-            return;
-        }
-
-        $this->nuevoGrupoNombre = null;
-
         if ($this->selectorGrupo === '') {
             $this->form->tipo_proyecto_id = null;
 
@@ -600,7 +617,7 @@ class Editar extends Component
     /**
      * @return Collection<int, User>
      */
-    private function usuariosProyectoPorRol(string $rol): Collection
+    private function usuariosProyectoPorRol(string $rol, string $columna = 'nombre', string $direccion = 'asc'): Collection
     {
         if ($this->proyecto === null) {
             return collect();
@@ -608,10 +625,10 @@ class Editar extends Component
 
         /** @var Proyecto|null $proy */
         $proy = Proyecto::query()
-            ->with(['usuarios' => function ($q) use ($rol): void {
+            ->with(['usuarios' => function ($q) use ($rol, $columna, $direccion): void {
                 $q->wherePivot('rol_en_proyecto', $rol)
-                    ->orderBy('nombre')
-                    ->orderBy('apellidos');
+                    ->orderBy($columna, $direccion)
+                    ->orderBy('apellidos', $direccion);
             }])
             ->find($this->proyecto->id);
 

@@ -27,7 +27,7 @@ class Index extends Component
     public string $buscar = '';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'fecha';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
     public string $ordenDireccion = 'desc';

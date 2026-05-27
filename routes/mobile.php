@@ -3,7 +3,9 @@
 use App\Livewire\Mobile\Albaranes\Crear as AlbaranesCrear;
 use App\Livewire\Mobile\Albaranes\Firmar as AlbaranesFirmar;
 use App\Livewire\Mobile\Albaranes\Index as AlbaranesIndex;
+use App\Livewire\Mobile\Albaranes\Personalizado as AlbaranesPersonalizado;
 use App\Livewire\Mobile\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Mobile\Horas\Index as HorasIndex;
 use App\Livewire\Mobile\Perfil\MiPerfil as PerfilMiPerfil;
 use Illuminate\Support\Facades\Route;
 
@@ -24,19 +26,16 @@ Route::middleware(['auth', 'ensure.mobile.access'])
             ->middleware('can:albaranes.crear_movil')
             ->name('albaranes.nuevo');
 
-        Route::view('/albaranes/personalizado', 'mobile.placeholder', [
-            'titulo' => 'Parte personalizado',
-            'icono' => 'heroicon-o-document-text',
-            'descripcion' => 'Parte con campos libres cuando faltan datos en el sistema. Lo normaliza el admin desde web.',
-            'roadmap' => 'Iter. 3.5 · Albarán personalizado',
-        ])->name('albaranes.personalizado');
+        Route::get('/albaranes/personalizado', AlbaranesPersonalizado::class)
+            ->middleware('can:borradores.crear_movil')
+            ->name('albaranes.personalizado');
 
         Route::get('/albaranes/{albaran}/editar', AlbaranesCrear::class)
             ->middleware('can:albaranes.crear_movil')
             ->name('albaranes.editar');
 
         Route::get('/albaranes/{albaran}/firmar', AlbaranesFirmar::class)
-            ->middleware('can:albaranes.crear_movil')
+            ->middleware('can:albaranes.firmar')
             ->name('albaranes.firmar');
 
         Route::get('/albaranes/{albaran}', AlbaranesVer::class)
@@ -50,13 +49,8 @@ Route::middleware(['auth', 'ensure.mobile.access'])
             'roadmap' => 'Fase 4 · Ausencias e incidencias',
         ])->name('ausencias.index');
 
-        // ─── Resumen (Fase 5) ───────────────────────────────────────────────
-        Route::view('/resumen', 'mobile.placeholder', [
-            'titulo' => 'Resumen mensual',
-            'icono' => 'heroicon-o-chart-bar',
-            'descripcion' => 'Total de horas trabajadas, tipos de hora, ausencias y desglose por proyecto del mes.',
-            'roadmap' => 'Fase 5 · Reportes y exportación',
-        ])->name('resumen.index');
+        // ─── Resumen de horas ───────────────────────────────────────────────
+        Route::get('/resumen', HorasIndex::class)->name('resumen.index');
 
         // ─── Incidencias (Fase 4) ───────────────────────────────────────────
         Route::view('/incidencias/nueva', 'mobile.placeholder', [

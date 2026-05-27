@@ -54,7 +54,11 @@ class Index extends Component
 
     public ?int $confirmarEliminarId = null;
 
+    public ?string $errorEliminar = null;
+
     public int $resetKey = 0;
+
+    public int $modalKey = 0;
 
     public function mount(): void
     {
@@ -148,6 +152,7 @@ class Index extends Component
 
         $this->resetErrorBag();
         $this->modoSoloLectura = false;
+        $this->modalKey++;
         $this->modalAbierto = true;
     }
 
@@ -159,6 +164,7 @@ class Index extends Component
         $this->form->fromModel($material);
         $this->resetErrorBag();
         $this->modoSoloLectura = true;
+        $this->modalKey++;
         $this->modalAbierto = true;
     }
 
@@ -170,6 +176,7 @@ class Index extends Component
         $this->form->fromModel($material);
         $this->resetErrorBag();
         $this->modoSoloLectura = false;
+        $this->modalKey++;
         $this->modalAbierto = true;
     }
 
@@ -209,17 +216,25 @@ class Index extends Component
     public function confirmarEliminar(int $id): void
     {
         $this->confirmarEliminarId = $id;
+        $this->errorEliminar = null;
     }
 
     public function cancelarEliminar(): void
     {
         $this->confirmarEliminarId = null;
+        $this->errorEliminar = null;
     }
 
     public function eliminar(int $id): void
     {
         $material = Material::findOrFail($id);
         Gate::authorize('delete', $material);
+
+        $count = $material->lineasAlbaran()->count();
+        if ($count > 0) {
+            $this->errorEliminar = "Este material está usado en {$count} " . ($count === 1 ? 'albarán' : 'albaranes') . " y no se puede eliminar. Márcalo como inactivo si no quieres que se pueda usar.";
+            return;
+        }
 
         $material->delete();
         $this->confirmarEliminarId = null;

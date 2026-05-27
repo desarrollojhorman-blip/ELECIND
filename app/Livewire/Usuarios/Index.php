@@ -45,10 +45,10 @@ class Index extends Component
     public string $filtroEmpresaCliente = '';
 
     #[Url(as: 'orden')]
-    public string $ordenColumna = 'nombre';
+    public string $ordenColumna = 'id';
 
     #[Url(as: 'dir')]
-    public string $ordenDireccion = 'asc';
+    public string $ordenDireccion = 'desc';
 
     #[Url(as: 'pp')]
     public int $porPagina = 25;
@@ -570,7 +570,7 @@ class Index extends Component
         return Cliente::query()
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+            ->get(['id', 'codigo_cliente', 'nombre']);
     }
 
     /**
@@ -624,7 +624,7 @@ class Index extends Component
             ? User::onlyTrashed()
             : User::query();
 
-        $query->with(['roles:id,name,nivel,acceso', 'cliente:id,nombre']);
+        $query->with(['roles:id,name,nivel,acceso', 'cliente:id,codigo_cliente,nombre']);
 
         // Jerarquía: oculta usuarios con algún rol de nivel mayor al propio.
         $query->whereDoesntHave('roles', function (Builder $q) use ($nivelActual): void {

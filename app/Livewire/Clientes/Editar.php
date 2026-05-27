@@ -123,7 +123,7 @@ class Editar extends Component
         $nombre = $this->cliente->nombre;
         $this->cliente->delete();
         session()->flash('status', "Cliente «{$nombre}» eliminado correctamente.");
-        $this->redirectRoute('clientes.index', navigate: true);
+        $this->redirectRoute('clientes.index', navigate: false);
     }
 
     /* ── Ordenación de tablas vinculadas ───────────────────────── */

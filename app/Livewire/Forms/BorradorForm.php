@@ -33,6 +33,14 @@ class BorradorForm extends Form
     public string  $tipo_hora = 'laboral';
     public ?string $observaciones = null;
 
+    /* ───── Firma ────────────────────────────────────────────────── */
+
+    public ?int    $firma_trabajador_user_id      = null;
+    public ?string $firma_trabajador_otro_nombre  = null;
+    public ?string $firma_trabajador_otro_correo  = null;
+    public ?string $firma_responsable_otro_nombre = null;
+    public ?string $firma_responsable_otro_correo = null;
+
     /* ───── Líneas ───────────────────────────────────────────────── */
 
     /**
@@ -106,8 +114,16 @@ class BorradorForm extends Form
         $this->concepto_texto = $borrador->concepto_texto;
         $this->responsable_id = $borrador->responsable_id;
         $this->fecha          = Carbon::parse($borrador->fecha)->format('Y-m-d');
-        $this->tipo_hora      = $borrador->tipo_hora;
+        $this->tipo_hora      = $borrador->tipo_hora instanceof \App\Enums\TipoHora
+            ? $borrador->tipo_hora->value
+            : (string) $borrador->tipo_hora;
         $this->observaciones  = $borrador->observaciones;
+
+        $this->firma_trabajador_user_id      = $borrador->firma_trabajador_user_id;
+        $this->firma_trabajador_otro_nombre  = $borrador->firma_trabajador_otro_nombre;
+        $this->firma_trabajador_otro_correo  = $borrador->firma_trabajador_otro_correo;
+        $this->firma_responsable_otro_nombre = $borrador->firma_responsable_otro_nombre;
+        $this->firma_responsable_otro_correo = $borrador->firma_responsable_otro_correo;
 
         $this->lineasPersonal = $borrador->lineasPersonal
             ->map(fn (BorradorLineaPersonal $l): array => [
@@ -191,6 +207,13 @@ class BorradorForm extends Form
             $borrador->fecha          = Carbon::parse($this->fecha);
             $borrador->tipo_hora      = $this->tipo_hora;
             $borrador->observaciones  = $this->observaciones;
+
+            $borrador->firma_trabajador_user_id      = $this->firma_trabajador_user_id ?: null;
+            $borrador->firma_trabajador_otro_nombre  = $this->firma_trabajador_otro_nombre ?: null;
+            $borrador->firma_trabajador_otro_correo  = $this->firma_trabajador_otro_correo ?: null;
+            $borrador->firma_responsable_otro_nombre = $this->firma_responsable_otro_nombre ?: null;
+            $borrador->firma_responsable_otro_correo = $this->firma_responsable_otro_correo ?: null;
+
             $borrador->save();
 
             // Sincronizar líneas de personal

@@ -127,7 +127,20 @@
                             <div class="flex items-center justify-end gap-1">
                                 @if ($borrador->trashed())
                                     @can('restore', $borrador)
-                                        <x-ui.icon-button wire:click="restaurar({{ $borrador->id }})" icon="heroicon-o-arrow-path" variant="ghost" tooltip="Restaurar" />
+                                        <x-ui.icon-button
+                                        wire:click="restaurar({{ $borrador->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="restaurar({{ $borrador->id }})"
+                                        variant="ghost"
+                                        tooltip="Restaurar">
+                                        <span wire:loading.remove wire:target="restaurar({{ $borrador->id }})">
+                                            <x-heroicon-o-arrow-path class="size-4" />
+                                        </span>
+                                        <svg wire:loading wire:target="restaurar({{ $borrador->id }})" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                    </x-ui.icon-button>
                                     @endcan
                                 @else
                                     <x-ui.icon-button as="a" href="{{ route('borradores.ver', $borrador) }}" wire:navigate icon="heroicon-o-eye" variant="ghost" tooltip="Ver" />
@@ -171,8 +184,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

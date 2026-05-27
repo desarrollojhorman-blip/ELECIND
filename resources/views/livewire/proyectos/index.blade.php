@@ -44,8 +44,8 @@
                     <x-ui.select wire:key="estado-{{ $resetKey }}" wire:model.live="filtroEstado">
                         <option value="todos">Todos</option>
                         <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
                         <option value="cerrado">Cerrado</option>
-                        <option value="archivado">Archivado</option>
                         <option value="papelera">En papelera</option>
                     </x-ui.select>
                 </x-ui.field>
@@ -124,18 +124,23 @@
         </div>
         {{ $proyectos->links() }}
     </div>
-    <x-ui.data-table :colspan="7" empty="No hay proyectos que coincidan con los filtros aplicados.">
+    <x-ui.data-table :colspan="8" empty="No hay proyectos que coincidan con los filtros aplicados.">
         <x-slot:head>
             <tr>
+                <x-ui.sortable-header column="codigo" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Código
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre proyecto
                 </x-ui.sortable-header>
-                <x-ui.sortable-header column="codigo" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Código proyecto
-                </x-ui.sortable-header>
                 <x-ui.sortable-header>Grupo</x-ui.sortable-header>
                 <x-ui.sortable-header>Cliente</x-ui.sortable-header>
-                <x-ui.sortable-header>Responsable</x-ui.sortable-header>
+                <x-ui.sortable-header column="fecha_inicio" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Fechas
+                </x-ui.sortable-header>
+                <x-ui.sortable-header column="albaranes_count" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
+                    Albaranes
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="estado" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Estado
                 </x-ui.sortable-header>
@@ -147,40 +152,46 @@
             @foreach ($proyectos as $proyecto)
                 @php
                     $estadoTone = match ($proyecto->estado) {
-                        'activo' => 'success',
-                        'cerrado' => 'info',
-                        'archivado' => 'warning',
-                        default => 'neutral',
+                        'activo'   => 'success',
+                        'inactivo' => 'neutral',
+                        'cerrado'  => 'info',
+                        default    => 'neutral',
                     };
                 @endphp
                 <tr wire:key="proy-{{ $proyecto->id }}" class="transition-colors hover:bg-slate-50">
-                    <td class="px-4 py-3">
-                        <div class="font-medium text-slate-900">{{ $proyecto->nombre }}</div>
-                        @if ($proyecto->fecha_inicio)
-                            <div class="text-xs text-slate-500">
-                                {{ $proyecto->fecha_inicio->format('d/m/Y') }}
-                                @if ($proyecto->fecha_fin) → {{ $proyecto->fecha_fin->format('d/m/Y') }} @endif
-                            </div>
-                        @endif
-                    </td>
                     <td class="px-4 py-3 font-mono text-xs text-slate-600">
                         {{ $proyecto->codigo ?? '—' }}
+                    </td>
+                    <td class="px-4 py-3 font-medium text-slate-900">
+                        {{ $proyecto->nombre }}
                     </td>
                     <td class="px-4 py-3">
                         @if ($proyecto->tipoProyecto)
                             <x-ui.badge tone="primary">{{ $proyecto->tipoProyecto->nombre }}</x-ui.badge>
                         @else
-                            <span class="text-xs text-slate-400">Sin tipo</span>
+                            <span class="text-xs text-slate-400">—</span>
                         @endif
                     </td>
                     <td class="px-4 py-3 text-slate-600">
                         {{ $proyecto->cliente?->nombre ?? '—' }}
                     </td>
-                    <td class="px-4 py-3 text-slate-600">
-                        @if ($proyecto->responsablePrincipal)
-                            {{ trim($proyecto->responsablePrincipal->nombre.' '.$proyecto->responsablePrincipal->apellidos) }}
+                    <td class="px-4 py-3 text-xs text-slate-500">
+                        @if ($proyecto->fecha_inicio)
+                            {{ $proyecto->fecha_inicio->format('d/m/Y') }}
+                            @if ($proyecto->fecha_fin)
+                                → {{ $proyecto->fecha_fin->format('d/m/Y') }}
+                            @endif
                         @else
-                            <span class="text-xs text-slate-400">Sin asignar</span>
+                            <span class="text-slate-400">—</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3 text-center text-sm text-slate-700">
+                        @if ($proyecto->albaranes_count)
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                {{ $proyecto->albaranes_count }}
+                            </span>
+                        @else
+                            <span class="text-slate-300">0</span>
                         @endif
                     </td>
                     <td class="px-4 py-3">
@@ -194,8 +205,20 @@
                         <div class="flex items-center justify-end gap-1">
                             @if ($proyecto->trashed())
                                 @can('restore', $proyecto)
-                                    <x-ui.icon-button wire:click="restaurar({{ $proyecto->id }})"
-                                        icon="heroicon-o-arrow-uturn-left" variant="success" tooltip="Restaurar" />
+                                    <x-ui.icon-button
+                                        wire:click="restaurar({{ $proyecto->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="restaurar({{ $proyecto->id }})"
+                                        variant="success"
+                                        tooltip="Restaurar">
+                                        <span wire:loading.remove wire:target="restaurar({{ $proyecto->id }})">
+                                            <x-heroicon-o-arrow-uturn-left class="size-4" />
+                                        </span>
+                                        <svg wire:loading wire:target="restaurar({{ $proyecto->id }})" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                    </x-ui.icon-button>
                                 @endcan
                             @else
                                 @can('view', $proyecto)
@@ -240,8 +263,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

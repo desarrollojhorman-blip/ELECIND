@@ -42,9 +42,12 @@
         </div>
         {{ $familias->links() }}
     </div>
-    <x-ui.data-table :colspan="4" empty="No hay familias que coincidan con la búsqueda.">
+    <x-ui.data-table :colspan="5" empty="No hay familias que coincidan con la búsqueda.">
         <x-slot:head>
             <tr>
+                <x-ui.sortable-header column="id" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
+                    ID
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion" align="center">
                     Nombre
                 </x-ui.sortable-header>
@@ -59,6 +62,7 @@
         <x-slot:rows>
             @foreach ($familias as $familia)
                 <tr wire:key="fam-{{ $familia->id }}" class="transition-colors hover:bg-slate-50">
+                    <td class="px-4 py-3 text-center font-mono text-xs text-slate-400">{{ $familia->id }}</td>
                     <td class="px-4 py-3">
                         <div class="text-sm font-semibold text-slate-900">{{ $familia->nombre }}</div>
                     </td>
@@ -68,13 +72,7 @@
                     <td class="px-4 py-3 text-center text-sm text-slate-700">{{ $familia->materiales_count }}</td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
-                            @if ($familia->trashed())
-                                @can('restore', $familia)
-                                    <x-ui.icon-button wire:click="restaurar({{ $familia->id }})"
-                                        icon="heroicon-o-arrow-uturn-left" variant="success" tooltip="Restaurar" />
-                                @endcan
-                            @else
-                                @can('view', $familia)
+                            @can('view', $familia)
                                     <x-ui.icon-button wire:click="abrirVer({{ $familia->id }})"
                                         icon="heroicon-o-eye" variant="secondary" tooltip="Ver" />
                                 @endcan
@@ -86,7 +84,6 @@
                                     <x-ui.icon-button wire:click="confirmarEliminar({{ $familia->id }})"
                                         icon="heroicon-o-trash" variant="danger" tooltip="Eliminar" />
                                 @endcan
-                            @endif
                         </div>
                     </td>
                 </tr>
@@ -130,17 +127,12 @@
                         </label>
                         <div class="flex items-stretch gap-2">
                             <div class="min-w-0 flex-1">
-                                <x-ui.select wire:model="materialAAsignar" class="w-full">
-                                    <option value="">— Selecciona un material —</option>
-                                    @foreach ($this->materialesHuerfanos as $huerfano)
-                                        <option value="{{ $huerfano->id }}">
-                                            {{ $huerfano->descripcion }}
-                                            @if ($huerfano->numeroPedido)
-                                                · {{ $huerfano->numeroPedido->numero }}
-                                            @endif
-                                        </option>
-                                    @endforeach
-                                </x-ui.select>
+                                <x-ui.searchable-select
+                                    wire:key="material-select-{{ $materialSelectKey }}"
+                                    wire-model="materialAAsignar"
+                                    :options="$this->materialesHuerfanos->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion . ($m->numeroPedido ? ' · ' . $m->numeroPedido->numero : '')])"
+                                    placeholder="— Selecciona un material —"
+                                />
                             </div>
                             <x-ui.button variant="success" wire:click="agregarMaterialAFamilia"
                                          icon="heroicon-o-plus" class="shrink-0 whitespace-nowrap">
@@ -262,8 +254,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar({{ $confirmarEliminarId ?? 0 }})"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

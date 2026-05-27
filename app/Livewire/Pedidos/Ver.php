@@ -42,7 +42,7 @@ class Ver extends Component
         $numero = $this->pedido->numero;
         $this->pedido->delete();
         session()->flash('status', "Pedido «{$numero}» enviado a papelera.");
-        $this->redirectRoute('materiales.pedidos', navigate: true);
+        $this->redirectRoute('materiales.pedidos', navigate: false);
     }
 
     /** @return EloquentCollection<int, Material> */

@@ -7,6 +7,27 @@
                 Todos
             </x-ui.button>
             @if ($albaran)
+                <div class="relative" x-data="{ abierto: false }" @click.outside="abierto = false">
+                    <x-ui.button type="button" @click="abierto = !abierto" variant="neutral" icon="heroicon-o-printer">
+                        Imprimir
+                        <x-heroicon-o-chevron-down class="size-3.5 ml-0.5" />
+                    </x-ui.button>
+                    <div x-show="abierto" x-transition
+                         class="absolute left-0 z-20 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                        <a href="{{ route('albaranes.pdf', ['albaran' => $albaran, 'materiales' => 1]) }}" target="_blank"
+                           @click="abierto = false"
+                           class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            <x-heroicon-o-clipboard-document-list class="size-4 text-slate-400" />
+                            Con materiales
+                        </a>
+                        <a href="{{ route('albaranes.pdf', ['albaran' => $albaran, 'materiales' => 0]) }}" target="_blank"
+                           @click="abierto = false"
+                           class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            <x-heroicon-o-clipboard-document class="size-4 text-slate-400" />
+                            Sin materiales
+                        </a>
+                    </div>
+                </div>
                 @can('albaranes.crear_web')
                     <x-ui.button as="a" href="{{ route('albaranes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
@@ -21,11 +42,21 @@
         </x-slot:actionsLeft>
 
         <x-slot:actionsRight>
-            <x-ui.button variant="neutral" wire:click="deshacer" icon="heroicon-o-arrow-uturn-left">
-                Deshacer
+            <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer">
+                <x-heroicon-o-arrow-uturn-left wire:loading.remove wire:target="deshacer" class="size-4" />
+                <svg wire:loading wire:target="deshacer" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="deshacer">Deshacer</span>
+                <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button variant="info" icon="heroicon-o-arrow-down-tray" type="submit" form="form-albaran"
-                         wire:loading.attr="disabled">
+            <x-ui.button variant="info" type="submit" form="form-albaran" wire:loading.attr="disabled" wire:target="guardar">
+                <x-heroicon-o-arrow-down-tray wire:loading.remove wire:target="guardar" class="size-4" />
+                <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
                 <span wire:loading.remove wire:target="guardar">Guardar</span>
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
@@ -80,6 +111,7 @@
         <div x-show="tab === 'albaran'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-4 md:grid-cols-2">
 
+                {{-- Fila 1: Nº Albarán · Proyecto --}}
                 <x-ui.field label="Nº Albarán">
                     <x-ui.input
                         :value="$form->numero ?? ''"
@@ -93,15 +125,24 @@
                     <x-ui.searchable-select
                         wire:key="proyecto-select"
                         wire-model="form.proyecto_id"
-                        :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->nombre.($p->codigo ? ' ('.$p->codigo.')' : '')])"
+                        :value="$form->proyecto_id"
+                        :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => ($p->codigo ? $p->codigo.' · ' : '').$p->nombre])"
                         placeholder="— Selecciona proyecto —"
                     />
                 </x-ui.field>
 
-                <x-ui.field label="Fecha" required :error="$errors->first('form.fecha')">
-                    <x-ui.input type="date" wire:model="form.fecha" />
+                {{-- Fila 2: Concepto --}}
+                <x-ui.field label="Concepto" :error="$errors->first('form.concepto_id')">
+                    <x-ui.searchable-select
+                        wire:key="concepto-select-{{ $form->proyecto_id }}"
+                        wire-model="form.concepto_id"
+                        :value="$form->concepto_id"
+                        :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->id.' · '.$c->nombre])"
+                        placeholder="— Sin concepto —"
+                    />
                 </x-ui.field>
 
+                {{-- Fila 3: Tipo jornada · Fecha --}}
                 <x-ui.field label="Tipo de jornada" required :error="$errors->first('form.tipo_hora')">
                     <x-ui.select wire:model="form.tipo_hora">
                         @foreach ($tiposHora as $tipo)
@@ -110,6 +151,11 @@
                     </x-ui.select>
                 </x-ui.field>
 
+                <x-ui.field label="Fecha" required :error="$errors->first('form.fecha')">
+                    <x-ui.date-input wireModel="form.fecha" placeholder="dd/mm/aaaa" />
+                </x-ui.field>
+
+                {{-- Fila 4: Estado (media línea) --}}
                 <x-ui.field label="Estado" required :error="$errors->first('form.estado')">
                     <x-ui.select wire:model="form.estado">
                         @foreach ($estados as $estado)
@@ -118,15 +164,7 @@
                     </x-ui.select>
                 </x-ui.field>
 
-                <x-ui.field label="Concepto" :error="$errors->first('form.concepto_id')">
-                    <x-ui.searchable-select
-                        wire:key="concepto-select-{{ $form->proyecto_id }}"
-                        wire-model="form.concepto_id"
-                        :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
-                        placeholder="— Sin concepto —"
-                    />
-                </x-ui.field>
-
+                {{-- Fila 5: Observaciones (línea completa) --}}
                 <x-ui.field label="Observaciones" class="md:col-span-2" :error="$errors->first('form.observaciones')">
                     <x-ui.textarea wire:model="form.observaciones" rows="3" placeholder="Notas adicionales del parte…" />
                 </x-ui.field>
@@ -155,56 +193,117 @@
                 </div>
                 <p class="mt-0.5 text-xs text-slate-400">Trabajadores que participan en este parte</p>
             </div>
-            <x-ui.button type="button" variant="success" wire:click="abrirModalTrabajador" icon="heroicon-o-plus">
-                Añadir
-            </x-ui.button>
+            @if ($albaran && $editandoLineaPersonalId === null)
+                <x-ui.button type="button" variant="success" wire:click="abrirModalTrabajador" icon="heroicon-o-plus">
+                    Añadir
+                </x-ui.button>
+            @endif
         </div>
 
-        @if ($albaran && $albaran->lineasPersonal->isNotEmpty())
+        @if ($albaran && ($albaran->lineasPersonal->isNotEmpty() || $editandoLineaPersonalId === 0))
             <div class="border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
                             <th class="px-6 py-2.5">Trabajador</th>
-                            <th class="w-28 px-4 py-2.5 text-right">Horas</th>
-                            <th class="w-28 px-4 py-2.5 text-right">H. extra</th>
+                            <th class="w-32 px-4 py-2.5 text-right">Horas</th>
+                            <th class="w-32 px-4 py-2.5 text-right">H. extra</th>
                             <th class="w-24 px-4 py-2.5 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($albaran->lineasPersonal as $linea)
-                            <tr wire:key="linea-personal-{{ $linea->id }}" class="hover:bg-slate-50">
-                                <td class="px-6 py-3 font-medium text-slate-800">
-                                    {{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-right text-slate-700">
-                                    {{ number_format((float) $linea->horas, 2) }} h
-                                </td>
-                                <td class="px-4 py-3 text-right text-slate-500">
-                                    {{ number_format((float) $linea->horas_extra, 2) }} h
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <x-ui.icon-button
-                                            wire:click="abrirModalTrabajador({{ $linea->id }})"
-                                            icon="heroicon-o-pencil-square"
-                                            variant="info"
-                                            tooltip="Editar" />
-                                        <x-ui.icon-button
-                                            wire:click="confirmarEliminarTrabajador({{ $linea->id }})"
-                                            icon="heroicon-o-trash"
-                                            variant="danger"
-                                            tooltip="Eliminar" />
+                            @if ($editandoLineaPersonalId === $linea->id)
+                                {{-- Fila en modo edición --}}
+                                <tr wire:key="linea-personal-edit-{{ $linea->id }}" class="bg-blue-50">
+                                    <td colspan="4" class="px-4 py-3">
+                                        <div class="flex items-start gap-3">
+                                            <div class="min-w-0 flex-1">
+                                                <x-ui.searchable-select
+                                                    wire:key="inline-trab-{{ $editandoLineaPersonalId }}"
+                                                    wire-model="modalTrabajadorUserId"
+                                                    :value="$modalTrabajadorUserId"
+                                                    :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim(($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->nombre.' '.$u->apellidos))])"
+                                                    placeholder="— Selecciona trabajador —"
+                                                />
+                                                @error('modalTrabajadorUserId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                            </div>
+                                            <div class="w-28 shrink-0">
+                                                <p class="mb-1 text-xs text-slate-500">Horas</p>
+                                                <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHoras" />
+                                                @error('modalTrabajadorHoras') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                            </div>
+                                            <div class="w-28 shrink-0">
+                                                <p class="mb-1 text-xs text-slate-500">H. extra</p>
+                                                <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHorasExtra" />
+                                            </div>
+                                            <div class="flex shrink-0 items-center gap-1 pt-5">
+                                                <x-ui.icon-button wire:click="guardarTrabajador" wire:loading.attr="disabled" wire:target="guardarTrabajador" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
+                                                <x-ui.icon-button wire:click="cerrarModalTrabajador" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @else
+                                {{-- Fila en modo lectura --}}
+                                <tr wire:key="linea-personal-{{ $linea->id }}" class="hover:bg-slate-50">
+                                    <td class="px-6 py-3 font-medium text-slate-800">
+                                        {{ trim(($linea->trabajador->numero_empleado ? $linea->trabajador->numero_empleado.' · ' : '').trim(($linea->trabajador->nombre ?? '').' '.($linea->trabajador->apellidos ?? ''))) ?: '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) $linea->horas, 2) }} h</td>
+                                    <td class="px-4 py-3 text-right text-slate-500">{{ number_format((float) $linea->horas_extra, 2) }} h</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <x-ui.icon-button wire:click="abrirModalTrabajador({{ $linea->id }})" icon="heroicon-o-pencil-square" variant="info" tooltip="Editar" />
+                                            <x-ui.icon-button wire:click="confirmarEliminarTrabajador({{ $linea->id }})" icon="heroicon-o-trash" variant="danger" tooltip="Eliminar" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
+                        @endforeach
+
+                        {{-- Fila nueva --}}
+                        @if ($editandoLineaPersonalId === 0)
+                            <tr wire:key="linea-personal-new" class="bg-blue-50">
+                                <td colspan="4" class="px-4 py-3">
+                                    <div class="flex items-start gap-3">
+                                        <div class="min-w-0 flex-1">
+                                            <x-ui.searchable-select
+                                                wire:key="inline-trab-new"
+                                                wire-model="modalTrabajadorUserId"
+                                                :value="$modalTrabajadorUserId"
+                                                :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim(($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->nombre.' '.$u->apellidos))])"
+                                                placeholder="— Selecciona trabajador —"
+                                            />
+                                            @error('modalTrabajadorUserId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div class="w-28 shrink-0">
+                                            <p class="mb-1 text-xs text-slate-500">Horas</p>
+                                            <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHoras" />
+                                            @error('modalTrabajadorHoras') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div class="w-28 shrink-0">
+                                            <p class="mb-1 text-xs text-slate-500">H. extra</p>
+                                            <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHorasExtra" />
+                                        </div>
+                                        <div class="flex shrink-0 items-center gap-1 pt-5">
+                                            <x-ui.icon-button wire:click="guardarTrabajador" wire:loading.attr="disabled" wire:target="guardarTrabajador" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
+                                            <x-ui.icon-button wire:click="cerrarModalTrabajador" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>
         @else
             <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
-                No hay trabajadores en este parte. Pulsa «Añadir» para incluir participantes.
+                @if (!$albaran)
+                    Guarda primero la cabecera del parte para poder añadir trabajadores.
+                @else
+                    No hay trabajadores en este parte. Pulsa «Añadir» para incluir participantes.
+                @endif
             </div>
         @endif
     </div>
@@ -224,60 +323,109 @@
                 </div>
                 <p class="mt-0.5 text-xs text-slate-400">Materiales del proyecto utilizados en este parte</p>
             </div>
-            <x-ui.button type="button" variant="success" wire:click="abrirModalMaterial" icon="heroicon-o-plus">
-                Añadir
-            </x-ui.button>
+            @if ($albaran && $editandoLineaMaterialId === null)
+                <x-ui.button type="button" variant="success" wire:click="abrirModalMaterial" icon="heroicon-o-plus">
+                    Añadir
+                </x-ui.button>
+            @endif
         </div>
 
-        @if ($albaran && $albaran->lineasMaterial->isNotEmpty())
-            <div class="overflow-x-auto border-t border-slate-100">
+        @if ($albaran && ($albaran->lineasMaterial->isNotEmpty() || $editandoLineaMaterialId === 0))
+            <div class="border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
                             <th class="px-6 py-2.5">Material</th>
-                            <th class="w-28 px-4 py-2.5 text-right">Cantidad</th>
+                            <th class="w-32 px-4 py-2.5 text-right">Cantidad</th>
                             <th class="w-24 px-4 py-2.5">Unidad</th>
-                            <th class="w-28 px-4 py-2.5 text-right">Stock actual</th>
+                            <th class="w-28 px-4 py-2.5 text-right">Stock</th>
                             <th class="w-24 px-4 py-2.5 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($albaran->lineasMaterial as $linea)
-                            <tr wire:key="linea-material-{{ $linea->id }}" class="hover:bg-slate-50">
-                                <td class="px-6 py-3 font-medium text-slate-800">
-                                    {{ $linea->material?->descripcion ?? '—' }}
+                            @if ($editandoLineaMaterialId === $linea->id)
+                                {{-- Fila en modo edición --}}
+                                <tr wire:key="linea-material-edit-{{ $linea->id }}" class="bg-blue-50">
+                                    <td class="px-4 py-2">
+                                        <x-ui.searchable-select
+                                            wire:key="inline-mat-{{ $editandoLineaMaterialId }}"
+                                            wire-model="modalMaterialId"
+                                            :value="$modalMaterialId"
+                                            :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => ($m->numeroPedido?->numero ? $m->numeroPedido->numero.' · ' : '').$m->descripcion.' · '.$m->stock.' '.$m->unidad_medida])"
+                                            placeholder="— Selecciona material —"
+                                        />
+                                        @error('modalMaterialId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <x-ui.input type="number" min="0.01" step="0.01" wire:model="modalMaterialCantidad" />
+                                        @error('modalMaterialCantidad') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="px-4 py-2 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <x-ui.icon-button wire:click="guardarMaterial" wire:loading.attr="disabled" wire:target="guardarMaterial" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
+                                            <x-ui.icon-button wire:click="cerrarModalMaterial" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            @else
+                                {{-- Fila en modo lectura --}}
+                                <tr wire:key="linea-material-{{ $linea->id }}" class="hover:bg-slate-50">
+                                    <td class="px-6 py-3 font-medium text-slate-800">{{ $linea->material?->descripcion ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) $linea->cantidad, 2) }}</td>
+                                    <td class="px-4 py-3 text-slate-500">{{ $linea->material?->unidad_medida ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-right text-slate-500">
+                                        {{ $linea->material ? number_format((float) $linea->material->stock, 2) : '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <x-ui.icon-button wire:click="abrirModalMaterial({{ $linea->id }})" icon="heroicon-o-pencil-square" variant="info" tooltip="Editar" />
+                                            <x-ui.icon-button wire:click="confirmarEliminarMaterial({{ $linea->id }})" icon="heroicon-o-trash" variant="danger" tooltip="Eliminar" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
+                        @endforeach
+
+                        {{-- Fila nueva --}}
+                        @if ($editandoLineaMaterialId === 0)
+                            <tr wire:key="linea-material-new" class="bg-blue-50">
+                                <td class="px-4 py-2">
+                                    <x-ui.searchable-select
+                                        wire:key="inline-mat-new"
+                                        wire-model="modalMaterialId"
+                                        :value="$modalMaterialId"
+                                        :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => ($m->numeroPedido?->numero ? $m->numeroPedido->numero.' · ' : '').$m->descripcion.' · '.$m->stock.' '.$m->unidad_medida])"
+                                        placeholder="— Selecciona material —"
+                                    />
+                                    @error('modalMaterialId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                 </td>
-                                <td class="px-4 py-3 text-right text-slate-700">
-                                    {{ number_format((float) $linea->cantidad, 2) }}
+                                <td class="px-4 py-2">
+                                    <x-ui.input type="number" min="0.01" step="0.01" wire:model="modalMaterialCantidad" />
+                                    @error('modalMaterialCantidad') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                 </td>
-                                <td class="px-4 py-3 text-slate-500">
-                                    {{ $linea->material?->unidad_medida ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-right text-slate-500">
-                                    {{ $linea->material ? number_format((float) $linea->material->stock, 2) : '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-right">
+                                <td></td>
+                                <td></td>
+                                <td class="px-4 py-2 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <x-ui.icon-button
-                                            wire:click="abrirModalMaterial({{ $linea->id }})"
-                                            icon="heroicon-o-pencil-square"
-                                            variant="info"
-                                            tooltip="Editar" />
-                                        <x-ui.icon-button
-                                            wire:click="confirmarEliminarMaterial({{ $linea->id }})"
-                                            icon="heroicon-o-trash"
-                                            variant="danger"
-                                            tooltip="Eliminar" />
+                                        <x-ui.icon-button wire:click="guardarMaterial" wire:loading.attr="disabled" wire:target="guardarMaterial" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
+                                        <x-ui.icon-button wire:click="cerrarModalMaterial" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>
         @else
             <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
-                No hay materiales en este parte. Pulsa «Añadir» para registrar consumos.
+                @if (!$albaran)
+                    Guarda primero la cabecera del parte para poder añadir materiales.
+                @else
+                    No hay materiales en este parte. Pulsa «Añadir» para registrar consumos.
+                @endif
             </div>
         @endif
     </div>
@@ -294,23 +442,34 @@
                     <span class="text-sm font-semibold text-slate-900">Firmantes</span>
                     <p class="mt-0.5 text-xs text-slate-400">Configura quién debe firmar y envía notificaciones</p>
                 </div>
-                <x-ui.button type="button" variant="info" icon="heroicon-o-paper-airplane"
-                             @click="$wire.notificarFirmantes(notificarTrab, notificarResp)"
-                             x-bind:disabled="!notificarTrab && !notificarResp">
-                    Notificar seleccionados
-                </x-ui.button>
+                <button type="button"
+                        @click="$wire.notificarFirmantes(notificarTrab, notificarResp)"
+                        x-bind:disabled="(!notificarTrab && !notificarResp)"
+                        wire:loading.attr="disabled"
+                        wire:target="notificarFirmantes"
+                        :class="(!notificarTrab && !notificarResp) ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-opacity"
+                        style="background-color: {{ \App\Support\Branding::colorPrimario() }}">
+                    <x-heroicon-o-paper-airplane wire:loading.remove wire:target="notificarFirmantes" class="size-4" />
+                    <svg wire:loading wire:target="notificarFirmantes" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span wire:loading.remove wire:target="notificarFirmantes">Notificar seleccionados</span>
+                    <span wire:loading wire:target="notificarFirmantes">Enviando…</span>
+                </button>
             </div>
 
             {{-- Dos bloques de firmante --}}
             <div class="grid gap-px border-t border-slate-100 bg-slate-100 md:grid-cols-2">
 
-                {{-- ── Firmante: Trabajador ── --}}
+                {{-- ── Firmante: Empleado ── --}}
                 <div class="bg-white p-6"
                      x-data="{ esOtro: {{ $form->firma_trabajador_otro_nombre ? 'true' : 'false' }} }">
                     <div class="mb-4 flex items-start justify-between gap-3">
                         <div>
-                            <h4 class="text-sm font-semibold text-slate-800">Trabajador</h4>
-                            <p class="text-xs text-slate-500">Quien firma por parte del trabajador</p>
+                            <h4 class="text-sm font-semibold text-slate-800">Empleado</h4>
+                            <p class="text-xs text-slate-500">Quien firma por parte de la empresa</p>
                         </div>
                         <div class="flex shrink-0 items-center gap-2">
                             <label class="flex cursor-pointer items-center gap-1.5 text-xs text-slate-600">
@@ -331,11 +490,12 @@
 
                     {{-- Select usuario o campos Otro --}}
                     <div x-show="!esOtro" class="space-y-2">
-                        <x-ui.field label="Usuario del proyecto" :error="$errors->first('form.firma_trabajador_user_id')">
+                        <x-ui.field label="Empleado firmante" :error="$errors->first('form.firma_trabajador_user_id')">
                             <x-ui.searchable-select
                                 wire:key="firma-trab-{{ $form->proyecto_id }}"
                                 wire-model="form.firma_trabajador_user_id"
-                                :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                :value="$form->firma_trabajador_user_id"
+                                :options="$this->firmantesInternosDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim(($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->nombre.' '.$u->apellidos))])"
                                 placeholder="— Sin firmante —"
                             />
                         </x-ui.field>
@@ -370,7 +530,7 @@
                                     <x-heroicon-o-check-circle class="size-4" />
                                     Firmado el {{ $firmaTrabajador->firmado_at->format('d/m/Y H:i') }}
                                 </div>
-                                <a href="{{ Storage::url($firmaTrabajador->firma_path) }}" target="_blank"
+                                <a href="{{ Storage::disk('public')->url($firmaTrabajador->firma_path) }}" target="_blank"
                                    class="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                     <x-heroicon-o-arrow-down-tray class="size-3.5" />
                                     Descargar
@@ -431,7 +591,8 @@
                             <x-ui.searchable-select
                                 wire:key="firma-resp-{{ $form->proyecto_id }}"
                                 wire-model="form.responsable_id"
-                                :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                :value="$form->responsable_id"
+                                :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => $u->id.' · '.trim($u->nombre.' '.$u->apellidos)])"
                                 placeholder="— Sin firmante —"
                             />
                         </x-ui.field>
@@ -466,7 +627,7 @@
                                     <x-heroicon-o-check-circle class="size-4" />
                                     Firmado el {{ $firmaResponsable->firmado_at->format('d/m/Y H:i') }}
                                 </div>
-                                <a href="{{ Storage::url($firmaResponsable->firma_path) }}" target="_blank"
+                                <a href="{{ Storage::disk('public')->url($firmaResponsable->firma_path) }}" target="_blank"
                                    class="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                     <x-heroicon-o-arrow-down-tray class="size-3.5" />
                                     Descargar
@@ -513,13 +674,15 @@
                 </div>
                 <p class="mt-0.5 text-xs text-slate-400">Documentos relacionados con este parte (máx. 10 MB por archivo)</p>
             </div>
-            <x-ui.button type="button" variant="success" wire:click="abrirModalArchivo" icon="heroicon-o-plus">
-                Añadir
-            </x-ui.button>
+            @if ($albaran && !$subiendoArchivo)
+                <x-ui.button type="button" variant="success" wire:click="abrirModalArchivo" icon="heroicon-o-plus">
+                    Añadir
+                </x-ui.button>
+            @endif
         </div>
 
-        @if ($albaran && $albaran->archivos->isNotEmpty())
-            <div class="overflow-x-auto border-t border-slate-100">
+        @if ($albaran && ($albaran->archivos->isNotEmpty() || $subiendoArchivo))
+            <div class="border-t border-slate-100">
                 <table class="w-full text-sm">
                     <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
                         <tr>
@@ -561,55 +724,47 @@
                                 </td>
                             </tr>
                         @endforeach
+
+                        {{-- Fila nueva --}}
+                        @if ($subiendoArchivo)
+                            <tr wire:key="archivo-new" class="bg-blue-50">
+                                {{-- Columna: Nombre --}}
+                                <td class="px-6 py-3">
+                                    <x-ui.input wire:model="modalArchivoNombre" placeholder="Nombre descriptivo (opcional)" />
+                                    @error('modalArchivoNombre') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </td>
+                                {{-- Columna: Archivo original --}}
+                                <td class="px-4 py-3" colspan="3">
+                                    <input type="file"
+                                           wire:model="modalArchivoFichero"
+                                           class="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-primary-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-800" />
+                                    <div wire:loading wire:target="modalArchivoFichero" class="mt-1 text-xs text-slate-500">Procesando…</div>
+                                    @error('modalArchivoFichero') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </td>
+                                {{-- Columna: Acciones --}}
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <x-ui.icon-button wire:click="guardarArchivo" wire:loading.attr="disabled" wire:target="guardarArchivo,modalArchivoFichero" icon="heroicon-o-check" variant="success" tooltip="Subir" />
+                                        <x-ui.icon-button wire:click="cerrarModalArchivo" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
         @else
             <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
-                No hay archivos adjuntos. Pulsa «Añadir» para subir documentos.
+                @if (!$albaran)
+                    Guarda primero la cabecera del parte para poder adjuntar archivos.
+                @else
+                    No hay archivos adjuntos. Pulsa «Añadir» para subir documentos.
+                @endif
             </div>
         @endif
     </div>
     </div>{{-- /tabs + contenido --}}
 
-    {{-- Modal añadir / editar trabajador --}}
-    <x-ui.modal
-        :show="$modalTrabajadorAbierto"
-        :title="$editandoLineaPersonalId ? 'Editar trabajador' : 'Añadir trabajador'"
-        close-action="cerrarModalTrabajador"
-        size="sm">
-
-        <div class="space-y-4">
-            <x-ui.field label="Trabajador" required :error="$errors->first('modalTrabajadorUserId')">
-                <x-ui.searchable-select
-                    wire:key="modal-trab-{{ $modalTrabajadorAbierto }}"
-                    wire-model="modalTrabajadorUserId"
-                    :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                    placeholder="— Selecciona trabajador —"
-                />
-            </x-ui.field>
-
-            <div class="grid grid-cols-2 gap-3">
-                <x-ui.field label="Horas" required :error="$errors->first('modalTrabajadorHoras')">
-                    <x-ui.input type="number" min="0" max="24" step="0.25"
-                                wire:model="modalTrabajadorHoras" />
-                </x-ui.field>
-                <x-ui.field label="Horas extra" :error="$errors->first('modalTrabajadorHorasExtra')">
-                    <x-ui.input type="number" min="0" max="24" step="0.25"
-                                wire:model="modalTrabajadorHorasExtra" />
-                </x-ui.field>
-            </div>
-        </div>
-
-        <x-slot:footer>
-            <x-ui.button variant="neutral" wire:click="cerrarModalTrabajador">Cancelar</x-ui.button>
-            <x-ui.button variant="info" wire:click="guardarTrabajador"
-                         wire:loading.attr="disabled" wire:target="guardarTrabajador"
-                        >
-                Guardar
-            </x-ui.button>
-        </x-slot:footer>
-    </x-ui.modal>
 
     {{-- Modal confirmar eliminar trabajador --}}
     <x-ui.modal
@@ -629,45 +784,22 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminarTrabajador">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminarTrabajador" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminarTrabajador"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminarTrabajador">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminarTrabajador" class="size-4" />
+                <svg wire:loading wire:target="eliminarTrabajador" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminarTrabajador">Eliminar</span>
+                <span wire:loading wire:target="eliminarTrabajador">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
 
     @if(\App\Support\Modulos::materialesAvanzado())
-    {{-- Modal añadir / editar material --}}
-    <x-ui.modal
-        :show="$modalMaterialAbierto"
-        :title="$editandoLineaMaterialId ? 'Editar material' : 'Añadir material'"
-        close-action="cerrarModalMaterial"
-        size="sm">
-
-        <div class="space-y-4">
-            <x-ui.field label="Material" required :error="$errors->first('modalMaterialId')">
-                <x-ui.searchable-select
-                    wire:key="modal-mat-{{ $modalMaterialAbierto }}"
-                    wire-model="modalMaterialId"
-                    :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.$m->unidad_medida.' | stock: '.$m->stock])"
-                    placeholder="— Selecciona material —"
-                />
-            </x-ui.field>
-
-            <x-ui.field label="Cantidad" required :error="$errors->first('modalMaterialCantidad')">
-                <x-ui.input type="number" min="0.01" step="0.01"
-                            wire:model="modalMaterialCantidad" />
-            </x-ui.field>
-        </div>
-
-        <x-slot:footer>
-            <x-ui.button variant="neutral" wire:click="cerrarModalMaterial">Cancelar</x-ui.button>
-            <x-ui.button variant="info" wire:click="guardarMaterial"
-                         wire:loading.attr="disabled" wire:target="guardarMaterial"
-                        >
-                Guardar
-            </x-ui.button>
-        </x-slot:footer>
-    </x-ui.modal>
 
     {{-- Modal confirmar eliminar material --}}
     <x-ui.modal
@@ -687,45 +819,21 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminarMaterial">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminarMaterial" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminarMaterial"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminarMaterial">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminarMaterial" class="size-4" />
+                <svg wire:loading wire:target="eliminarMaterial" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminarMaterial">Eliminar</span>
+                <span wire:loading wire:target="eliminarMaterial">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
     @endif
-
-    {{-- Modal subir archivo --}}
-    <x-ui.modal
-        :show="$modalArchivoAbierto"
-        title="Añadir archivo"
-        close-action="cerrarModalArchivo"
-        size="sm">
-
-        <div class="space-y-4">
-            <x-ui.field label="Archivo" required :error="$errors->first('modalArchivoFichero')">
-                <input type="file"
-                       wire:model="modalArchivoFichero"
-                       class="block w-full text-sm text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-primary-700 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-800" />
-                <div wire:loading wire:target="modalArchivoFichero" class="mt-1 text-xs text-slate-500">
-                    Subiendo…
-                </div>
-            </x-ui.field>
-
-            <x-ui.field label="Nombre descriptivo" :error="$errors->first('modalArchivoNombre')">
-                <x-ui.input wire:model="modalArchivoNombre"
-                            placeholder="Opcional — si lo dejas vacío se usará el nombre del archivo" />
-            </x-ui.field>
-        </div>
-
-        <x-slot:footer>
-            <x-ui.button variant="neutral" wire:click="cerrarModalArchivo">Cancelar</x-ui.button>
-            <x-ui.button variant="info" wire:click="guardarArchivo"
-                         wire:loading.attr="disabled" wire:target="guardarArchivo,modalArchivoFichero"
-                         icon="heroicon-o-arrow-up-tray">
-                Subir
-            </x-ui.button>
-        </x-slot:footer>
-    </x-ui.modal>
 
     {{-- Modal confirmar eliminar archivo --}}
     <x-ui.modal
@@ -745,8 +853,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminarArchivo">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminarArchivo" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminarArchivo"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminarArchivo">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminarArchivo" class="size-4" />
+                <svg wire:loading wire:target="eliminarArchivo" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminarArchivo">Eliminar</span>
+                <span wire:loading wire:target="eliminarArchivo">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>
@@ -774,8 +891,17 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
-            <x-ui.button variant="danger" wire:click="eliminar" icon="heroicon-o-trash">
-                Eliminar
+            <x-ui.button variant="danger"
+                         wire:click="eliminar"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminar">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminar" class="size-4" />
+                <svg wire:loading wire:target="eliminar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminar">Eliminar</span>
+                <span wire:loading wire:target="eliminar">Eliminando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

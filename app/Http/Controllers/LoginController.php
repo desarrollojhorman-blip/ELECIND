@@ -28,6 +28,10 @@ class LoginController
         if ($user && $user->activo && Hash::check($credentials['password'], $user->password)) {
             Auth::login($user, $request->boolean('remember'));
 
+            activity()->causedBy($user)
+                ->withProperties(['ip' => $request->ip()])
+                ->log('login');
+
             return redirect()->intended($this->rutaInicial($user));
         }
 
@@ -57,6 +61,10 @@ class LoginController
 
     public function logout(Request $request): RedirectResponse
     {
+        activity()->causedBy(Auth::user())
+            ->withProperties(['ip' => $request->ip()])
+            ->log('logout');
+
         Auth::logout();
 
         $request->session()->invalidate();
