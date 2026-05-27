@@ -6,6 +6,7 @@ use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExc
 use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
 use App\Http\Controllers\Conceptos\ExportarExcelController as ConceptosExportarExcel;
 use App\Http\Controllers\Conceptos\ExportarPdfController as ConceptosExportarPdf;
+use App\Http\Controllers\Horas\ExportarExcelController as HorasExportarExcel;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Usuarios\ExportarExcelController as UsuariosExportarExcel;
 use App\Http\Controllers\Usuarios\ExportarPdfController as UsuariosExportarPdf;
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
 
     Route::get('/horas', HorasIndex::class)
         ->name('horas.index');
+
+    Route::get('/horas/exportar/excel', HorasExportarExcel::class)
+        ->name('horas.exportar.excel');
 
     Route::get('/borradores', BorradoresIndex::class)
         ->middleware('can:borradores.ver_todos')

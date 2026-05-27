@@ -24,132 +24,131 @@
         @php
             $empresa  = \App\Models\Empresa::actual();
             $logoUrl  = $empresa->logo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($empresa->logo_path) : null;
-            $color    = $empresa->color_primario ?? '#334155';
+            $cli      = $firmable->cliente;
+            $cliPoblacion = $cli
+                ? trim(($cli->codigo_postal ? $cli->codigo_postal.' ' : '').($cli->poblacion ?? '')).
+                  ($cli->provincia ? ' ('.$cli->provincia.')' : '')
+                : '';
             $totalLineas = $firmable->lineasPersonal->count();
         @endphp
 
-        {{-- ══ DOCUMENTO (misma estructura que el email) ══ --}}
-        <div class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {{-- ══ DOCUMENTO (espejo del PDF) — scroll horizontal en móvil ══ --}}
+        <div class="mb-6 overflow-x-auto bg-white">
+            <div class="min-w-[680px] p-5 sm:p-6">
 
-            {{-- Cabecera: logo + datos empresa / Nº albarán --}}
-            <div class="border-b-2 p-4 sm:p-5" style="border-color: {{ $color }}">
-                <div class="flex items-start justify-between gap-4">
-
-                    {{-- Izquierda: logo o nombre --}}
-                    <div class="min-w-0">
-                        @if ($logoUrl)
-                            <img src="{{ $logoUrl }}" alt="{{ $empresa->nombre }}"
-                                 class="mb-2 block max-h-16 max-w-[180px]">
-                        @else
-                            <div class="mb-2 text-xl font-extrabold" style="color: {{ $color }}">
-                                {{ $empresa->nombre_comercial ?: $empresa->nombre }}
-                            </div>
-                        @endif
-                        <div class="text-[11px] leading-relaxed text-slate-500">
-                            @if ($empresa->nombre_comercial && $empresa->nombre)
-                                <div class="font-semibold text-slate-600">{{ $empresa->nombre }}</div>
+                {{-- Cabecera: logo + datos empresa | Nº albarán + fecha + tipo jornada --}}
+                <table class="w-full">
+                    <tr>
+                        <td class="w-3/5 pb-2 align-top">
+                            @if ($logoUrl)
+                                <img src="{{ $logoUrl }}" alt="{{ $empresa->nombre }}"
+                                     class="mb-2 block max-h-[72px] max-w-[220px]">
+                            @else
+                                <div class="mb-1 text-lg font-extrabold text-gray-800">
+                                    {{ $empresa->nombre }}
+                                </div>
                             @endif
-                            @if ($empresa->direccion)
-                                <div>{{ $empresa->direccion }}</div>
-                            @endif
-                            @if ($empresa->codigo_postal || $empresa->poblacion)
-                                <div>{{ trim($empresa->codigo_postal . ' ' . $empresa->poblacion) }}{{ $empresa->provincia ? ' (' . $empresa->provincia . ')' : '' }}</div>
-                            @endif
-                            @if ($empresa->telefono)
-                                <div>Tlf. {{ $empresa->telefono }}</div>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Derecha: número + fecha + tipo jornada --}}
-                    <table class="shrink-0 rounded border border-slate-200 text-xs">
-                        <tr>
-                            <td class="px-2 py-1.5 text-slate-500 whitespace-nowrap">Nº Documento</td>
-                            <td class="pl-3 pr-2 py-1.5 font-bold text-slate-900 whitespace-nowrap">{{ $firmable->numero }}</td>
-                        </tr>
-                        <tr class="border-t border-slate-100">
-                            <td class="px-2 py-1.5 text-slate-500">Fecha</td>
-                            <td class="pl-3 pr-2 py-1.5 font-semibold text-slate-800">{{ $firmable->fecha->format('d/m/Y') }}</td>
-                        </tr>
-                        <tr class="border-t border-slate-100">
-                            <td class="px-2 py-1.5 text-slate-500 whitespace-nowrap">Tipo jornada</td>
-                            <td class="pl-3 pr-2 py-1.5 text-slate-700">{{ $firmable->tipo_hora->etiqueta() }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            {{-- Barra cliente / proyecto / concepto --}}
-            <div class="border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
-                <strong>Cliente:</strong> {{ $firmable->cliente?->nombre ?? '—' }}
-                @if ($firmable->proyecto)
-                    &nbsp;·&nbsp; <strong>Proyecto:</strong> {{ $firmable->proyecto->nombre }}
-                @endif
-                @if ($firmable->concepto)
-                    &nbsp;·&nbsp; <strong>Concepto:</strong> {{ $firmable->concepto->nombre }}
-                @endif
-            </div>
-
-            {{-- Tabla trabajadores --}}
-            @if ($firmable->lineasPersonal->isNotEmpty())
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr style="background: {{ $color }}">
-                            <th class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-white">Trabajo realizado</th>
-                            <th class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-white">Nombre del trabajador</th>
-                            <th class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white whitespace-nowrap">Horas<br>normales</th>
-                            <th class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white whitespace-nowrap">Horas<br>extras</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($firmable->lineasPersonal as $i => $linea)
-                            <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50' }} border-t border-slate-100">
-                                @if ($i === 0)
-                                    <td rowspan="{{ $totalLineas }}" class="px-3 py-2.5 align-middle text-slate-600 border-r border-slate-100">
-                                        {{ $firmable->concepto?->nombre ?? '—' }}
-                                    </td>
+                            <div class="text-[10px] leading-relaxed text-slate-500">
+                                @if ($empresa->razon_social)
+                                    <div class="font-semibold text-slate-700">{{ $empresa->razon_social }}</div>
                                 @endif
-                                <td class="px-3 py-2.5 font-medium text-slate-800">
-                                    {{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}
-                                </td>
-                                <td class="px-3 py-2.5 text-center font-semibold text-slate-800">
-                                    {{ number_format((float) $linea->horas, 2) }}
-                                </td>
-                                <td class="px-3 py-2.5 text-center text-slate-500">
-                                    {{ number_format((float) $linea->horas_extra, 2) }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
+                                @if ($empresa->direccion)
+                                    <div>{{ $empresa->direccion }}</div>
+                                @endif
+                                @if ($empresa->codigo_postal || $empresa->poblacion)
+                                    <div>{{ trim($empresa->codigo_postal . ' ' . $empresa->poblacion) }}{{ $empresa->provincia ? ' (' . $empresa->provincia . ')' : '' }}</div>
+                                @endif
+                                @if ($empresa->telefono || $empresa->movil)
+                                    <div>
+                                        @if ($empresa->telefono)Tlf. {{ $empresa->telefono }}@endif
+                                        @if ($empresa->telefono && $empresa->movil) &nbsp;·&nbsp; @endif
+                                        @if ($empresa->movil)Móvil {{ $empresa->movil }}@endif
+                                    </div>
+                                @endif
+                                @if ($empresa->web || $empresa->email_contacto)
+                                    <div>
+                                        @if ($empresa->web){{ $empresa->web }}@endif
+                                        @if ($empresa->web && $empresa->email_contacto) &nbsp;·&nbsp; @endif
+                                        @if ($empresa->email_contacto){{ $empresa->email_contacto }}@endif
+                                    </div>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="w-2/5 pb-2 align-top text-right">
+                            <table class="ml-auto border border-slate-200 text-xs">
+                                <tr>
+                                    <td class="whitespace-nowrap px-2 py-1 text-slate-500">Nº Albarán</td>
+                                    <td class="whitespace-nowrap py-1 pl-3 pr-2 text-[13px] font-bold text-slate-900">{{ $firmable->numero }}</td>
+                                </tr>
+                                <tr class="border-t border-slate-100">
+                                    <td class="px-2 py-1 text-slate-500">Fecha</td>
+                                    <td class="py-1 pl-3 pr-2 text-[11px] font-semibold text-slate-800">{{ $firmable->fecha->format('d/m/Y') }}</td>
+                                </tr>
+                                <tr class="border-t border-slate-100">
+                                    <td class="whitespace-nowrap px-2 py-1 text-slate-500">Tipo jornada</td>
+                                    <td class="py-1 pl-3 pr-2 text-[11px] text-slate-700">{{ $firmable->tipo_hora->etiqueta() }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
                 </table>
-            @endif
 
-            {{-- Materiales --}}
-            @if ($firmable->lineasMaterial->isNotEmpty())
-                <table class="w-full border-t border-slate-200 text-sm">
-                    <thead>
-                        <tr class="bg-slate-100">
-                            <th class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">Material</th>
-                            <th class="px-3 py-2 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($firmable->lineasMaterial as $i => $linea)
-                            <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50' }} border-t border-slate-100">
-                                <td class="px-3 py-2.5 font-medium text-slate-800">{{ $linea->material->descripcion ?? '—' }}</td>
-                                <td class="px-3 py-2.5 text-right text-slate-700">{{ number_format((float) $linea->cantidad, 2) }} {{ $linea->material->unidad_medida ?? '' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-
-            {{-- Observaciones --}}
-            @if ($firmable->observaciones)
-                <div class="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
-                    <strong>Observaciones:</strong> {{ $firmable->observaciones }}
+                {{-- Datos del cliente --}}
+                <div class="mt-3 mb-1 ml-0.5 text-[9px] font-extrabold uppercase tracking-wider text-gray-900">
+                    Datos del cliente
                 </div>
-            @endif
+                <div class="mb-3 border border-gray-300 px-3 py-2">
+                    <div class="text-[10px] font-bold leading-relaxed text-gray-800">{{ $cli?->nombre ?? '—' }}</div>
+                    @if ($cli?->direccion)
+                        <div class="text-[10px] leading-relaxed text-gray-800">{{ $cli->direccion }}</div>
+                    @endif
+                    @if ($cliPoblacion !== '')
+                        <div class="text-[10px] leading-relaxed text-gray-800">{{ $cliPoblacion }}</div>
+                    @endif
+                </div>
+
+                {{-- Tabla trabajadores --}}
+                @if ($firmable->lineasPersonal->isNotEmpty())
+                    <table class="w-full border border-gray-800 text-sm">
+                        <thead>
+                            <tr class="bg-gray-800">
+                                <th class="border-r border-slate-600 px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wide text-white">Trabajo realizado</th>
+                                <th class="border-r border-slate-600 px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wide text-white">Nombre del trabajador</th>
+                                <th class="whitespace-nowrap border-r border-slate-600 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white">Horas normales</th>
+                                <th class="whitespace-nowrap px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white">Horas extras</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($firmable->lineasPersonal as $i => $linea)
+                                <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50' }}">
+                                    @if ($i === 0)
+                                        <td rowspan="{{ $totalLineas }}" class="border-t border-r border-slate-200 px-3 py-2 align-middle text-slate-600">
+                                            {{ $firmable->concepto?->nombre ?? '—' }}
+                                        </td>
+                                    @endif
+                                    <td class="border-t border-r border-slate-200 px-3 py-2 font-medium text-slate-800">
+                                        {{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}
+                                    </td>
+                                    <td class="border-t border-r border-slate-200 px-3 py-2 text-center font-semibold text-slate-800">
+                                        {{ number_format((float) $linea->horas, 2) }}
+                                    </td>
+                                    <td class="border-t border-slate-200 px-3 py-2 text-center text-slate-700">
+                                        {{ number_format((float) $linea->horas_extra, 2) }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                {{-- Observaciones --}}
+                @if ($firmable->observaciones)
+                    <div class="mt-3 text-xs text-slate-600">
+                        <strong>Observaciones:</strong> {{ $firmable->observaciones }}
+                    </div>
+                @endif
+
+            </div>
         </div>
 
         {{-- ══ CANVAS DE FIRMA ══ --}}
@@ -236,9 +235,8 @@
                         :disabled="vacio"
                         wire:loading.attr="disabled"
                         wire:target="firmar"
-                        :class="vacio ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90'"
-                        class="inline-flex items-center gap-2 rounded-md px-6 py-2 text-sm font-semibold text-white transition-opacity"
-                        style="background-color: {{ \App\Support\Branding::colorPrimario() }}">
+                        :class="vacio ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-700'"
+                        class="inline-flex items-center gap-2 rounded-md bg-gray-800 px-6 py-2 text-sm font-semibold text-white transition-colors">
                     <svg wire:loading wire:target="firmar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />

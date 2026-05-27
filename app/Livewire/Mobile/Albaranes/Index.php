@@ -15,7 +15,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    /** Filtros: todos | borrador | pendiente_firma | firmado */
+    /** Filtros: todos | pendiente_firma | firmado | facturado */
     #[Url(as: 'estado')]
     public string $filtroEstado = 'todos';
 

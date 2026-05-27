@@ -5,7 +5,6 @@
             @php
                 $filtros = [
                     'todos' => 'Todos',
-                    'borrador' => 'Borradores',
                     'pendiente_firma' => 'Pdte. firma',
                     'firmado' => 'Firmados',
                     'facturado' => 'Facturados',

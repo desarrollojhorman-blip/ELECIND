@@ -119,24 +119,13 @@
             </div>
         @endif
 
-        {{-- Botón firmar (borrador) --}}
-        @if ($albaran->estado->value === 'borrador')
-            @can('albaranes.crear_movil')
-                <a href="{{ route('mobile.albaranes.firmar', ['albaran' => $albaran->getKey()]) }}"
-                   class="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700">
-                    <x-heroicon-o-pencil class="size-4" />
-                    Iniciar proceso de firma
-                </a>
-            @endcan
-        @endif
-
         {{-- Botón firmar (pendiente_firma) --}}
         @if ($albaran->estado->value === 'pendiente_firma')
             @can('albaranes.crear_movil')
                 <a href="{{ route('mobile.albaranes.firmar', ['albaran' => $albaran->getKey()]) }}"
                    class="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-amber-600 px-4 py-3 text-sm font-medium text-white hover:bg-amber-700">
                     <x-heroicon-o-pencil class="size-4" />
-                    Completar firma pendiente
+                    Firmar parte
                 </a>
             @endcan
         @endif

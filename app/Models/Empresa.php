@@ -16,8 +16,8 @@ class Empresa extends Model
         return LogOptions::defaults()
             ->useLogName('empresa')
             ->logOnly([
-                'nombre', 'nombre_comercial', 'cif', 'direccion', 'codigo_postal', 'poblacion',
-                'provincia', 'telefono', 'email_contacto', 'email_notificaciones',
+                'nombre', 'razon_social', 'cif', 'direccion', 'codigo_postal', 'poblacion',
+                'provincia', 'telefono', 'movil', 'web', 'email_contacto', 'email_notificaciones',
                 'color_primario', 'color_secundario', 'color_texto_encabezado',
                 'plantilla_numeracion_albaran', 'plantilla_numeracion_cliente', 'prefijo_proyecto',
                 'token_caducidad_dias', 'modulo_materiales_avanzado',
@@ -34,13 +34,15 @@ class Empresa extends Model
 
     protected $fillable = [
         'nombre',
-        'nombre_comercial',
+        'razon_social',
         'cif',
         'direccion',
         'codigo_postal',
         'poblacion',
         'provincia',
         'telefono',
+        'movil',
+        'web',
         'email_contacto',
         'email_notificaciones',
         'logo_path',

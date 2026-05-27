@@ -29,7 +29,7 @@ class AlbaranFactory extends Factory
             'proyecto_id' => Proyecto::factory(),
             'creado_por' => User::factory()->trabajador(),
             'responsable_id' => null,
-            'estado' => EstadoAlbaran::BORRADOR,
+            'estado' => EstadoAlbaran::PENDIENTE_FIRMA,
             'tipo_hora' => $faker->randomElement([
                 TipoHora::LABORAL, TipoHora::LABORAL, TipoHora::LABORAL, TipoHora::LABORAL,
                 TipoHora::LABORAL, TipoHora::LABORAL,
@@ -55,10 +55,5 @@ class AlbaranFactory extends Factory
     public function facturado(): static
     {
         return $this->state(fn () => ['estado' => EstadoAlbaran::FACTURADO]);
-    }
-
-    public function archivado(): static
-    {
-        return $this->state(fn () => ['estado' => EstadoAlbaran::ARCHIVADO]);
     }
 }

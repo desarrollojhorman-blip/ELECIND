@@ -95,7 +95,7 @@ class Ver extends Component
             $albaran = new Albaran;
             $albaran->numero       = app(NumeracionService::class)->siguienteNumeroAlbaran(Carbon::parse($this->borrador->fecha));
             $albaran->creado_por   = (int) Auth::id();
-            $albaran->estado       = \App\Enums\EstadoAlbaran::BORRADOR;
+            $albaran->estado       = \App\Enums\EstadoAlbaran::PENDIENTE_FIRMA;
             $albaran->fecha        = $this->borrador->fecha;
             $albaran->cliente_id   = $this->borrador->cliente_id;
             $albaran->proyecto_id  = $this->borrador->proyecto_id;

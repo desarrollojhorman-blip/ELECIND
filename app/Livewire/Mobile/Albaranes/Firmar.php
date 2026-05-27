@@ -58,7 +58,6 @@ class Firmar extends Component
         if (\in_array($albaran->estado, [
             EstadoAlbaran::FIRMADO,
             EstadoAlbaran::FACTURADO,
-            EstadoAlbaran::ARCHIVADO,
         ], true)) {
             $this->firmado = true;
         }

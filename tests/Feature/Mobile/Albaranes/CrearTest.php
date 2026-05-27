@@ -68,7 +68,7 @@ class CrearTest extends TestCase
             'creado_por' => $trabajador->getKey(),
             'proyecto_id' => $proyecto->id,
             'cliente_id' => $proyecto->cliente_id,
-            'estado' => EstadoAlbaran::BORRADOR->value,
+            'estado' => EstadoAlbaran::PENDIENTE_FIRMA->value,
         ]);
 
         $albaran = Albaran::query()->where('creado_por', $trabajador->getKey())->firstOrFail();

@@ -42,12 +42,12 @@
 
             <div>
                 <label class="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
-                <x-ui.date-input wireModel="fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
+                <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
             </div>
 
             <div>
                 <label class="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
-                <x-ui.date-input wireModel="fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
+                <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
             </div>
 
             <div>
@@ -83,20 +83,47 @@
                 Fest. Noche
             </span>
         </div>
-        <x-ui.button variant="outline" icon="heroicon-o-arrow-down-tray" disabled>
+        @php
+            $filtrosExport = array_filter([
+                'trabajador' => $filtroTrabajador,
+                'cliente'    => $filtroCliente,
+                'proyecto'   => $filtroProyecto,
+                'estado'     => $filtroEstado,
+                'desde'      => $fechaDesde,
+                'hasta'      => $fechaHasta,
+            ], fn ($v) => $v !== null && $v !== '');
+        @endphp
+        <a href="{{ route('horas.exportar.excel', $filtrosExport) }}"
+           class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <x-heroicon-o-arrow-down-tray class="size-4" />
             Exportar Excel
-            <x-ui.badge tone="neutral" class="ml-1">Pronto</x-ui.badge>
-        </x-ui.button>
+        </a>
     </div>
 
     {{-- ── Tabla ────────────────────────────────────────────────── --}}
-    @php $lineas = $this->lineasDiarias; @endphp
-
-    @if ($lineas->isEmpty())
+    @if ($lineas->total() === 0)
         <div class="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
             No hay registros para el período y filtros seleccionados.
         </div>
     @else
+        {{-- Selector de filas + paginación superior --}}
+        <div class="mb-3 flex items-center justify-between">
+            <div class="flex shrink-0 items-center gap-2">
+                <span class="text-xs text-slate-500">Filas:</span>
+                <select wire:model.live="porPagina"
+                        class="rounded-md border-slate-300 py-1 pl-2 pr-7 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="250">250</option>
+                    <option value="500">500</option>
+                </select>
+            </div>
+            {{ $lineas->links() }}
+        </div>
+
         <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead>

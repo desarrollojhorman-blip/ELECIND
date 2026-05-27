@@ -47,7 +47,7 @@
 
             <div>
                 <label class="mb-1 block text-xs font-medium text-slate-600">Desde</label>
-                <x-ui.date-input wireModel="fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
+                <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
             </div>
 
         </div>
@@ -55,7 +55,7 @@
         <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <div>
                 <label class="mb-1 block text-xs font-medium text-slate-600">Hasta</label>
-                <x-ui.date-input wireModel="fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
+                <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
             </div>
 
             @if ($busqueda || $filtroUsuario || $filtroModelo || $filtroEvento || $fechaDesde || $fechaHasta)

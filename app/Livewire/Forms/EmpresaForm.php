@@ -17,7 +17,7 @@ class EmpresaForm extends Form
     public string $nombre = '';
 
     #[Validate]
-    public ?string $nombre_comercial = null;
+    public ?string $razon_social = null;
 
     #[Validate]
     public ?string $cif = null;
@@ -36,6 +36,12 @@ class EmpresaForm extends Form
 
     #[Validate]
     public ?string $telefono = null;
+
+    #[Validate]
+    public ?string $movil = null;
+
+    #[Validate]
+    public ?string $web = null;
 
     #[Validate]
     public ?string $email_contacto = null;
@@ -66,13 +72,15 @@ class EmpresaForm extends Form
     {
         return [
             'nombre' => ['required', 'string', 'max:150'],
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'razon_social' => ['nullable', 'string', 'max:150'],
             'cif' => ['nullable', 'string', 'max:20'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'codigo_postal' => ['nullable', 'string', 'max:10'],
             'poblacion' => ['nullable', 'string', 'max:100'],
             'provincia' => ['nullable', 'string', 'max:100'],
             'telefono' => ['nullable', 'string', 'max:30'],
+            'movil' => ['nullable', 'string', 'max:30'],
+            'web' => ['nullable', 'string', 'max:255'],
             'email_contacto' => ['nullable', 'email', 'max:150'],
             'email_notificaciones' => ['nullable', 'email', 'max:150'],
             'nuevoLogo' => ['nullable', 'image', 'max:2048', 'mimes:png,jpg,jpeg,svg,webp'],
@@ -88,13 +96,15 @@ class EmpresaForm extends Form
         return [
             'nombre.required'              => 'El nombre es obligatorio.',
             'nombre.max'                   => 'El nombre no puede superar 150 caracteres.',
-            'nombre_comercial.max'         => 'El nombre comercial no puede superar 150 caracteres.',
+            'razon_social.max'             => 'La razón social no puede superar 150 caracteres.',
             'cif.max'                      => 'El CIF no puede superar 20 caracteres.',
             'direccion.max'                => 'La dirección no puede superar 255 caracteres.',
             'codigo_postal.max'            => 'El código postal no puede superar 10 caracteres.',
             'poblacion.max'                => 'La población no puede superar 100 caracteres.',
             'provincia.max'                => 'La provincia no puede superar 100 caracteres.',
             'telefono.max'                 => 'El teléfono no puede superar 30 caracteres.',
+            'movil.max'                    => 'El móvil no puede superar 30 caracteres.',
+            'web.max'                      => 'La web no puede superar 255 caracteres.',
             'email_contacto.email'         => 'El email de contacto no tiene un formato válido.',
             'email_contacto.max'           => 'El email de contacto no puede superar 150 caracteres.',
             'email_notificaciones.email'   => 'El email de notificaciones no tiene un formato válido.',
@@ -114,13 +124,15 @@ class EmpresaForm extends Form
     {
         return [
             'nombre' => 'nombre',
-            'nombre_comercial' => 'nombre comercial',
+            'razon_social' => 'razón social',
             'cif' => 'CIF',
             'direccion' => 'dirección',
             'codigo_postal' => 'código postal',
             'poblacion' => 'población',
             'provincia' => 'provincia',
             'telefono' => 'teléfono',
+            'movil' => 'móvil',
+            'web' => 'web',
             'email_contacto' => 'email de contacto',
             'email_notificaciones' => 'email de notificaciones',
             'nuevoLogo' => 'logo de empresa',
@@ -132,13 +144,15 @@ class EmpresaForm extends Form
     {
         $this->id = (int) $empresa->getKey();
         $this->nombre = $empresa->nombre;
-        $this->nombre_comercial = $empresa->nombre_comercial;
+        $this->razon_social = $empresa->razon_social;
         $this->cif = $empresa->cif;
         $this->direccion = $empresa->direccion;
         $this->codigo_postal = $empresa->codigo_postal;
         $this->poblacion = $empresa->poblacion;
         $this->provincia = $empresa->provincia;
         $this->telefono = $empresa->telefono;
+        $this->movil = $empresa->movil;
+        $this->web = $empresa->web;
         $this->email_contacto = $empresa->email_contacto;
         $this->email_notificaciones = $empresa->email_notificaciones;
 
@@ -179,13 +193,15 @@ class EmpresaForm extends Form
 
         $empresa->fill([
             'nombre' => $this->nombre,
-            'nombre_comercial' => $this->nombre_comercial,
+            'razon_social' => $this->razon_social,
             'cif' => $this->cif,
             'direccion' => $this->direccion,
             'codigo_postal' => $this->codigo_postal,
             'poblacion' => $this->poblacion,
             'provincia' => $this->provincia,
             'telefono' => $this->telefono,
+            'movil' => $this->movil,
+            'web' => $this->web,
             'email_contacto' => $this->email_contacto,
             'email_notificaciones' => $this->email_notificaciones,
             'logo_zoom' => $this->logo_zoom,

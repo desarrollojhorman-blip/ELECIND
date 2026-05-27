@@ -119,11 +119,11 @@
 
                 {{-- Fila 3: Fecha inicio | Fecha fin --}}
                 <x-ui.field label="Fecha inicio" :error="$errors->first('form.fecha_inicio')">
-                    <x-ui.date-input wireModel="form.fecha_inicio" placeholder="dd/mm/aaaa" />
+                    <x-ui.date-input wireModel="form.fecha_inicio" :value="$form->fecha_inicio" placeholder="dd/mm/aaaa" />
                 </x-ui.field>
 
                 <x-ui.field label="Fecha fin" :error="$errors->first('form.fecha_fin')">
-                    <x-ui.date-input wireModel="form.fecha_fin" placeholder="dd/mm/aaaa" />
+                    <x-ui.date-input wireModel="form.fecha_fin" :value="$form->fecha_fin" placeholder="dd/mm/aaaa" />
                 </x-ui.field>
 
                 {{-- Fila 4: Estado (media columna) --}}

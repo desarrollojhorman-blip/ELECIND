@@ -77,7 +77,7 @@ class IndexTest extends TestCase
             ->assertSee('ALB-COMPANERO');
     }
 
-    public function test_filtro_por_estado_borrador(): void
+    public function test_filtro_por_estado_pendiente_firma(): void
     {
         $yo = $this->trabajador();
         $cliente = Cliente::factory()->create();
@@ -85,8 +85,8 @@ class IndexTest extends TestCase
         Albaran::factory()->create([
             'cliente_id' => $cliente->id,
             'creado_por' => $yo->getKey(),
-            'numero' => 'ALB-BORR',
-            'estado' => EstadoAlbaran::BORRADOR,
+            'numero' => 'ALB-PEND',
+            'estado' => EstadoAlbaran::PENDIENTE_FIRMA,
         ]);
         Albaran::factory()->firmado()->create([
             'cliente_id' => $cliente->id,
@@ -96,8 +96,8 @@ class IndexTest extends TestCase
 
         Livewire::actingAs($yo)
             ->test(Index::class)
-            ->call('setFiltro', 'borrador')
-            ->assertSee('ALB-BORR')
+            ->call('setFiltro', 'pendiente_firma')
+            ->assertSee('ALB-PEND')
             ->assertDontSee('ALB-FIRM');
     }
 }

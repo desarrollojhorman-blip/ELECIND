@@ -321,7 +321,7 @@ class AlbaranForm extends Form
                 $albaran = new Albaran;
                 $albaran->numero = app(NumeracionService::class)->siguienteNumeroAlbaran(Carbon::parse($this->fecha));
                 $albaran->creado_por = (int) Auth::id();
-                $albaran->estado = EstadoAlbaran::BORRADOR;
+                $albaran->estado = EstadoAlbaran::PENDIENTE_FIRMA;
             } else {
                 /** @var Albaran $albaran */
                 $albaran = Albaran::findOrFail($this->id);

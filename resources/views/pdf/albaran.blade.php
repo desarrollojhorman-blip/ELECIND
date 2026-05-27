@@ -7,10 +7,10 @@
     body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1e293b; }
 
     /* ── Cabecera ── */
-    .header-table { width: 100%; border-collapse: collapse; border-bottom: 2px solid {{ $color }}; padding-bottom: 10px; margin-bottom: 0; }
+    .header-table { width: 100%; border-collapse: collapse; padding-bottom: 10px; margin-bottom: 0; }
     .logo-cell { width: 60%; vertical-align: top; padding: 0 0 10px 0; }
-    .logo-img { max-height: 55px; max-width: 170px; }
-    .empresa-nombre { font-size: 16px; font-weight: 800; color: {{ $color }}; margin-bottom: 5px; }
+    .logo-img { max-height: 72px; max-width: 220px; }
+    .empresa-nombre { font-size: 16px; font-weight: 800; color: #1f2937; margin-bottom: 5px; }
     .empresa-datos { font-size: 10px; color: #475569; line-height: 1.6; }
     .empresa-datos .sub { font-weight: 600; }
     .num-cell { width: 40%; vertical-align: top; text-align: right; padding: 0 0 10px 0; }
@@ -21,18 +21,23 @@
     .num-table .val-sm { font-weight: 600; color: #1e293b; padding-left: 10px; }
     .num-table tr:first-child td { border-top: none; }
 
-    /* ── Barra cliente ── */
-    .info-bar { background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 8px; font-size: 10px; color: #475569; margin-bottom: 0; }
+    /* ── Bloque cliente ── */
+    .client-title { font-size: 9px; font-weight: 800; color: #111827; text-transform: uppercase; letter-spacing: .06em; margin: 12px 0 4px 2px; }
+    .client-box { width: 100%; border: 1px solid #d1d5db; padding: 8px 12px; margin-bottom: 12px; }
+    .client-box .row { font-size: 10px; color: #1f2937; line-height: 1.6; }
+    .client-box .row.bold { font-weight: 700; }
 
     /* ── Tablas de líneas ── */
-    .section-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-    .section-table thead tr { background-color: {{ $color }}; }
-    .section-table thead th { padding: 6px 10px; font-size: 10px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+    .section-table { width: 100%; border-collapse: collapse; margin-bottom: 0; border: 1px solid #1f2937; }
+    .section-table thead tr { background-color: #1f2937; }
+    .section-table thead th { padding: 6px 10px; font-size: 10px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: .04em; text-align: left; border-right: 1px solid #475569; }
+    .section-table thead th:last-child { border-right: none; }
     .section-table thead th.center { text-align: center; }
     .section-table tbody tr.odd  { background: #ffffff; }
     .section-table tbody tr.even { background: #f8fafc; }
-    .section-table tbody td { padding: 7px 10px; font-size: 11px; color: #1e293b; border-top: 1px solid #e2e8f0; vertical-align: middle; }
-    .section-table tbody td.concepto { color: #475569; border-right: 1px solid #e2e8f0; }
+    .section-table tbody td { padding: 7px 10px; font-size: 11px; color: #1e293b; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; vertical-align: middle; }
+    .section-table tbody td:last-child { border-right: none; }
+    .section-table tbody td.concepto { color: #475569; }
     .section-table tbody td.center { text-align: center; }
     .section-table tbody td.bold { font-weight: 600; }
 
@@ -40,18 +45,19 @@
     .obs { border-top: 1px solid #e2e8f0; padding: 8px 10px; font-size: 10px; color: #475569; }
 
     /* ── Firmas ── */
-    .firmas-section { margin-top: 16px; }
+    .firmas-section { margin-top: 30px; }
     .firmas-table { width: 100%; border-collapse: collapse; }
     .firma-cell { width: 50%; vertical-align: top; padding: 0 8px 0 0; }
     .firma-cell:last-child { padding: 0 0 0 8px; }
-    .firma-box { border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; }
+    .firma-box { padding: 4px 0 0 0; }
     .firma-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .firma-img { max-width: 100%; max-height: 80px; display: block; margin: 4px auto; }
     .firma-fecha { font-size: 9px; color: #94a3b8; text-align: center; margin-top: 4px; }
     .firma-pendiente { font-size: 10px; color: #94a3b8; font-style: italic; text-align: center; padding: 12px 0; }
 
-    /* ── Borde general doc ── */
-    .doc-wrap { border: 1px solid #e2e8f0; }
+    /* ── Bloque de documento (sin marco) ── */
+    .doc-wrap { }
+    .doc-wrap + .doc-wrap { margin-top: 30px; }
 </style>
 </head>
 <body>
@@ -71,18 +77,30 @@
                 @if ($logoPath)
                     <img src="{{ $logoPath }}" class="logo-img" alt="{{ $empresa->nombre }}">
                 @else
-                    <div class="empresa-nombre">{{ $empresa->nombre_comercial ?: $empresa->nombre }}</div>
+                    <div class="empresa-nombre">{{ $empresa->nombre }}</div>
                 @endif
                 <div class="empresa-datos">
-                    @if ($empresa->nombre_comercial && $empresa->nombre)
-                        <div class="sub">{{ $empresa->nombre }}</div>
+                    @if ($empresa->razon_social)
+                        <div class="sub">{{ $empresa->razon_social }}</div>
                     @endif
                     @if ($empresa->direccion)<div>{{ $empresa->direccion }}</div>@endif
                     @if ($empresa->codigo_postal || $empresa->poblacion)
                         <div>{{ trim($empresa->codigo_postal . ' ' . $empresa->poblacion) }}{{ $empresa->provincia ? ' (' . $empresa->provincia . ')' : '' }}</div>
                     @endif
-                    @if ($empresa->telefono)<div>Tlf. {{ $empresa->telefono }}</div>@endif
-                    @if ($empresa->email_contacto)<div>{{ $empresa->email_contacto }}</div>@endif
+                    @if ($empresa->telefono || $empresa->movil)
+                        <div>
+                            @if ($empresa->telefono)Tlf. {{ $empresa->telefono }}@endif
+                            @if ($empresa->telefono && $empresa->movil) &nbsp;·&nbsp; @endif
+                            @if ($empresa->movil)Móvil {{ $empresa->movil }}@endif
+                        </div>
+                    @endif
+                    @if ($empresa->web || $empresa->email_contacto)
+                        <div>
+                            @if ($empresa->web){{ $empresa->web }}@endif
+                            @if ($empresa->web && $empresa->email_contacto) &nbsp;·&nbsp; @endif
+                            @if ($empresa->email_contacto){{ $empresa->email_contacto }}@endif
+                        </div>
+                    @endif
                 </div>
             </td>
             <td class="num-cell">
@@ -104,14 +122,22 @@
         </tr>
     </table>
 
-    {{-- ══ BARRA CLIENTE / PROYECTO / CONCEPTO ══ --}}
-    <div class="info-bar">
-        <strong>Cliente:</strong> {{ $albaran->cliente?->nombre ?? '—' }}
-        @if ($albaran->proyecto)
-            &nbsp;·&nbsp; <strong>Proyecto:</strong> {{ $albaran->proyecto->nombre }}
+    {{-- ══ BLOQUE CLIENTE (título fuera + rectángulo) ══ --}}
+    @php
+        $cli = $albaran->cliente;
+        $cliPoblacion = $cli
+            ? trim(($cli->codigo_postal ? $cli->codigo_postal.' ' : '').($cli->poblacion ?? '')).
+              ($cli->provincia ? ' ('.$cli->provincia.')' : '')
+            : '';
+    @endphp
+    <div class="client-title">Datos del cliente</div>
+    <div class="client-box">
+        <div class="row bold">{{ $cli?->nombre ?? '—' }}</div>
+        @if ($cli?->direccion)
+            <div class="row">{{ $cli->direccion }}</div>
         @endif
-        @if ($albaran->concepto)
-            &nbsp;·&nbsp; <strong>Concepto:</strong> {{ $albaran->concepto->nombre }}
+        @if ($cliPoblacion !== '')
+            <div class="row">{{ $cliPoblacion }}</div>
         @endif
     </div>
 
@@ -152,7 +178,7 @@
 
 {{-- ══ MATERIALES (bloque separado) ══ --}}
 @if ($conMateriales && $albaran->lineasMaterial->isNotEmpty())
-    <div class="doc-wrap" style="margin-top: 10px;">
+    <div class="doc-wrap" style="margin-top: 30px;">
         <table class="section-table">
             <thead>
                 <tr>

@@ -63,6 +63,8 @@
         </x-slot:actionsRight>
     </x-ui.page-header>
 
+    <x-ui.flash />
+
     {{-- Tabs + contenido como unidad visual --}}
     @php $modoCrear = $albaran === null; @endphp
     <div>
@@ -152,7 +154,7 @@
                 </x-ui.field>
 
                 <x-ui.field label="Fecha" required :error="$errors->first('form.fecha')">
-                    <x-ui.date-input wireModel="form.fecha" placeholder="dd/mm/aaaa" />
+                    <x-ui.date-input wireModel="form.fecha" :value="$form->fecha" placeholder="dd/mm/aaaa" />
                 </x-ui.field>
 
                 {{-- Fila 4: Estado (media línea) --}}

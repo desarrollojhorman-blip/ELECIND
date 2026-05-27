@@ -37,9 +37,13 @@ class Fase2DemoSeeder extends Seeder
             return;
         }
 
-        $proyectos = Proyecto::with(['cliente', 'usuarios'])->get();
+        // Solo proyectos activos: un albarán sobre un proyecto cerrado/inactivo
+        // dejaría el selector del editor vacío y daría datos demo incongruentes.
+        $proyectos = Proyecto::with(['cliente', 'usuarios'])
+            ->where('estado', 'activo')
+            ->get();
         if ($proyectos->isEmpty()) {
-            $this->command?->warn('Fase2DemoSeeder omitido: no hay proyectos. Ejecuta Fase1DemoSeeder primero.');
+            $this->command?->warn('Fase2DemoSeeder omitido: no hay proyectos activos. Ejecuta Fase1DemoSeeder primero.');
 
             return;
         }
@@ -170,36 +174,36 @@ class Fase2DemoSeeder extends Seeder
         }
 
         $this->command?->info(sprintf(
-            'Demo Fase 2 OK → %d albaranes creados (%d borrador · %d pendiente · %d firmado · %d facturado · %d archivado)',
+            'Demo Fase 2 OK → %d albaranes creados (%d pendiente · %d firmado · %d facturado)',
             $creados,
-            Albaran::where('estado', EstadoAlbaran::BORRADOR)->count(),
             Albaran::where('estado', EstadoAlbaran::PENDIENTE_FIRMA)->count(),
             Albaran::where('estado', EstadoAlbaran::FIRMADO)->count(),
             Albaran::where('estado', EstadoAlbaran::FACTURADO)->count(),
-            Albaran::where('estado', EstadoAlbaran::ARCHIVADO)->count(),
         ));
     }
 
-    // Albaranes recientes tienden a ser borradores; los antiguos, más consolidados.
+    // Los albaranes recientes suelen estar pendientes de firma; los más antiguos,
+    // firmados o ya facturados.
     private function elegirEstado(int $diasAtras): EstadoAlbaran
     {
-        if ($diasAtras <= 7) {
+        if ($diasAtras <= 14) {
             return fake()->randomElement([
-                EstadoAlbaran::BORRADOR, EstadoAlbaran::BORRADOR, EstadoAlbaran::PENDIENTE_FIRMA,
+                EstadoAlbaran::PENDIENTE_FIRMA, EstadoAlbaran::PENDIENTE_FIRMA,
+                EstadoAlbaran::FIRMADO,
             ]);
         }
 
-        if ($diasAtras <= 30) {
+        if ($diasAtras <= 60) {
             return fake()->randomElement([
-                EstadoAlbaran::BORRADOR, EstadoAlbaran::PENDIENTE_FIRMA,
-                EstadoAlbaran::FIRMADO, EstadoAlbaran::FIRMADO,
+                EstadoAlbaran::PENDIENTE_FIRMA,
+                EstadoAlbaran::FIRMADO, EstadoAlbaran::FIRMADO, EstadoAlbaran::FIRMADO,
+                EstadoAlbaran::FACTURADO,
             ]);
         }
 
         return fake()->randomElement([
             EstadoAlbaran::FIRMADO, EstadoAlbaran::FIRMADO,
-            EstadoAlbaran::FACTURADO, EstadoAlbaran::FACTURADO,
-            EstadoAlbaran::ARCHIVADO,
+            EstadoAlbaran::FACTURADO, EstadoAlbaran::FACTURADO, EstadoAlbaran::FACTURADO,
         ]);
     }
 

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('proyecto_id')->nullable()->constrained('proyectos')->nullOnDelete();
             $table->foreignId('creado_por')->constrained('users')->restrictOnDelete();
             $table->foreignId('responsable_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->enum('estado', ['borrador', 'pendiente_firma', 'firmado', 'facturado', 'archivado'])
-                ->default('borrador');
+            $table->enum('estado', ['pendiente_firma', 'firmado', 'facturado'])
+                ->default('pendiente_firma');
             $table->text('observaciones')->nullable();
             $table->json('snapshot_data')->nullable();
             $table->timestamps();

@@ -21,11 +21,11 @@
 
             <div class="grid gap-4 md:grid-cols-2">
                 <x-ui.field label="Nombre" required :error="$errors->first('form.nombre')">
-                    <x-ui.input wire:model="form.nombre" maxlength="150" />
+                    <x-ui.input wire:model="form.nombre" maxlength="150" placeholder="ELECIND" />
                 </x-ui.field>
 
-                <x-ui.field label="Nombre comercial" :error="$errors->first('form.nombre_comercial')">
-                    <x-ui.input wire:model="form.nombre_comercial" maxlength="150" />
+                <x-ui.field label="Razón social" :error="$errors->first('form.razon_social')">
+                    <x-ui.input wire:model="form.razon_social" maxlength="150" placeholder="ELECTRICIDAD INDUSTRIAL E INSTALACIONES, S.L.L." />
                 </x-ui.field>
 
                 <x-ui.field label="CIF" :error="$errors->first('form.cif')">
@@ -36,7 +36,15 @@
                     <x-ui.input wire:model="form.telefono" maxlength="30" inputmode="tel" />
                 </x-ui.field>
 
-                <x-ui.field label="Dirección" class="md:col-span-2" :error="$errors->first('form.direccion')">
+                <x-ui.field label="Móvil" :error="$errors->first('form.movil')">
+                    <x-ui.input wire:model="form.movil" maxlength="30" inputmode="tel" />
+                </x-ui.field>
+
+                <x-ui.field label="Email de contacto" :error="$errors->first('form.email_contacto')">
+                    <x-ui.input type="email" wire:model="form.email_contacto" maxlength="150" inputmode="email" />
+                </x-ui.field>
+
+                <x-ui.field label="Dirección" :error="$errors->first('form.direccion')">
                     <x-ui.input wire:model="form.direccion" maxlength="255" />
                 </x-ui.field>
 
@@ -52,12 +60,12 @@
                     <x-ui.input wire:model="form.provincia" maxlength="100" />
                 </x-ui.field>
 
-                <x-ui.field label="Email de contacto" :error="$errors->first('form.email_contacto')">
-                    <x-ui.input type="email" wire:model="form.email_contacto" maxlength="150" inputmode="email" />
+                <x-ui.field label="Email para notificaciones" :error="$errors->first('form.email_notificaciones')">
+                    <x-ui.input type="email" wire:model="form.email_notificaciones" maxlength="150" inputmode="email" />
                 </x-ui.field>
 
-                <x-ui.field label="Email para notificaciones" class="md:col-span-2" :error="$errors->first('form.email_notificaciones')">
-                    <x-ui.input type="email" wire:model="form.email_notificaciones" maxlength="150" inputmode="email" />
+                <x-ui.field label="Web" :error="$errors->first('form.web')">
+                    <x-ui.input wire:model="form.web" maxlength="255" placeholder="www.elecind.com" />
                 </x-ui.field>
             </div>
         </x-ui.card>

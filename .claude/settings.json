@@ -86,7 +86,16 @@
       "Bash(./vendor/bin/pint app/Livewire/Pedidos/Editar.php app/Livewire/Pedidos/Ver.php app/Livewire/Materiales/NumeroPedidos/Index.php routes/web.php)",
       "PowerShell(php artisan view:cache)",
       "PowerShell(php artisan db:seed --class=RolesAndPermissionsSeeder --force)",
-      "PowerShell(php artisan route:clear)"
+      "PowerShell(php artisan route:clear)",
+      "PowerShell(php artisan migrate:fresh --seed)",
+      "PowerShell(php artisan permission:cache-reset)",
+      "PowerShell(php artisan migrate)",
+      "PowerShell(php artisan tinker --execute=\"echo \\\\Schema::getColumnListing\\('empresa'\\) | json_encode\\($s ?? []\\);\" 2>&1; echo '---'; php artisan tinker --execute=\"$e = \\\\App\\\\Models\\\\Empresa::actual\\(\\); echo 'nombre: '.var_export\\($e->nombre, true\\).PHP_EOL.'razon_social: '.var_export\\($e->razon_social, true\\).PHP_EOL.'movil: '.var_export\\($e->movil, true\\).PHP_EOL.'web: '.var_export\\($e->web, true\\).PHP_EOL;\")",
+      "PowerShell(php -r \"require 'vendor/autoload.php'; $app = require_once 'bootstrap/app.php'; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); echo implode\\(',', Illuminate\\\\Support\\\\Facades\\\\Schema::getColumnListing\\('empresa'\\)\\);\")",
+      "PowerShell(php artisan db:table empresa)",
+      "PowerShell(php _check_empresa.php)",
+      "Bash(curl -s -b \"elecind-session=eyJpdiI6InZsTTJ1WTg1Mjd5Y0JtYm5TaGJhMlE9PSIsInZhbHVlIjoidkFGMEx5Um92WkR5bWZtVVBydW50RTY3N0VDRmJvVE9aMXhXMGYxS1RNemFEVExWS2VKWGVGb1Y5cTRBOEpYeERNQk82cUU4S1RhYUtUdy8zTlJSdDlaTEp2dUpMZnJZUUdzQWJZS2xUZjhtWGVFTXUreHh6N3dueklHM1ozTnMiLCJtYWMiOiJmNWZhMzk3OTc3NTU1MjNiMGZmYzliODVkZjg1YWQ4N2VkMzhmNjUzODJlOTA0NjY0Y2JjYjkyZTczNTc4MjMzIiwidGFnIjoiIn0%3D\" \"http://localhost/CLIENTES/ELECIND/public/albaranes/crear\")",
+      "PowerShell(php _preview_mail.php)"
     ],
     "additionalDirectories": [
       "\\tmp",

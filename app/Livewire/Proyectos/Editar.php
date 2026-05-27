@@ -75,6 +75,7 @@ class Editar extends Component
             $this->form->reset();
             $this->form->estado = 'activo';
             $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
+            $this->form->fecha_inicio = now()->format('Y-m-d');
         }
     }
 
@@ -94,6 +95,7 @@ class Editar extends Component
             Gate::authorize('create', Proyecto::class);
             $this->form->estado = 'activo';
             $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
+            $this->form->fecha_inicio = now()->format('Y-m-d');
         }
     }
 
@@ -134,6 +136,15 @@ class Editar extends Component
 
         Gate::authorize('update', $this->proyecto);
 
+        // Verificar que el usuario realmente tenga rol "trabajador" (defensa
+        // contra manipulación del payload por DOM/Livewire).
+        $user = User::find($this->trabajadorAAgregar);
+        if ($user === null || ! $user->hasRole('trabajador')) {
+            $this->addError('trabajadorAAgregar', 'Solo se pueden asignar usuarios con rol trabajador.');
+
+            return;
+        }
+
         $yaExiste = $this->proyecto->usuarios()
             ->where('users.id', $this->trabajadorAAgregar)
             ->exists();
@@ -160,6 +171,10 @@ class Editar extends Component
         $this->proyecto->usuarios()
             ->wherePivot('rol_en_proyecto', 'trabajador')
             ->detach($userId);
+
+        // Forzar re-render del select para que el trabajador vuelva a
+        // estar disponible inmediatamente sin recargar la página.
+        $this->trabajadorSelectKey++;
     }
 
     /* ───────────────────── Responsables ───────────────────── */
@@ -204,6 +219,10 @@ class Editar extends Component
         $this->proyecto->usuarios()
             ->wherePivot('rol_en_proyecto', 'responsable')
             ->detach($userId);
+
+        // Forzar re-render del select para que el responsable vuelva a
+        // estar disponible inmediatamente.
+        $this->responsableSelectKey++;
     }
 
     /* ───────────────────── Materiales ───────────────────── */
@@ -246,6 +265,8 @@ class Editar extends Component
         Gate::authorize('update', $this->proyecto);
 
         $this->proyecto->materiales()->detach($materialId);
+
+        $this->materialSelectKey++;
     }
 
     /* ───────────────────── Conceptos ───────────────────── */
@@ -288,6 +309,8 @@ class Editar extends Component
         Gate::authorize('update', $this->proyecto);
 
         $this->proyecto->conceptos()->detach($conceptoId);
+
+        $this->conceptoSelectKey++;
     }
 
     /* ───────────────────── Ordenación tabs ────────────── */
@@ -436,7 +459,7 @@ class Editar extends Component
         $asignados = $this->trabajadoresProyecto->pluck('id')->all();
 
         return User::query()
-            ->where('tipo_usuario', 'interno')
+            ->role('trabajador')
             ->where('activo', true)
             ->whereNotIn('id', $asignados)
             ->orderBy('nombre')

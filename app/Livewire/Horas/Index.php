@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -14,11 +15,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.web', ['active' => 'horas'])]
 #[Title('Control de Horas')]
 class Index extends Component
 {
+    use WithPagination;
+
     #[Url(as: 'trabajador')]
     public ?int $filtroTrabajador = null;
 
@@ -37,6 +41,9 @@ class Index extends Component
     #[Url(as: 'estado')]
     public string $filtroEstado = '';
 
+    #[Url(as: 'pp')]
+    public int $porPagina = 25;
+
     public function mount(): void
     {
         if ($this->fechaDesde === '') {
@@ -47,9 +54,22 @@ class Index extends Component
         }
     }
 
-    public function updatedFiltroCliente(): void
+    /**
+     * Hook genérico: cuando cambia cualquier filtro o el tamaño de página,
+     * vuelve a la página 1. La cascada cliente → proyecto sigue funcionando.
+     */
+    public function updated(string $name): void
     {
-        $this->filtroProyecto = null;
+        if ($name === 'filtroCliente') {
+            $this->filtroProyecto = null;
+        }
+
+        if (in_array($name, [
+            'filtroTrabajador', 'filtroCliente', 'filtroProyecto',
+            'filtroEstado', 'fechaDesde', 'fechaHasta', 'porPagina',
+        ], true)) {
+            $this->resetPage();
+        }
     }
 
     /** @return Collection<int, User> */
@@ -84,13 +104,11 @@ class Index extends Component
     }
 
     /**
-     * Líneas diarias de todos los trabajadores (o del filtrado).
-     * Cada fila = una línea de personal de un albarán.
-     *
-     * @return Collection<int, object>
+     * Query base con joins y filtros aplicados. Se usa tanto para la lista
+     * paginada como para el agregado de totales — así los totales suman
+     * SIEMPRE todo lo filtrado, no solo la página visible.
      */
-    #[Computed]
-    public function lineasDiarias(): Collection
+    private function baseQuery(): QueryBuilder
     {
         $idsTrabajadores = User::role('trabajador')->withTrashed()->pluck('id');
 
@@ -107,7 +125,13 @@ class Index extends Component
             ->when($this->filtroProyecto, fn ($q) => $q->where('a.proyecto_id', $this->filtroProyecto))
             ->when($this->filtroEstado, fn ($q) => $q->where('a.estado', $this->filtroEstado))
             ->when($this->fechaDesde, fn ($q) => $q->whereDate('a.fecha', '>=', $this->fechaDesde))
-            ->when($this->fechaHasta, fn ($q) => $q->whereDate('a.fecha', '<=', $this->fechaHasta))
+            ->when($this->fechaHasta, fn ($q) => $q->whereDate('a.fecha', '<=', $this->fechaHasta));
+    }
+
+    public function render(): View
+    {
+        // Página visible
+        $lineas = $this->baseQuery()
             ->select([
                 'a.id as albaran_id',
                 'a.numero as albaran_numero',
@@ -127,28 +151,37 @@ class Index extends Component
             ->orderBy('trabajador_apellidos')
             ->orderBy('trabajador_nombre')
             ->orderBy('a.id')
-            ->get();
-    }
+            ->paginate($this->porPagina)
+            ->onEachSide(2);
 
-    public function render(): View
-    {
-        $lineas = $this->lineasDiarias;
+        // Totales: una sola query agregada sobre TODO lo filtrado
+        $sumas = $this->baseQuery()
+            ->groupBy('a.tipo_hora')
+            ->select([
+                'a.tipo_hora',
+                DB::raw('SUM(alp.horas) as total_horas'),
+                DB::raw('SUM(alp.horas_extra) as total_extras'),
+            ])
+            ->get()
+            ->keyBy('tipo_hora');
+
+        $get = fn (string $tipo, string $col) => (float) ($sumas->get($tipo)?->{$col} ?? 0);
 
         $totales = [
-            'laboral'             => (float) $lineas->where('tipo_hora', 'laboral')->sum('horas'),
-            'laboral_noche'       => (float) $lineas->where('tipo_hora', 'laboral_noche')->sum('horas'),
-            'festivo'             => (float) $lineas->where('tipo_hora', 'festivo')->sum('horas'),
-            'festivo_noche'       => (float) $lineas->where('tipo_hora', 'festivo_noche')->sum('horas'),
-            'laboral_extra'       => (float) $lineas->where('tipo_hora', 'laboral')->sum('horas_extra'),
-            'laboral_noche_extra' => (float) $lineas->where('tipo_hora', 'laboral_noche')->sum('horas_extra'),
-            'festivo_extra'       => (float) $lineas->where('tipo_hora', 'festivo')->sum('horas_extra'),
-            'festivo_noche_extra' => (float) $lineas->where('tipo_hora', 'festivo_noche')->sum('horas_extra'),
+            'laboral'             => $get('laboral', 'total_horas'),
+            'laboral_noche'       => $get('laboral_noche', 'total_horas'),
+            'festivo'             => $get('festivo', 'total_horas'),
+            'festivo_noche'       => $get('festivo_noche', 'total_horas'),
+            'laboral_extra'       => $get('laboral', 'total_extras'),
+            'laboral_noche_extra' => $get('laboral_noche', 'total_extras'),
+            'festivo_extra'       => $get('festivo', 'total_extras'),
+            'festivo_noche_extra' => $get('festivo_noche', 'total_extras'),
         ];
         $totales['total'] = (float) array_sum($totales);
 
         $diasSemana = ['', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         $estados    = EstadoAlbaran::cases();
 
-        return view('livewire.horas.index', compact('totales', 'diasSemana', 'estados'));
+        return view('livewire.horas.index', compact('lineas', 'totales', 'diasSemana', 'estados'));
     }
 }

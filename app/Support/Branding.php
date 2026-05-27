@@ -246,11 +246,7 @@ class Branding
 
     public static function nombre(): string
     {
-        $config = self::actual();
-
-        return $config?->nombre_comercial
-            ?: $config?->nombre
-            ?: 'ENIA';
+        return self::actual()?->nombre ?: 'ENIA';
     }
 
     public static function abreviatura(): string

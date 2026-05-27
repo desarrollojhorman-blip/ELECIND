@@ -32,6 +32,7 @@ use App\Policies\RolePolicy;
 use App\Policies\TiposProyectoPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -48,6 +49,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Forzar que route() / url() respeten APP_URL aunque se acceda desde
+        // otro host (p.ej. el panel se navega por localhost pero queremos que
+        // los enlaces de firma se generen con la IP/dominio público).
+        if ($appUrl = config('app.url')) {
+            URL::forceRootUrl($appUrl);
+            if (str_starts_with($appUrl, 'https://')) {
+                URL::forceScheme('https');
+            }
+        }
+
         Gate::policy(Cliente::class, ClientePolicy::class);
         Gate::policy(TiposProyecto::class, TiposProyectoPolicy::class);
         Gate::policy(Proyecto::class, ProyectoPolicy::class);

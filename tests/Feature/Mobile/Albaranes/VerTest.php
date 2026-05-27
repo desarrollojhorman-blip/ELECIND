@@ -65,14 +65,14 @@ class VerTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_eliminar_un_borrador_devuelve_el_stock_al_material(): void
+    public function test_eliminar_un_albaran_pendiente_devuelve_el_stock_al_material(): void
     {
         $yo = $this->trabajador();
         $cliente = Cliente::factory()->create();
         $albaran = Albaran::factory()->create([
             'cliente_id' => $cliente->id,
             'creado_por' => $yo->getKey(),
-            'estado' => EstadoAlbaran::BORRADOR,
+            'estado' => EstadoAlbaran::PENDIENTE_FIRMA,
         ]);
 
         $material = Material::factory()->create(['stock' => 80]);

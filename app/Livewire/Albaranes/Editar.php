@@ -387,7 +387,7 @@ public function guardar(): void
         $empresa = Empresa::actual();
 
         if (! $empresa->mail_host) {
-            $this->addError('firma', 'Configura el servidor de correo en Ajustes → Correo antes de enviar notificaciones.');
+            session()->flash('error', 'Configura el servidor de correo en Ajustes → Correo antes de enviar notificaciones.');
             return;
         }
 
@@ -402,8 +402,11 @@ public function guardar(): void
             'timeout'    => 15,
         ]]);
 
-        $enviados = 0;
         $caducidadDias = $empresa->token_caducidad_dias ?? 7;
+        $caducaEl = now()->addDays($caducidadDias)->format('d/m/Y');
+
+        /** @var array<int, string> $destinos Lista "Rol (email)" de notificados con éxito */
+        $destinos = [];
 
         if ($trabajador) {
             $email  = $this->form->firma_trabajador_otro_correo;
@@ -416,10 +419,11 @@ public function guardar(): void
             }
 
             if ($email) {
-                $this->enviarTokenFirma('trabajador', $email, $nombre, $caducidadDias, $empresa);
-                $enviados++;
+                if ($this->enviarTokenFirma('trabajador', $email, $nombre, $caducidadDias, $empresa)) {
+                    $destinos[] = "Empleado ({$email})";
+                }
             } else {
-                $this->addError('firma', 'El empleado firmante no tiene correo configurado.');
+                session()->flash('error', 'El empleado firmante no tiene correo configurado.');
             }
         }
 
@@ -434,21 +438,30 @@ public function guardar(): void
             }
 
             if ($email) {
-                $this->enviarTokenFirma('responsable', $email, $nombre, $caducidadDias, $empresa);
-                $enviados++;
+                if ($this->enviarTokenFirma('responsable', $email, $nombre, $caducidadDias, $empresa)) {
+                    $destinos[] = "Responsable ({$email})";
+                }
             } else {
-                $this->addError('firma', 'El responsable firmante no tiene correo configurado.');
+                session()->flash('error', 'El responsable firmante no tiene correo configurado.');
             }
         }
 
         $this->albaran->load('tokensFirma');
 
-        if ($enviados > 0) {
-            session()->flash('status', $enviados === 1 ? 'Notificación enviada correctamente.' : 'Notificaciones enviadas correctamente.');
+        if ($destinos !== []) {
+            $lista = count($destinos) === 1
+                ? $destinos[0]
+                : implode(' y ', $destinos);
+
+            session()->flash('status', sprintf(
+                'Solicitud de firma enviada a %s. El enlace de firma caduca el %s.',
+                $lista,
+                $caducaEl,
+            ));
         }
     }
 
-    private function enviarTokenFirma(string $tipo, string $email, ?string $nombre, int $caducidadDias, Empresa $empresa): void
+    private function enviarTokenFirma(string $tipo, string $email, ?string $nombre, int $caducidadDias, Empresa $empresa): bool
     {
         // Invalidar tokens anteriores activos del mismo tipo
         $this->albaran->tokensFirma()
@@ -474,9 +487,32 @@ public function guardar(): void
             'firmable.lineasPersonal.trabajador',
         ]);
 
-        Mail::mailer('empresa_smtp')
-            ->to($email, $nombre)
-            ->send(new SolicitudFirmaEmail($tokenFirma));
+        try {
+            Mail::mailer('empresa_smtp')
+                ->to($email, $nombre)
+                ->send(new SolicitudFirmaEmail($tokenFirma));
+        } catch (\Throwable $e) {
+            // Invalidar el token recién creado: no se ha podido notificar.
+            $tokenFirma->update(['invalidado_at' => now()]);
+
+            \Log::warning('Fallo enviando notificación de firma', [
+                'albaran_id' => $this->albaran->id,
+                'tipo'       => $tipo,
+                'email'      => $email,
+                'mensaje'    => $e->getMessage(),
+            ]);
+
+            session()->flash('error', sprintf(
+                'No se pudo enviar el correo al %s (%s). Revisa la configuración SMTP en Ajustes → Correo. Detalle: %s',
+                $tipo,
+                $email,
+                $e->getMessage(),
+            ));
+
+            return false;
+        }
+
+        return true;
     }
 
     public function eliminar(): void
@@ -499,10 +535,17 @@ public function guardar(): void
     #[Computed]
     public function proyectosDisponibles(): Collection
     {
+        $actual = $this->form->proyecto_id;
+
         return Proyecto::query()
-            ->where('estado', 'activo')
+            ->where(function ($q) use ($actual): void {
+                $q->where('estado', 'activo');
+                if ($actual !== null) {
+                    $q->orWhere('id', $actual);
+                }
+            })
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'codigo', 'cliente_id']);
+            ->get(['id', 'nombre', 'codigo', 'cliente_id', 'estado']);
     }
 
     /** @return Collection<int, Concepto> */
@@ -618,7 +661,7 @@ public function guardar(): void
     {
         $titulo   = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
         $tiposHora = TipoHora::cases();
-        $estados   = array_values(array_filter(EstadoAlbaran::cases(), fn ($e) => $e !== EstadoAlbaran::BORRADOR));
+        $estados   = EstadoAlbaran::cases();
 
         $tokenTrabajador   = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'trabajador')->sortByDesc('created_at')->first();
         $tokenResponsable  = $this->albaran?->tokensFirma->where('tipo_firmante.value', 'responsable')->sortByDesc('created_at')->first();

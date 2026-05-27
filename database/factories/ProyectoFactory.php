@@ -30,7 +30,7 @@ class ProyectoFactory extends Factory
             'descripcion' => $faker->boolean(60) ? $faker->paragraph(2) : null,
             'fecha_inicio' => $fechaInicio->format('Y-m-d'),
             'fecha_fin' => $fechaFin,
-            'estado' => $faker->randomElement(['borrador', 'activo', 'activo', 'activo', 'cerrado']),
+            'estado' => $faker->randomElement(['activo', 'activo', 'activo', 'inactivo', 'cerrado']),
             'responsable_principal_id' => null,
         ];
     }
