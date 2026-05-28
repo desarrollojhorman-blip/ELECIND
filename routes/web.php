@@ -262,27 +262,27 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('conceptos.exportar.pdf');
 
     Route::get('/configuracion/empresa', EmpresaEdit::class)
-        ->middleware('can:configuracion.ver')
+        ->middleware('can:empresa.ver')
         ->name('configuracion.empresa');
 
     Route::get('/configuracion/ajustes', ConfiguracionAjustes::class)
-        ->middleware('can:configuracion.ver')
+        ->middleware('can:ajustes.ver')
         ->name('configuracion.ajustes');
 
     Route::get('/configuracion/roles', RolesIndex::class)
-        ->middleware('can:roles.gestionar')
+        ->middleware('can:roles.ver')
         ->name('configuracion.roles');
 
     Route::get('/configuracion/api', ConfiguracionApi::class)
-        ->middleware('can:configuracion.ver')
+        ->middleware('can:api.ver')
         ->name('configuracion.api');
 
     Route::get('/configuracion/logs', ConfiguracionLogs::class)
-        ->middleware('can:configuracion.ver')
+        ->middleware('can:logs.ver')
         ->name('configuracion.logs');
 
     Route::get('/configuracion/licencias', ConfiguracionLicencias::class)
-        ->middleware('can:configuracion.ver')
+        ->middleware('can:licencias.ver')
         ->name('configuracion.licencias');
 
     Route::get('/perfil', MiPerfil::class)

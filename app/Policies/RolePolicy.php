@@ -9,12 +9,12 @@ class RolePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('roles.gestionar');
+        return $user->can('roles.ver') || $user->can('roles.gestionar');
     }
 
     public function view(User $user, Role $rol): bool
     {
-        if (! $user->can('roles.gestionar')) {
+        if (! ($user->can('roles.ver') || $user->can('roles.gestionar'))) {
             return false;
         }
 

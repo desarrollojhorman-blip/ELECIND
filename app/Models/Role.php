@@ -7,6 +7,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
 /**
  * @property int $id
  * @property string $name
+ * @property ?string $etiqueta
  * @property string $guard_name
  * @property int $nivel
  * @property string $acceso
@@ -16,6 +17,7 @@ class Role extends SpatieRole
 {
     protected $fillable = [
         'name',
+        'etiqueta',
         'guard_name',
         'nivel',
         'acceso',
@@ -28,5 +30,11 @@ class Role extends SpatieRole
             'nivel' => 'integer',
             'es_sistema' => 'boolean',
         ];
+    }
+
+    /** Nombre legible para la interfaz (etiqueta o, en su defecto, el name "humanizado"). */
+    public function nombreVisible(): string
+    {
+        return $this->etiqueta ?: ucfirst(str_replace('_', ' ', $this->name));
     }
 }

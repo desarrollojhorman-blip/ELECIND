@@ -24,7 +24,7 @@ class Edit extends Component
     {
         $empresa = Empresa::actual();
 
-        Gate::authorize('update', $empresa);
+        Gate::authorize('view', $empresa);
 
         $this->form->fromModel($empresa);
     }
@@ -80,6 +80,8 @@ class Edit extends Component
 
     public function render(): View
     {
-        return view('livewire.empresa.edit');
+        return view('livewire.empresa.edit', [
+            'puedeEditar' => Gate::allows('update', Empresa::actual()),
+        ]);
     }
 }

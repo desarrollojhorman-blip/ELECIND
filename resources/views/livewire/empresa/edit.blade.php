@@ -15,6 +15,14 @@
     </div>
   
     <div class="space-y-5">
+        @unless ($puedeEditar)
+            <div class="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <x-heroicon-o-lock-closed class="mt-0.5 size-4 shrink-0" />
+                <span>Modo solo lectura: no tienes permiso para editar los datos de la empresa.</span>
+            </div>
+        @endunless
+
+        <fieldset @disabled(! $puedeEditar) class="space-y-5 border-0 p-0 m-0 disabled:opacity-70">
         {{-- ─── Datos fiscales y de contacto ─── --}}
         <x-ui.card>
             <h3 class="mb-3 text-sm font-semibold text-slate-900">Datos fiscales y de contacto</h3>
@@ -171,7 +179,9 @@
                 </div>
             </div>
         </x-ui.card>
+        </fieldset>
 
+        @if ($puedeEditar)
         {{-- Acciones --}}
         <div class="flex justify-end gap-2 pt-2">
             <x-ui.button variant="neutral" wire:click="deshacer" wire:loading.attr="disabled" wire:target="deshacer" type="button">
@@ -193,6 +203,7 @@
                 <span wire:loading wire:target="guardar">Guardando…</span>
             </x-ui.button>
         </div>
+        @endif
 
     </div>
 

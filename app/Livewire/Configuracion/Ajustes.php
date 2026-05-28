@@ -95,7 +95,7 @@ class Ajustes extends Component
 
     public function mount(): void
     {
-        Gate::authorize('configuracion.ver');
+        Gate::authorize('ajustes.ver');
 
         $empresa = Empresa::actual();
         $this->plantilla_numeracion_albaran = $empresa->plantilla_numeracion_albaran ?? 'ALB-{YYYY}-{NNNN}';
@@ -306,6 +306,8 @@ class Ajustes extends Component
 
     public function guardar(): void
     {
+        Gate::authorize('ajustes.editar');
+
         // ─ Aplicar valores por defecto si los colores están vacíos
         if (empty($this->color_primario)) {
             $this->color_primario = self::COLOR_PRIMARIO_DEFAULT;

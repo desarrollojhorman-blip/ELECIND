@@ -303,7 +303,15 @@ class Index extends Component
         $rol = Role::findOrFail($id);
         Gate::authorize('delete', $rol);
 
-        $nombre = $rol->name;
+        // Un rol asignado a usuarios no se puede eliminar (perderían su rol).
+        if ($rol->users()->exists()) {
+            session()->flash('error', "El rol «{$rol->nombreVisible()}» está asignado a usuarios y no se puede eliminar. Reasigna primero esos usuarios.");
+            $this->confirmarEliminarId = null;
+
+            return;
+        }
+
+        $nombre = $rol->nombreVisible();
         $rol->delete();
         $this->confirmarEliminarId = null;
 

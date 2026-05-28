@@ -59,7 +59,7 @@ class Logs extends Component
 
     public function mount(): void
     {
-        Gate::authorize('configuracion.ver');
+        Gate::authorize('logs.ver');
     }
 
     public function updatingBusqueda(): void    { $this->resetPage(); }

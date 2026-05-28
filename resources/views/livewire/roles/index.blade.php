@@ -95,7 +95,8 @@
             @foreach ($roles as $rol)
                 <tr wire:key="rol-{{ $rol->id }}" class="transition-colors hover:bg-slate-50">
                     <td class="px-4 py-3">
-                        <div class="font-mono text-sm font-medium text-slate-900">{{ $rol->name }}</div>
+                        <div class="text-sm font-medium text-slate-900">{{ $rol->nombreVisible() }}</div>
+                        <div class="font-mono text-xs text-slate-400">{{ $rol->name }}</div>
                     </td>
                     <td class="px-4 py-3">
                         @if ($rol->es_sistema)
@@ -128,11 +129,19 @@
                                     tooltip="Editar" />
                             @endcan
                             @can('delete', $rol)
-                                <x-ui.icon-button
-                                    wire:click="confirmarEliminar({{ $rol->id }})"
-                                    icon="heroicon-o-trash"
-                                    variant="danger"
-                                    tooltip="Eliminar" />
+                                @if ($rol->users_count > 0)
+                                    <x-ui.icon-button
+                                        icon="heroicon-o-trash"
+                                        variant="neutral"
+                                        disabled
+                                        tooltip="Asignado a {{ $rol->users_count }} usuario(s): no se puede eliminar" />
+                                @else
+                                    <x-ui.icon-button
+                                        wire:click="confirmarEliminar({{ $rol->id }})"
+                                        icon="heroicon-o-trash"
+                                        variant="danger"
+                                        tooltip="Eliminar" />
+                                @endif
                             @endcan
                         </div>
                     </td>
@@ -150,13 +159,40 @@
 
         <form wire:submit="guardar" id="form-rol" class="space-y-5">
             {{-- Identidad del rol --}}
-            <div class="grid gap-4 md:grid-cols-3">
-                <x-ui.field label="Nombre interno" required :error="$errors->first('form.name')">
-                    <x-ui.input wire:model="form.name" :disabled="$form->es_sistema" class="font-mono" />
+            <div class="grid gap-4 md:grid-cols-2"
+                 x-data="{
+                    esNuevo: {{ $form->id === null ? 'true' : 'false' }},
+                    esSistema: {{ $form->es_sistema ? 'true' : 'false' }},
+                    generarInterno(v) {
+                        if (!this.esNuevo || this.esSistema) return;
+                        const slug = (v || '')
+                            .toLowerCase()
+                            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                            .replace(/[^a-z0-9\s]/g, '')
+                            .trim()
+                            .replace(/\s+/g, '_');
+                        $wire.set('form.name', slug);
+                    }
+                 }">
+                {{-- Nombre visible --}}
+                <x-ui.field label="Nombre" required :error="$errors->first('form.etiqueta')">
+                    <x-ui.input wire:model="form.etiqueta" x-on:blur="generarInterno($event.target.value)"
+                                :disabled="$form->es_sistema" maxlength="80" placeholder="Ej: Jefe de equipo" />
+                    @unless ($form->es_sistema)
+                        <p class="mt-1 text-xs text-slate-400">Letras, números y espacios.</p>
+                    @endunless
+                </x-ui.field>
+
+                {{-- Nombre interno (slug) --}}
+                <x-ui.field label="Nombre interno" :error="$errors->first('form.name')">
+                    <x-ui.input wire:model="form.name" readonly class="font-mono bg-slate-50 text-slate-500"
+                                placeholder="se_genera_solo" />
                     @if ($form->es_sistema)
-                        <p class="mt-1 text-xs text-slate-400">Los roles del sistema no se pueden renombrar.</p>
+                        <p class="mt-1 text-xs text-slate-400">Rol del sistema: no se puede cambiar.</p>
+                    @elseif ($form->id !== null)
+                        <p class="mt-1 text-xs text-slate-400">No se puede cambiar una vez creado.</p>
                     @else
-                        <p class="mt-1 text-xs text-slate-400">Minúsculas, sin espacios. Ej: supervisor_obra</p>
+                        <p class="mt-1 text-xs text-slate-400">Se genera del nombre al salir del campo.</p>
                     @endif
                 </x-ui.field>
 

@@ -18,7 +18,7 @@ class Licencias extends Component
 {
     public function mount(): void
     {
-        Gate::authorize('configuracion.ver');
+        Gate::authorize('licencias.ver');
     }
 
     #[Computed]

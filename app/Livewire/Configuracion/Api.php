@@ -31,7 +31,7 @@ class Api extends Component
 
     public function mount(): void
     {
-        Gate::authorize('configuracion.ver');
+        Gate::authorize('api.ver');
     }
 
     /** @return \Illuminate\Database\Eloquent\Collection<int, ApiToken> */

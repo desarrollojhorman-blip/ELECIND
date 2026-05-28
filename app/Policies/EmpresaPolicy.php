@@ -9,11 +9,11 @@ class EmpresaPolicy
 {
     public function view(User $user, Empresa $empresa): bool
     {
-        return $user->can('configuracion.ver');
+        return $user->can('empresa.ver');
     }
 
     public function update(User $user, Empresa $empresa): bool
     {
-        return $user->can('configuracion.editar');
+        return $user->can('empresa.editar');
     }
 }

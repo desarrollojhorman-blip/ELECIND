@@ -22,6 +22,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'tipos_proyecto.modificar',
             'tipos_proyecto.eliminar',
             'borradores.crear', // reemplazado por borradores.crear_movil + borradores.crear_web
+            'configuracion.ver',    // separado en empresa.ver / ajustes.ver / licencias.ver / api.ver / logs.ver
+            'configuracion.editar', // separado en empresa.editar / ajustes.editar
         ])->delete();
 
         $permisos = $this->catalogoPermisos();
@@ -37,24 +39,24 @@ class RolesAndPermissionsSeeder extends Seeder
             );
         }
 
-        $superadmin = Role::firstOrCreate(
+        $superadmin = Role::updateOrCreate(
             ['name' => 'superadmin', 'guard_name' => 'web'],
-            ['nivel' => 100, 'acceso' => 'ambos', 'es_sistema' => true]
+            ['etiqueta' => 'Superadministrador', 'nivel' => 100, 'acceso' => 'ambos', 'es_sistema' => true]
         );
 
-        $administrador = Role::firstOrCreate(
+        $administrador = Role::updateOrCreate(
             ['name' => 'administrador', 'guard_name' => 'web'],
-            ['nivel' => 50, 'acceso' => 'web', 'es_sistema' => true]
+            ['etiqueta' => 'Administrador', 'nivel' => 50, 'acceso' => 'web', 'es_sistema' => true]
         );
 
-        $trabajador = Role::firstOrCreate(
+        $trabajador = Role::updateOrCreate(
             ['name' => 'trabajador', 'guard_name' => 'web'],
-            ['nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
+            ['etiqueta' => 'Trabajador', 'nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
         );
 
-        $responsable = Role::firstOrCreate(
+        $responsable = Role::updateOrCreate(
             ['name' => 'responsable', 'guard_name' => 'web'],
-            ['nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
+            ['etiqueta' => 'Responsable', 'nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
         );
 
         // Superadmin: todos los permisos.
@@ -215,16 +217,19 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'incidencias.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar incidencias', 'categoria' => 'incidencias'],
 
             // ─────────────── Configuración ───────────────
-            ['name' => 'configuracion.ver',    'ambito' => 'web', 'descripcion' => 'Ver configuración (empresa, ajustes, licencias y logs)',       'categoria' => 'configuracion'],
-            ['name' => 'configuracion.editar', 'ambito' => 'web', 'descripcion' => 'Editar configuración (empresa y ajustes)',                     'categoria' => 'configuracion'],
+            ['name' => 'empresa.ver',    'ambito' => 'web', 'descripcion' => 'Ver los datos de la empresa',                                   'categoria' => 'configuracion'],
+            ['name' => 'empresa.editar', 'ambito' => 'web', 'descripcion' => 'Editar los datos de la empresa (logo, colores, datos fiscales)', 'categoria' => 'configuracion'],
+            ['name' => 'ajustes.ver',    'ambito' => 'web', 'descripcion' => 'Ver los ajustes del sistema',                                    'categoria' => 'configuracion'],
+            ['name' => 'ajustes.editar', 'ambito' => 'web', 'descripcion' => 'Editar los ajustes del sistema (numeración, correo, módulos)',   'categoria' => 'configuracion'],
+            ['name' => 'licencias.ver',  'ambito' => 'web', 'descripcion' => 'Ver la información de licencia',                                 'categoria' => 'configuracion'],
+            ['name' => 'logs.ver',       'ambito' => 'ambos', 'descripcion' => 'Ver el registro de actividad (logs de auditoría)',            'categoria' => 'configuracion'],
+            ['name' => 'api.ver',        'ambito' => 'web', 'descripcion' => 'Ver la sección de tokens de API',                               'categoria' => 'configuracion'],
             ['name' => 'api_tokens.gestionar', 'ambito' => 'web', 'descripcion' => 'Crear, editar y eliminar tokens de API externos (dato sensible)', 'categoria' => 'configuracion'],
 
             // ─────────────── Roles y permisos ───────────────
-            ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar roles personalizados', 'categoria' => 'roles'],
-            ['name' => 'permisos.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar permisos (avanzado)', 'categoria' => 'roles'],
-
-            // ─────────────── Sistema ───────────────
-            ['name' => 'logs.ver', 'ambito' => 'ambos', 'descripcion' => 'Ver registro de actividad', 'categoria' => 'sistema'],
+            ['name' => 'roles.ver',       'ambito' => 'web', 'descripcion' => 'Ver roles y permisos',                'categoria' => 'roles'],
+            ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Crear, editar y eliminar roles',      'categoria' => 'roles'],
+            ['name' => 'permisos.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar permisos (avanzado)',    'categoria' => 'roles'],
         ];
     }
 }

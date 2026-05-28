@@ -6,6 +6,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -14,6 +15,11 @@ class RoleForm extends Form
 {
     public ?int $id = null;
 
+    /** Nombre visible (libre: letras, números y espacios). */
+    #[Validate]
+    public string $etiqueta = '';
+
+    /** Identificador interno tipo slug. Se genera desde la etiqueta al crear. */
     #[Validate]
     public string $name = '';
 
@@ -36,6 +42,7 @@ class RoleForm extends Form
     public function rules(): array
     {
         return [
+            'etiqueta' => ['required', 'string', 'max:80', 'regex:/^[\pL\pN ]+$/u'],
             'name' => [
                 'required', 'string', 'max:60', 'regex:/^[a-z][a-z0-9_]*$/',
                 Rule::unique('roles', 'name')->ignore($this->id),
@@ -53,7 +60,8 @@ class RoleForm extends Form
     public function validationAttributes(): array
     {
         return [
-            'name' => 'nombre del rol',
+            'etiqueta' => 'nombre',
+            'name' => 'nombre interno',
             'acceso' => 'ámbito',
             'nivel' => 'nivel',
             'permisos' => 'permisos',
@@ -66,13 +74,16 @@ class RoleForm extends Form
     public function messages(): array
     {
         return [
-            'name.regex' => 'El nombre debe estar en minúsculas, sin espacios. Solo letras, números y guiones bajos.',
+            'etiqueta.regex' => 'El nombre solo admite letras, números y espacios (sin caracteres especiales).',
+            'name.regex' => 'El nombre interno debe estar en minúsculas, sin espacios. Solo letras, números y guiones bajos.',
+            'name.unique' => 'Ya existe un rol con ese nombre interno. Cambia ligeramente el nombre.',
         ];
     }
 
     public function fromModel(Role $rol): void
     {
         $this->id = (int) $rol->getKey();
+        $this->etiqueta = $rol->etiqueta ?: $rol->nombreVisible();
         $this->name = $rol->name;
         $this->acceso = $rol->acceso;
         $this->nivel = $rol->nivel;
@@ -82,13 +93,21 @@ class RoleForm extends Form
 
     public function save(User $creador): Role
     {
-        $this->validate();
-
         $esNuevo = $this->id === null;
+
+        // El nombre interno se genera desde la etiqueta SOLO al crear; después es
+        // inmutable (se referencia en código/middlewares). Se calcula antes de
+        // validar para que la regla unique evalúe el slug definitivo.
+        if ($esNuevo) {
+            $this->name = Str::slug($this->etiqueta, '_');
+        }
+
+        $this->validate();
 
         if ($esNuevo) {
             $rol = new Role([
                 'name' => $this->name,
+                'etiqueta' => $this->etiqueta,
                 'guard_name' => 'web',
                 'acceso' => $this->acceso,
                 'nivel' => $this->nivel,
@@ -99,9 +118,10 @@ class RoleForm extends Form
             /** @var Role $rol */
             $rol = Role::findOrFail($this->id);
 
-            // Roles del sistema: protegemos name + es_sistema; solo permisos y opcionalmente nivel/acceso (vía superadmin).
+            // Roles del sistema: name + etiqueta protegidos. El name interno
+            // nunca se cambia tras crear; solo la etiqueta visible (no-sistema).
             if (! $rol->es_sistema) {
-                $rol->name = $this->name;
+                $rol->etiqueta = $this->etiqueta;
             }
             $rol->acceso = $this->acceso;
             $rol->nivel = $this->nivel;
