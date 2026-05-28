@@ -5,7 +5,11 @@ use App\Livewire\Mobile\Albaranes\Firmar as AlbaranesFirmar;
 use App\Livewire\Mobile\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Mobile\Albaranes\Personalizado as AlbaranesPersonalizado;
 use App\Livewire\Mobile\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Mobile\Ausencias\Crear as AusenciasCrear;
+use App\Livewire\Mobile\Ausencias\Index as AusenciasIndex;
 use App\Livewire\Mobile\Horas\Index as HorasIndex;
+use App\Livewire\Mobile\Incidencias\Crear as IncidenciasCrear;
+use App\Livewire\Mobile\Incidencias\Index as IncidenciasIndex;
 use App\Livewire\Mobile\Perfil\MiPerfil as PerfilMiPerfil;
 use Illuminate\Support\Facades\Route;
 
@@ -41,22 +45,28 @@ Route::middleware(['auth', 'ensure.mobile.access'])
         Route::get('/albaranes/{albaran}', AlbaranesVer::class)
             ->name('albaranes.ver');
 
-        // ─── Faltas (Fase 4) ────────────────────────────────────────────────
-        Route::view('/ausencias', 'mobile.placeholder', [
-            'titulo' => 'Faltas de Asistencia',
-            'icono' => 'heroicon-o-calendar-days',
-            'descripcion' => 'Solicita ausencias y consulta el estado de las ya solicitadas.',
-            'roadmap' => 'Fase 4 · Ausencias e incidencias',
-        ])->name('ausencias.index');
+        // ─── Ausencias ──────────────────────────────────────────────────────
+        Route::get('/ausencias', AusenciasIndex::class)
+            ->middleware('can:ausencias.ver_propias')
+            ->name('ausencias.index');
+
+        Route::get('/ausencias/nueva', AusenciasCrear::class)
+            ->middleware('can:ausencias.solicitar')
+            ->name('ausencias.nueva');
+
+        Route::get('/ausencias/{ausencia}/editar', AusenciasCrear::class)
+            ->middleware('can:ausencias.solicitar')
+            ->name('ausencias.editar');
 
         // ─── Resumen de horas ───────────────────────────────────────────────
         Route::get('/resumen', HorasIndex::class)->name('resumen.index');
 
-        // ─── Incidencias (Fase 4) ───────────────────────────────────────────
-        Route::view('/incidencias/nueva', 'mobile.placeholder', [
-            'titulo' => 'Nueva incidencia',
-            'icono' => 'heroicon-o-exclamation-circle',
-            'descripcion' => 'Reporta una incidencia. El sistema detecta el contexto (albarán, ausencia o general) según desde dónde se cree.',
-            'roadmap' => 'Fase 4 · Ausencias e incidencias',
-        ])->name('incidencias.nueva');
+        // ─── Incidencias ────────────────────────────────────────────────────
+        Route::get('/incidencias', IncidenciasIndex::class)
+            ->middleware('can:incidencias.ver_propias')
+            ->name('incidencias.index');
+
+        Route::get('/incidencias/nueva', IncidenciasCrear::class)
+            ->middleware('can:incidencias.crear')
+            ->name('incidencias.nueva');
     });

@@ -6,6 +6,8 @@ use App\Http\Controllers\Clientes\ExportarExcelController as ClientesExportarExc
 use App\Http\Controllers\Clientes\ExportarPdfController as ClientesExportarPdf;
 use App\Http\Controllers\Conceptos\ExportarExcelController as ConceptosExportarExcel;
 use App\Http\Controllers\Conceptos\ExportarPdfController as ConceptosExportarPdf;
+use App\Http\Controllers\Ausencias\ExportarExcelController as AusenciasExportarExcel;
+use App\Http\Controllers\Ausencias\ExportarPdfController as AusenciasExportarPdf;
 use App\Http\Controllers\Horas\ExportarExcelController as HorasExportarExcel;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Usuarios\ExportarExcelController as UsuariosExportarExcel;
@@ -16,7 +18,9 @@ use App\Livewire\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Albaranes\Ver as AlbaranesVer;
 use App\Livewire\Borradores\Editar as BorradoresEditar;
 use App\Livewire\Borradores\Index as BorradoresIndex;
+use App\Livewire\Ausencias\Index as AusenciasIndex;
 use App\Livewire\Horas\Index as HorasIndex;
+use App\Livewire\Incidencias\Index as IncidenciasIndex;
 use App\Livewire\Borradores\Ver as BorradoresVer;
 use App\Livewire\Clientes\Editar as ClientesEditar;
 use App\Livewire\Clientes\Importar as ClientesImportar;
@@ -44,6 +48,7 @@ use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Usuarios\Editar as UsuariosEditar;
 use App\Livewire\Usuarios\Importar as UsuariosImportar;
+use App\Livewire\Dashboard;
 use App\Livewire\Usuarios\Index as UsuariosIndex;
 use App\Livewire\Usuarios\Ver as UsuariosVer;
 use Illuminate\Support\Facades\Route;
@@ -62,9 +67,24 @@ Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
-    Route::get('/', function () {
-        return view('web.dashboard');
-    })->name('web.dashboard');
+    Route::get('/', Dashboard::class)->name('web.dashboard');
+
+    Route::get('/ausencias', AusenciasIndex::class)
+        ->middleware('can:ausencias.ver_todas')
+        ->name('ausencias.index');
+
+    Route::get('/ausencias/exportar/excel', AusenciasExportarExcel::class)
+        ->middleware('can:ausencias.exportar')
+        ->name('ausencias.exportar.excel');
+
+    Route::get('/ausencias/exportar/pdf/{orientacion}', AusenciasExportarPdf::class)
+        ->where('orientacion', 'vertical|horizontal')
+        ->middleware('can:ausencias.exportar')
+        ->name('ausencias.exportar.pdf');
+
+    Route::get('/incidencias', IncidenciasIndex::class)
+        ->middleware('can:incidencias.ver_todas')
+        ->name('incidencias.index');
 
     Route::get('/horas', HorasIndex::class)
         ->name('horas.index');
@@ -113,7 +133,7 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('clientes.index');
 
     Route::get('/clientes/crear', ClientesEditar::class)
-        ->middleware('can:clientes.ver')
+        ->middleware('can:clientes.crear')
         ->name('clientes.crear');
 
     Route::get('/clientes/importar', ClientesImportar::class)
@@ -134,7 +154,7 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('clientes.ver');
 
     Route::get('/clientes/{cliente}/editar', ClientesEditar::class)
-        ->middleware('can:clientes.ver')
+        ->middleware('can:clientes.modificar')
         ->name('clientes.editar');
 
     Route::get('/proyectos', ProyectosIndex::class)
@@ -142,7 +162,7 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('proyectos.index');
 
     Route::get('/proyectos/crear', ProyectosEditar::class)
-        ->middleware('can:proyectos.ver')
+        ->middleware('can:proyectos.crear')
         ->name('proyectos.crear');
 
     Route::get('/proyectos/grupos', GruposProyectosIndex::class)
@@ -154,7 +174,7 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->name('proyectos.ver');
 
     Route::get('/proyectos/{proyecto}/editar', ProyectosEditar::class)
-        ->middleware('can:proyectos.ver')
+        ->middleware('can:proyectos.modificar')
         ->name('proyectos.editar');
 
     Route::middleware('modulo.materiales')->group(function (): void {

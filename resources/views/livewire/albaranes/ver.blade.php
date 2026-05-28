@@ -212,11 +212,11 @@
                                     Firmado el {{ $firma->firmado_at->format('d/m/Y H:i') }}
                                 </div>
                             </div>
-                            <img src="{{ $firma->firma_base64 ?? '' }}"
-                                 alt="Firma {{ $firma->tipo }}"
-                                 class="h-24 w-full rounded border border-slate-200 bg-white object-contain p-1" />
                             @if ($firma->firma_path)
-                                <a href="{{ Storage::url($firma->firma_path) }}" target="_blank"
+                                <img src="{{ Storage::disk('public')->url($firma->firma_path) }}"
+                                     alt="Firma {{ $firma->tipo }}"
+                                     class="h-24 w-full rounded border border-slate-200 bg-white object-contain p-1" />
+                                <a href="{{ Storage::disk('public')->url($firma->firma_path) }}" target="_blank"
                                    class="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                     <x-heroicon-o-arrow-down-tray class="size-3.5" />
                                     Descargar

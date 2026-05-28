@@ -322,6 +322,10 @@ class AlbaranForm extends Form
                 $albaran->numero = app(NumeracionService::class)->siguienteNumeroAlbaran(Carbon::parse($this->fecha));
                 $albaran->creado_por = (int) Auth::id();
                 $albaran->estado = EstadoAlbaran::PENDIENTE_FIRMA;
+                // En móvil el creador es siempre el firmante trabajador
+                if (! $this->omitirLineaCreador) {
+                    $this->firma_trabajador_user_id = (int) Auth::id();
+                }
             } else {
                 /** @var Albaran $albaran */
                 $albaran = Albaran::findOrFail($this->id);

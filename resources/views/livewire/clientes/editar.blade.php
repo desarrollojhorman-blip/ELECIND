@@ -5,7 +5,7 @@
                 Todos
             </x-ui.button>
             @if ($cliente)
-                @can('clientes.ver')
+                @can('create', App\Models\Cliente::class)
                     <x-ui.button as="a" href="{{ route('clientes.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>

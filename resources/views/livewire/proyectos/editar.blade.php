@@ -5,7 +5,7 @@
                 Todos
             </x-ui.button>
             @if ($proyecto)
-                @can('proyectos.ver')
+                @can('create', App\Models\Proyecto::class)
                     <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                         Nuevo
                     </x-ui.button>
@@ -53,13 +53,13 @@
             Proyecto
         </button>
 
-        @foreach ([
+        @foreach (array_values(array_filter([
             ['key' => 'trabajadores',  'label' => 'Trabajadores',  'count' => $proyecto ? $this->trabajadoresProyecto->count() : null],
             ['key' => 'responsables',  'label' => 'Responsables',  'count' => $proyecto ? $this->responsablesProyecto->count() : null],
             ['key' => 'conceptos',     'label' => 'Conceptos',     'count' => $proyecto ? $this->conceptosProyecto->count() : null],
-            ['key' => 'materiales',    'label' => 'Materiales',    'count' => $proyecto ? $this->materialesProyecto->count() : null],
+            \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $proyecto ? $this->materialesProyecto->count() : null] : false,
             ['key' => 'albaranes',     'label' => 'Albaranes',     'count' => $proyecto ? $this->albaranesDelProyecto->count() : null],
-        ] as $t)
+        ])) as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
                       title="Guarda primero el proyecto para acceder a esta sección">
@@ -363,6 +363,7 @@
         @endif
     </div>
 
+    @if (\App\Support\Modulos::materialesAvanzado())
     {{-- ═══ Tab: Materiales ═══ --}}
     <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
         <div class="flex items-center justify-between px-6 py-4">
@@ -437,6 +438,7 @@
             </div>
         @endif
     </div>
+    @endif
     {{-- ═══ Tab: Albaranes ═══ --}}
     <div x-show="tab === 'albaranes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
         <div class="px-6 py-4">

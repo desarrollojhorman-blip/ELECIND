@@ -1,6 +1,25 @@
 <div>
-    {{-- Filtros pills --}}
+    {{-- Buscador --}}
     <div class="sticky top-0 z-10 border-b border-slate-200 bg-white px-3 py-2">
+        <div class="relative">
+            <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <input
+                type="text"
+                wire:model.live.debounce.300ms="buscar"
+                placeholder="Número, cliente, proyecto, concepto, fecha…"
+                class="w-full rounded-lg border-slate-300 py-2 pl-9 pr-9 text-sm placeholder:text-slate-400 focus:border-primary-500 focus:ring-primary-500"
+            />
+            @if ($buscar !== '')
+                <button type="button" wire:click="limpiarBuscar"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-600">
+                    <x-heroicon-m-x-mark class="size-4" />
+                </button>
+            @endif
+        </div>
+    </div>
+
+    {{-- Filtros pills --}}
+    <div class="sticky top-[52px] z-10 border-b border-slate-200 bg-white px-3 py-2">
         <div class="flex gap-1.5 overflow-x-auto">
             @php
                 $filtros = [
@@ -45,6 +64,11 @@
                                 · {{ $albaran->proyecto->nombre }}
                             @endif
                         </p>
+                        @if ($albaran->concepto)
+                            <p class="mt-0.5 truncate text-xs text-slate-400">
+                                {{ $albaran->concepto->nombre }}
+                            </p>
+                        @endif
                     </div>
                     <div class="shrink-0 text-right">
                         <x-ui.badge :tone="$estadoTone" dot>{{ $albaran->estado->etiqueta() }}</x-ui.badge>

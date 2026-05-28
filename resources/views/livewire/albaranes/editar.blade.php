@@ -14,12 +14,14 @@
                     </x-ui.button>
                     <div x-show="abierto" x-transition
                          class="absolute left-0 z-20 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                        <a href="{{ route('albaranes.pdf', ['albaran' => $albaran, 'materiales' => 1]) }}" target="_blank"
-                           @click="abierto = false"
-                           class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                            <x-heroicon-o-clipboard-document-list class="size-4 text-slate-400" />
-                            Con materiales
-                        </a>
+                        @if (\App\Support\Modulos::materialesAvanzado())
+                            <a href="{{ route('albaranes.pdf', ['albaran' => $albaran, 'materiales' => 1]) }}" target="_blank"
+                               @click="abierto = false"
+                               class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                <x-heroicon-o-clipboard-document-list class="size-4 text-slate-400" />
+                                Con materiales
+                            </a>
+                        @endif
                         <a href="{{ route('albaranes.pdf', ['albaran' => $albaran, 'materiales' => 0]) }}" target="_blank"
                            @click="abierto = false"
                            class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
@@ -739,6 +741,7 @@
                                 <td class="px-4 py-3" colspan="3">
                                     <input type="file"
                                            wire:model="modalArchivoFichero"
+                                           accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
                                            class="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-primary-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-800" />
                                     <div wire:loading wire:target="modalArchivoFichero" class="mt-1 text-xs text-slate-500">Procesando…</div>
                                     @error('modalArchivoFichero') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror

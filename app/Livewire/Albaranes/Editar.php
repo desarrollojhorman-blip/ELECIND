@@ -282,11 +282,16 @@ class Editar extends Component
         }
 
         $this->validate([
-            'modalArchivoFichero' => ['required', 'file', 'max:' . ($maxMb * 1024)],
+            'modalArchivoFichero' => [
+                'required', 'file',
+                'max:' . ($maxMb * 1024),
+                'mimes:pdf,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,csv,txt',
+            ],
             'modalArchivoNombre'  => ['nullable', 'string', 'max:200'],
         ], [
             'modalArchivoFichero.required' => 'Selecciona un archivo.',
             'modalArchivoFichero.max'      => "El archivo no puede superar {$maxMb} MB.",
+            'modalArchivoFichero.mimes'    => 'Tipo de archivo no permitido. Se aceptan: PDF, JPG, PNG, GIF, WEBP, DOC, DOCX, XLS, XLSX, CSV, TXT.',
         ]);
 
         if ($this->albaran === null || $this->modalArchivoFichero === null) {
@@ -572,28 +577,21 @@ public function guardar(): void
     #[Computed]
     public function firmantesInternosDisponibles(): Collection
     {
-        if ($this->form->proyecto_id === null) {
+        $lineaIds  = $this->albaran?->lineasPersonal->pluck('trabajador_id')->filter()->unique()->values()->toArray() ?? [];
+        $creadorId = $this->albaran?->creado_por;
+
+        $ids = array_values(array_filter(array_unique(
+            array_merge($lineaIds, $creadorId ? [$creadorId] : [])
+        )));
+
+        if (empty($ids)) {
             return collect();
         }
 
-        $ids = array_filter(array_unique([
-            $this->albaran?->creado_por,
-            (int) Auth::id(),
-        ]));
-
         return User::query()
-            ->where('activo', true)
-            ->where(function ($q) use ($ids) {
-                $q->where(function ($q2) {
-                    $q2->role('trabajador')
-                        ->whereHas('proyectos', fn ($q3) => $q3->where('proyectos.id', $this->form->proyecto_id));
-                });
-                if ($ids) {
-                    $q->orWhereIn('id', $ids);
-                }
-            })
-            ->orderBy('nombre')
+            ->whereIn('id', $ids)
             ->orderBy('apellidos')
+            ->orderBy('nombre')
             ->get(['id', 'numero_empleado', 'nombre', 'apellidos']);
     }
 

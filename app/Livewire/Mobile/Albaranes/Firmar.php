@@ -23,8 +23,14 @@ class Firmar extends Component
     /** true cuando el proceso ha terminado (éxito o ya estaba firmado) */
     public bool $firmado = false;
 
-    /** El usuario logueado es el creador del parte */
+    /** Mensaje de éxito tras guardar firma parcial */
+    public ?string $mensajeGuardado = null;
+
+    /** El usuario logueado actúa como firmante del slot trabajador */
     public bool $esTrabajador = false;
+
+    /** Sin permiso para firmar este albarán */
+    public bool $sinPermiso = false;
 
     /** El campo de trabajador ya tiene firma guardada en BD */
     public bool $trabajadorYaFirmo = false;
@@ -34,20 +40,30 @@ class Firmar extends Component
 
     public function mount(Albaran $albaran): void
     {
-        Gate::authorize('firmar', $albaran);
+        // Comprobación sin lanzar excepción — mostramos pantalla amigable
+        if (! Gate::check('firmar', $albaran)) {
+            $this->albaran    = $albaran;
+            $this->sinPermiso = true;
+            return;
+        }
 
         $this->albaran = $albaran->loadMissing([
             'cliente',
             'proyecto',
             'concepto',
             'creador',
+            'firmaTrabajador',
             'responsable',
             'lineasPersonal.trabajador',
             'lineasMaterial.material',
             'firmas',
         ]);
 
-        $this->esTrabajador = $albaran->creado_por === Auth::id();
+        $uid = Auth::id();
+
+        // Es "trabajador" si es el creador del parte O el firmante asignado explícitamente
+        $this->esTrabajador = $albaran->creado_por === $uid
+            || ($albaran->firma_trabajador_user_id !== null && $albaran->firma_trabajador_user_id === $uid);
 
         $this->trabajadorYaFirmo = $this->albaran->firmas
             ->contains(fn ($f) => $f->tipo->value === 'trabajador');
@@ -65,33 +81,50 @@ class Firmar extends Component
 
     public function firmar(): void
     {
-        Gate::authorize('firmar', $this->albaran);
+        if (! Gate::check('firmar', $this->albaran)) {
+            $this->sinPermiso = true;
+            return;
+        }
 
         if ($this->esTrabajador) {
-            $this->validate([
-                'firmaTrabajadorData' => ['required', 'string', 'starts_with:data:image/png;base64,'],
-            ], [
-                'firmaTrabajadorData.required'    => 'El trabajador debe dibujar su firma.',
-                'firmaTrabajadorData.starts_with' => 'La firma del trabajador no es válida.',
-            ]);
+            // Debe haber al menos una firma dibujada
+            if ($this->firmaTrabajadorData === '' && $this->firmaResponsableData === '') {
+                $this->addError('firmaTrabajadorData', 'Dibuja al menos una firma para continuar.');
+                return;
+            }
 
-            $pathTrab = $this->guardarImagenFirma($this->firmaTrabajadorData, 'trabajador');
+            // Guardar firma del trabajador si la ha dibujado y no estaba ya firmada
+            if ($this->firmaTrabajadorData !== '' && ! $this->trabajadorYaFirmo) {
+                $this->validate([
+                    'firmaTrabajadorData' => ['string', 'starts_with:data:image/png;base64,'],
+                ], [
+                    'firmaTrabajadorData.starts_with' => 'La firma del trabajador no es válida.',
+                ]);
 
-            Firma::create([
-                'firmable_type'       => Albaran::class,
-                'firmable_id'         => $this->albaran->id,
-                'tipo'                => TipoFirma::TRABAJADOR,
-                'firmado_por_user_id' => Auth::id(),
-                'firma_path'          => $pathTrab,
-                'ip'                  => request()->ip(),
-                'user_agent'          => request()->userAgent(),
-                'firmado_at'          => now(),
-            ]);
+                $pathTrab = $this->guardarImagenFirma($this->firmaTrabajadorData, 'trabajador');
 
-            $this->trabajadorYaFirmo = true;
+                Firma::create([
+                    'firmable_type'       => Albaran::class,
+                    'firmable_id'         => $this->albaran->id,
+                    'tipo'                => TipoFirma::TRABAJADOR,
+                    'firmado_por_user_id' => Auth::id(),
+                    'firma_path'          => $pathTrab,
+                    'ip'                  => request()->ip(),
+                    'user_agent'          => request()->userAgent(),
+                    'firmado_at'          => now(),
+                ]);
 
-            // El trabajador también puede firmar por el responsable en el mismo acto
-            if ($this->firmaResponsableData !== '' && $this->albaran->responsable_id) {
+                $this->trabajadorYaFirmo = true;
+            }
+
+            // Guardar firma del responsable si la ha dibujado y no estaba ya firmada
+            if ($this->firmaResponsableData !== '' && $this->albaran->responsable_id && ! $this->responsableYaFirmo) {
+                $this->validate([
+                    'firmaResponsableData' => ['string', 'starts_with:data:image/png;base64,'],
+                ], [
+                    'firmaResponsableData.starts_with' => 'La firma del responsable no es válida.',
+                ]);
+
                 $pathResp = $this->guardarImagenFirma($this->firmaResponsableData, 'responsable');
 
                 Firma::create([
@@ -108,7 +141,7 @@ class Firmar extends Component
                 $this->responsableYaFirmo = true;
             }
         } else {
-            // Responsable: solo firma su campo
+            // Responsable: solo puede firmar su propio campo
             $this->validate([
                 'firmaResponsableData' => ['required', 'string', 'starts_with:data:image/png;base64,'],
             ], [
@@ -132,15 +165,20 @@ class Firmar extends Component
             $this->responsableYaFirmo = true;
         }
 
-        // Transición de estado
+        // FIRMADO solo cuando ambas partes han firmado.
+        // Si no hay responsable asignado, basta con la firma del trabajador.
         $tieneResponsable = (bool) $this->albaran->responsable_id;
-        $estadoFinal = (! $tieneResponsable || $this->responsableYaFirmo)
+        $estadoFinal = ($this->trabajadorYaFirmo && (! $tieneResponsable || $this->responsableYaFirmo))
             ? EstadoAlbaran::FIRMADO
             : EstadoAlbaran::PENDIENTE_FIRMA;
 
         $this->albaran->update(['estado' => $estadoFinal]);
 
-        $this->firmado = true;
+        if ($estadoFinal === EstadoAlbaran::FIRMADO) {
+            $this->firmado = true;
+        } else {
+            $this->mensajeGuardado = 'Firma guardada. Pendiente de completar el resto de firmas.';
+        }
     }
 
     public function irAlListado(): void
@@ -157,7 +195,7 @@ class Firmar extends Component
             $tipo,
             now()->format('YmdHis')
         );
-        Storage::put($path, $binario);
+        Storage::disk('public')->put($path, $binario);
 
         return $path;
     }

@@ -3,64 +3,70 @@
 
     {{-- ── Filtros ──────────────────────────────────────────────── --}}
     <div class="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
 
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Trabajador</label>
-                <select wire:model.live="filtroTrabajador"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($this->trabajadoresDisponibles as $trab)
-                        <option value="{{ $trab->id }}">{{ trim($trab->apellidos . ' ' . $trab->nombre) }}</option>
-                    @endforeach
-                </select>
+        <div wire:key="filtros-horas-{{ $filtrosVersion }}">
+            {{-- Fila 1: trabajador · cliente · proyecto · estado --}}
+            <div class="grid grid-cols-4 gap-3">
+                <x-ui.field label="Trabajador">
+                    <x-ui.searchable-select
+                        wire-model="filtroTrabajador"
+                        :value="$filtroTrabajador"
+                        :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim(($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->apellidos.' '.$u->nombre))])"
+                        placeholder="Todos"
+                    />
+                </x-ui.field>
+
+                <x-ui.field label="Cliente">
+                    <x-ui.searchable-select
+                        wire-model="filtroCliente"
+                        :value="$filtroCliente"
+                        :options="$this->clientesDisponibles->map(fn($c) => ['value' => $c->id, 'label' => ($c->codigo_cliente ? $c->codigo_cliente.' · ' : '').$c->nombre])"
+                        placeholder="Todos"
+                    />
+                </x-ui.field>
+
+                <x-ui.field label="Proyecto">
+                    <div wire:key="proyecto-sel-{{ $filtroCliente }}-{{ $filtrosVersion }}">
+                        <x-ui.searchable-select
+                            wire-model="filtroProyecto"
+                            :value="$filtroProyecto"
+                            :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => ($p->codigo ? '('.$p->codigo.') ' : '').$p->nombre])"
+                            placeholder="Todos"
+                        />
+                    </div>
+                </x-ui.field>
+
+                <x-ui.field label="Estado albarán">
+                    <x-ui.select wire:model.live="filtroEstado">
+                        <option value="">Todos</option>
+                        @foreach ($estados as $estado)
+                            <option value="{{ $estado->value }}">{{ $estado->etiqueta() }}</option>
+                        @endforeach
+                    </x-ui.select>
+                </x-ui.field>
             </div>
 
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Cliente</label>
-                <select wire:model.live="filtroCliente"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($this->clientesDisponibles as $cliente)
-                        <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                    @endforeach
-                </select>
-            </div>
+            {{-- Fila 2: fechas --}}
+            <div class="mt-3 grid grid-cols-4 gap-3">
+                <x-ui.field label="Fecha inicio">
+                    <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
+                </x-ui.field>
 
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Proyecto</label>
-                <select wire:model.live="filtroProyecto"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($this->proyectosDisponibles as $proyecto)
-                        <option value="{{ $proyecto->id }}">
-                            @if ($proyecto->codigo)[{{ $proyecto->codigo }}] @endif{{ $proyecto->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Fecha inicio</label>
-                <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
-            </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Fecha fin</label>
-                <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
-            </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Estado albarán</label>
-                <select wire:model.live="filtroEstado"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($estados as $estado)
-                        <option value="{{ $estado->value }}">{{ $estado->etiqueta() }}</option>
-                    @endforeach
-                </select>
+                <x-ui.field label="Fecha fin">
+                    <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
+                </x-ui.field>
             </div>
         </div>
+
+        @if ($filtroTrabajador || $filtroCliente || $filtroProyecto || $filtroEstado || $fechaDesde || $fechaHasta)
+            <div class="mt-3 flex justify-end">
+                <button wire:click="limpiarFiltros"
+                        class="text-xs text-primary-600 underline hover:text-primary-800">
+                    Limpiar filtros
+                </button>
+            </div>
+        @endif
+
     </div>
 
     {{-- ── Leyenda + acciones ───────────────────────────────────── --}}

@@ -109,14 +109,14 @@
         [
             'label' => 'Ausencias',
             'icon' => 'heroicon-o-calendar-days',
-            'route' => null,
+            'route' => 'ausencias.index',
             'key' => 'ausencias',
             'permission' => 'ausencias.ver_todas',
         ],
         [
             'label' => 'Incidencias',
             'icon' => 'heroicon-o-exclamation-circle',
-            'route' => null,
+            'route' => 'incidencias.index',
             'key' => 'incidencias',
             'permission' => 'incidencias.ver_todas',
         ],

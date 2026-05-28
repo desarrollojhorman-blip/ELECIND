@@ -83,6 +83,12 @@
                     <span class="flex-1 text-left">Mi perfil</span>
                 </a>
 
+                <a href="{{ route('mobile.incidencias.index') }}"
+                   class="flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-slate-50 hover:text-slate-900">
+                    <x-heroicon-o-exclamation-triangle class="size-4 shrink-0 text-amber-500" />
+                    <span class="flex-1 text-left">Mis incidencias</span>
+                </a>
+
                 <a href="{{ route('mobile.incidencias.nueva') }}"
                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-slate-50 hover:text-slate-900">
                     <x-heroicon-o-exclamation-circle class="size-4 shrink-0 text-amber-600" />

@@ -69,10 +69,18 @@ class AlbaranPolicy
             return false;
         }
 
+        // Creador del parte
         if ($albaran->creado_por === $user->getKey()) {
             return true;
         }
 
+        // Firmante trabajador asignado explícitamente desde la web
+        if ($albaran->firma_trabajador_user_id !== null
+            && $albaran->firma_trabajador_user_id === $user->getKey()) {
+            return true;
+        }
+
+        // Responsable asignado
         return $albaran->responsable_id === $user->getKey();
     }
 

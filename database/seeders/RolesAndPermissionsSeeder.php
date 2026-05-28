@@ -206,6 +206,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'ausencias.ver_propias', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO mis ausencias', 'categoria' => 'ausencias'],
             ['name' => 'ausencias.solicitar', 'ambito' => 'movil', 'descripcion' => 'Solicitar ausencias', 'categoria' => 'ausencias'],
             ['name' => 'ausencias.aprobar', 'ambito' => 'web', 'descripcion' => 'Aprobar/rechazar ausencias', 'categoria' => 'ausencias'],
+            ['name' => 'ausencias.exportar', 'ambito' => 'web', 'descripcion' => 'Exportar ausencias a Excel/PDF', 'categoria' => 'ausencias'],
 
             // ─────────────── Incidencias ───────────────
             ['name' => 'incidencias.ver_todas', 'ambito' => 'web', 'descripcion' => 'Ver incidencias de TODA la empresa (no solo las propias)', 'categoria' => 'incidencias'],

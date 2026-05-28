@@ -24,6 +24,7 @@
     'disabled'    => false,
     'entangle'    => null,
     'value'       => null,
+    'live'        => true,
 ])
 
 @php
@@ -81,7 +82,7 @@
     x-on:click.outside="open = false"
     class="relative"
 >
-    <input type="hidden" wire:model.live="{{ $wireModel }}" x-ref="hiddenInput" />
+    <input type="hidden" @if($live) wire:model.live="{{ $wireModel }}" @else wire:model="{{ $wireModel }}" @endif x-ref="hiddenInput" />
 
     {{-- Trigger --}}
     <button

@@ -95,7 +95,14 @@
       "PowerShell(php artisan db:table empresa)",
       "PowerShell(php _check_empresa.php)",
       "Bash(curl -s -b \"elecind-session=eyJpdiI6InZsTTJ1WTg1Mjd5Y0JtYm5TaGJhMlE9PSIsInZhbHVlIjoidkFGMEx5Um92WkR5bWZtVVBydW50RTY3N0VDRmJvVE9aMXhXMGYxS1RNemFEVExWS2VKWGVGb1Y5cTRBOEpYeERNQk82cUU4S1RhYUtUdy8zTlJSdDlaTEp2dUpMZnJZUUdzQWJZS2xUZjhtWGVFTXUreHh6N3dueklHM1ozTnMiLCJtYWMiOiJmNWZhMzk3OTc3NTU1MjNiMGZmYzliODVkZjg1YWQ4N2VkMzhmNjUzODJlOTA0NjY0Y2JjYjkyZTczNTc4MjMzIiwidGFnIjoiIn0%3D\" \"http://localhost/CLIENTES/ELECIND/public/albaranes/crear\")",
-      "PowerShell(php _preview_mail.php)"
+      "PowerShell(php _preview_mail.php)",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Directory -Depth 2)",
+      "Bash(Select-Object -First 20)",
+      "Bash(D:\\\\xampp\\\\php\\\\php.exe \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\\\\artisan\" db:seed --class=RolesAndPermissionsSeeder)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan make:migration update_tipo_incidencia_values 2>&1)",
+      "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate 2>&1)",
+      "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)"
     ],
     "additionalDirectories": [
       "\\tmp",

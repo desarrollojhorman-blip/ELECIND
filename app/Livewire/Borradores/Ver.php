@@ -101,6 +101,8 @@ class Ver extends Component
             $albaran->proyecto_id  = $this->borrador->proyecto_id;
             $albaran->concepto_id  = $this->borrador->concepto_id;
             $albaran->responsable_id = $this->borrador->responsable_id;
+            // El firmante trabajador es quien creó el borrador desde móvil
+            $albaran->firma_trabajador_user_id = $this->borrador->creado_por;
             $albaran->tipo_hora    = \App\Enums\TipoHora::from($this->borrador->tipo_hora);
             $albaran->observaciones = $this->borrador->observaciones;
             $albaran->save();

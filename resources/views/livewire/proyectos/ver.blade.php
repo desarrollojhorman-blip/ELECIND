@@ -9,7 +9,7 @@
                     Editar
                 </x-ui.button>
             @endcan
-            @can('proyectos.ver')
+            @can('create', App\Models\Proyecto::class)
                 <x-ui.button as="a" href="{{ route('proyectos.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
                     Nuevo
                 </x-ui.button>
@@ -34,12 +34,12 @@
                 Proyecto
             </button>
 
-            @foreach ([
+            @foreach (array_values(array_filter([
                 ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $this->trabajadoresProyecto->count()],
                 ['key' => 'responsables', 'label' => 'Responsables', 'count' => $this->responsablesProyecto->count()],
                 ['key' => 'conceptos',    'label' => 'Conceptos',    'count' => $this->conceptosProyecto->count()],
-                ['key' => 'materiales',   'label' => 'Materiales',   'count' => $this->materialesProyecto->count()],
-            ] as $t)
+                \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $this->materialesProyecto->count()] : false,
+            ])) as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
                         :class="tab === '{{ $t['key'] }}'
@@ -192,6 +192,7 @@
             @endif
         </div>
 
+        @if (\App\Support\Modulos::materialesAvanzado())
         {{-- ═══ Tab: Materiales ═══ --}}
         <div x-show="tab === 'materiales'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
             <div class="px-6 py-4">
@@ -228,6 +229,7 @@
                 </table>
             @endif
         </div>
+        @endif
     </div>
 
     {{-- Modal confirmar eliminación --}}

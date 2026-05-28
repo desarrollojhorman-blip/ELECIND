@@ -44,6 +44,20 @@ class Index extends Component
     #[Url(as: 'pp')]
     public int $porPagina = 25;
 
+    public int $filtrosVersion = 0;
+
+    public function limpiarFiltros(): void
+    {
+        $this->filtroTrabajador = null;
+        $this->filtroCliente    = null;
+        $this->filtroProyecto   = null;
+        $this->filtroEstado     = '';
+        $this->fechaDesde       = '';
+        $this->fechaHasta       = '';
+        $this->filtrosVersion++;
+        $this->resetPage();
+    }
+
     public function mount(): void
     {
         if ($this->fechaDesde === '') {
@@ -81,7 +95,7 @@ class Index extends Component
             ->withTrashed()
             ->orderBy('apellidos')
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'apellidos']);
+            ->get(['id', 'nombre', 'apellidos', 'numero_empleado']);
     }
 
     /** @return Collection<int, Cliente> */
@@ -90,7 +104,7 @@ class Index extends Component
     {
         return Cliente::query()
             ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+            ->get(['id', 'nombre', 'codigo_cliente']);
     }
 
     /** @return Collection<int, Proyecto> */

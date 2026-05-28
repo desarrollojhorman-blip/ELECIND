@@ -1,5 +1,29 @@
 <div class="px-4 py-3 space-y-4">
 
+    {{-- ══ Sin permiso ══ --}}
+    @if ($sinPermiso)
+        <div class="flex flex-col items-center gap-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm">
+            <div class="flex size-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <x-heroicon-o-lock-closed class="size-8" />
+            </div>
+            <div>
+                <h2 class="text-base font-semibold text-red-800">Sin permiso para firmar</h2>
+                <p class="mt-1 text-sm text-red-700">
+                    No estás asignado como firmante de este parte.<br>
+                    Contacta con el responsable si crees que es un error.
+                </p>
+            </div>
+            <button
+                type="button"
+                wire:click="irAlListado"
+                class="mt-2 flex items-center gap-2 rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700"
+            >
+                <x-heroicon-o-arrow-left class="size-4" />
+                Volver a mis albaranes
+            </button>
+        </div>
+    @else
+
     {{-- Resumen del parte --}}
     <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-3 flex items-center justify-between gap-2">
@@ -29,7 +53,8 @@
             <div class="flex justify-between gap-3">
                 <dt class="text-slate-500">Trabajador</dt>
                 <dd class="text-right font-medium text-slate-800">
-                    {{ trim($albaran->creador->nombre.' '.$albaran->creador->apellidos) }}
+                    @php $firmante = $albaran->firmaTrabajador ?? $albaran->creador; @endphp
+                    {{ trim($firmante->nombre.' '.$firmante->apellidos) }}
                 </dd>
             </div>
             @if ($albaran->responsable)
@@ -54,6 +79,7 @@
                 ctxR: null, vacioR: true, dibR: false, posR: {x:0,y:0},
 
                 esTrabajador: {{ $esTrabajador ? 'true' : 'false' }},
+                guardando: false,
 
                 init() {
                     const setup = (ctx) => {
@@ -107,19 +133,32 @@
 
                 /* Envío */
                 get puedeEnviar() {
-                    return this.esTrabajador ? !this.vacioT : !this.vacioR;
-                },
-                enviar() {
-                    if (!this.puedeEnviar) return;
                     if (this.esTrabajador) {
-                        $wire.set('firmaTrabajadorData', this.$refs.canvasT.toDataURL('image/png'));
-                        if (this.$refs.canvasR && !this.vacioR) {
-                            $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
-                        }
-                    } else {
-                        $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
+                        // Cuenta solo si el canvas existe en el DOM Y tiene algo dibujado
+                        const tieneTrab = !this.vacioT && !!this.$refs.canvasT;
+                        const tieneResp = !this.vacioR && !!this.$refs.canvasR;
+                        return tieneTrab || tieneResp;
                     }
-                    $wire.call('firmar');
+                    return !this.vacioR;
+                },
+                async enviar() {
+                    if (!this.puedeEnviar || this.guardando) return;
+                    this.guardando = true;
+                    try {
+                        if (this.esTrabajador) {
+                            if (!this.vacioT && this.$refs.canvasT) {
+                                await $wire.set('firmaTrabajadorData', this.$refs.canvasT.toDataURL('image/png'));
+                            }
+                            if (!this.vacioR && this.$refs.canvasR) {
+                                await $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
+                            }
+                        } else {
+                            await $wire.set('firmaResponsableData', this.$refs.canvasR.toDataURL('image/png'));
+                        }
+                        await $wire.call('firmar');
+                    } finally {
+                        this.guardando = false;
+                    }
                 }
             }"
             class="space-y-4"
@@ -128,7 +167,7 @@
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="mb-1 text-sm font-semibold text-slate-800">Firma del trabajador</p>
                 <p class="mb-3 text-xs text-slate-500">
-                    {{ trim($albaran->creador->nombre.' '.$albaran->creador->apellidos) }}
+                    {{ trim(($albaran->firmaTrabajador ?? $albaran->creador)->nombre.' '.($albaran->firmaTrabajador ?? $albaran->creador)->apellidos) }}
                 </p>
 
                 @if ($esTrabajador && ! $trabajadorYaFirmo)
@@ -205,25 +244,36 @@
                 </div>
             @endif
 
+            {{-- Mensaje de guardado parcial --}}
+            @if ($mensajeGuardado)
+                <div class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    <x-heroicon-o-check-circle class="size-5 shrink-0 text-green-600" />
+                    {{ $mensajeGuardado }}
+                </div>
+            @endif
+
             {{-- Botón único al final --}}
             <button
                 type="button"
                 x-on:click="enviar()"
-                x-bind:disabled="!puedeEnviar"
-                :class="!puedeEnviar ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
+                x-bind:disabled="!puedeEnviar || guardando"
+                x-bind:class="(!puedeEnviar || guardando) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'"
                 class="flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors"
-                wire:loading.attr="disabled"
             >
-                <span wire:loading.remove wire:target="firmar">
-                    <x-heroicon-o-check class="inline size-4" /> Confirmar y firmar
-                </span>
-                <span wire:loading wire:target="firmar" class="flex items-center gap-2">
-                    <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    Guardando…
-                </span>
+                <template x-if="!guardando">
+                    <span class="flex items-center gap-2">
+                        <x-heroicon-o-check class="inline size-4" /> Guardar
+                    </span>
+                </template>
+                <template x-if="guardando">
+                    <span class="flex items-center gap-2">
+                        <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                        </svg>
+                        Guardando…
+                    </span>
+                </template>
             </button>
 
         </div>
@@ -253,5 +303,7 @@
         </div>
 
     @endif
+
+    @endif {{-- /sinPermiso --}}
 
 </div>
