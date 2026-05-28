@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             AdminUsersSeeder::class,
             Fase1DemoSeeder::class,
             Fase2DemoSeeder::class,
+            Fase3DemoSeeder::class,
         ]);
     }
 }

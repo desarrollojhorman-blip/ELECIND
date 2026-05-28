@@ -34,6 +34,9 @@ class Logs extends Component
     #[Url] public string $fechaDesde    = '';
     #[Url] public string $fechaHasta    = '';
 
+    /** Fuerza el re-render de los searchable-select al limpiar filtros. */
+    public int $filtrosVersion = 0;
+
     public const MODELOS = [
         Albaran::class  => 'Albarán',
         Borrador::class => 'Borrador',
@@ -65,6 +68,13 @@ class Logs extends Component
     public function updatingFiltroEvento(): void  { $this->resetPage(); }
     public function updatingFechaDesde(): void    { $this->resetPage(); }
     public function updatingFechaHasta(): void    { $this->resetPage(); }
+
+    public function limpiarFiltros(): void
+    {
+        $this->reset(['busqueda', 'filtroUsuario', 'filtroModelo', 'filtroEvento', 'fechaDesde', 'fechaHasta']);
+        $this->filtrosVersion++;
+        $this->resetPage();
+    }
 
     #[Computed]
     public function logs(): LengthAwarePaginator
@@ -121,6 +131,41 @@ class Logs extends Component
             'restored' => 'bg-blue-100 text-blue-800 border border-blue-200',
             default    => 'bg-slate-100 text-slate-700 border border-slate-200',
         };
+    }
+
+    /** IP registrada en la actividad (o null si no se guardó). */
+    public function ip(Activity $log): ?string
+    {
+        return $log->properties->get('ip');
+    }
+
+    /** Navegador + SO legible a partir del user agent registrado. */
+    public function navegador(Activity $log): ?string
+    {
+        $ua = $log->properties->get('user_agent');
+        if (! $ua) {
+            return null;
+        }
+
+        $navegador = match (true) {
+            str_contains($ua, 'Edg')                                  => 'Edge',
+            str_contains($ua, 'OPR') || str_contains($ua, 'Opera')    => 'Opera',
+            str_contains($ua, 'Chrome')                               => 'Chrome',
+            str_contains($ua, 'Firefox')                              => 'Firefox',
+            str_contains($ua, 'Safari')                               => 'Safari',
+            default                                                   => 'Otro',
+        };
+
+        $so = match (true) {
+            str_contains($ua, 'Windows')                              => 'Windows',
+            str_contains($ua, 'Android')                              => 'Android',
+            str_contains($ua, 'iPhone') || str_contains($ua, 'iPad')  => 'iOS',
+            str_contains($ua, 'Mac OS')                               => 'macOS',
+            str_contains($ua, 'Linux')                                => 'Linux',
+            default                                                   => '',
+        };
+
+        return trim($navegador.($so !== '' ? ' · '.$so : ''));
     }
 
     /** Etiqueta legible del tipo de entidad. */

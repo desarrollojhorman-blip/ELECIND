@@ -34,6 +34,7 @@ use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Activitylog\Models\Activity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -81,5 +82,26 @@ class AppServiceProvider extends ServiceProvider
         AlbaranLineaMaterial::observe(AlbaranLineaMaterialObserver::class);
         AlbaranLineaPersonal::observe(AlbaranLineaPersonalObserver::class);
         Albaran::observe(AlbaranObserver::class);
+
+        // Adjuntar IP y navegador a TODA actividad registrada (CRUD, login, etc.)
+        // siempre que haya una petición HTTP real. En consola (seeders, comandos)
+        // no hay request del usuario, así que se omite.
+        Activity::creating(function (Activity $activity): void {
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            $request    = request();
+            $propiedades = collect($activity->properties ?? []);
+
+            if (! $propiedades->has('ip')) {
+                $propiedades->put('ip', $request->ip());
+            }
+            if (! $propiedades->has('user_agent')) {
+                $propiedades->put('user_agent', $request->userAgent());
+            }
+
+            $activity->properties = $propiedades;
+        });
     }
 }

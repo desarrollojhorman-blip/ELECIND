@@ -131,7 +131,7 @@
                                         wire:click="restaurar({{ $borrador->id }})"
                                         wire:loading.attr="disabled"
                                         wire:target="restaurar({{ $borrador->id }})"
-                                        variant="ghost"
+                                        variant="success"
                                         tooltip="Restaurar">
                                         <span wire:loading.remove wire:target="restaurar({{ $borrador->id }})">
                                             <x-heroicon-o-arrow-path class="size-4" />
@@ -143,12 +143,12 @@
                                     </x-ui.icon-button>
                                     @endcan
                                 @else
-                                    <x-ui.icon-button as="a" href="{{ route('borradores.ver', $borrador) }}" wire:navigate icon="heroicon-o-eye" variant="ghost" tooltip="Ver" />
+                                    <x-ui.icon-button as="a" href="{{ route('borradores.ver', $borrador) }}" wire:navigate icon="heroicon-o-eye" variant="neutral" tooltip="Ver" />
                                     @can('update', $borrador)
-                                        <x-ui.icon-button as="a" href="{{ route('borradores.editar', $borrador) }}" wire:navigate.fresh icon="heroicon-o-pencil-square" variant="ghost" tooltip="Editar" />
+                                        <x-ui.icon-button as="a" href="{{ route('borradores.editar', $borrador) }}" wire:navigate.fresh icon="heroicon-o-pencil-square" variant="info" tooltip="Editar" />
                                     @endcan
                                     @can('delete', $borrador)
-                                        <x-ui.icon-button wire:click="confirmarEliminar({{ $borrador->id }})" icon="heroicon-o-trash" variant="ghost-danger" tooltip="Eliminar" />
+                                        <x-ui.icon-button wire:click="confirmarEliminar({{ $borrador->id }})" icon="heroicon-o-trash" variant="danger" tooltip="Eliminar" />
                                     @endcan
                                 @endif
                             </div>

@@ -111,12 +111,25 @@
                             <x-ui.searchable-select
                                 wire:key="proyecto-select"
                                 wire-model="form.proyecto_id"
+                                :value="$form->proyecto_id"
                                 :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->nombre.($p->codigo ? ' ('.$p->codigo.')' : '')])"
                                 placeholder="— Selecciona proyecto —"
                             />
                         </div>
                         <div x-show="!modo">
-                            <x-ui.input wire:model="form.proyecto_texto" placeholder="Escribe el nombre del proyecto…" />
+                            <div class="flex items-start gap-2">
+                                <div class="flex-1">
+                                    <x-ui.input wire:model="form.proyecto_texto" placeholder="Escribe el nombre del proyecto…" />
+                                </div>
+                                @can('create', App\Models\Proyecto::class)
+                                    <x-ui.button type="button" variant="success" icon="heroicon-o-plus"
+                                                 x-on:click="$wire.crearProyecto().then(() => { if ($wire.get('form.proyecto_id')) modo = true })"
+                                                 wire:loading.attr="disabled" wire:target="crearProyecto">
+                                        Crear
+                                    </x-ui.button>
+                                @endcan
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">Se crea bajo el cliente seleccionado. Selecciona o crea el cliente primero.</p>
                         </div>
                     </x-ui.field>
 
@@ -132,12 +145,25 @@
                             <x-ui.searchable-select
                                 wire:key="cliente-select"
                                 wire-model="form.cliente_id"
+                                :value="$form->cliente_id"
                                 :options="$this->clientesDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
                                 placeholder="— Selecciona cliente —"
                             />
                         </div>
                         <div x-show="!modo">
-                            <x-ui.input wire:model="form.cliente_texto" placeholder="Escribe el nombre del cliente…" />
+                            <div class="flex items-start gap-2">
+                                <div class="flex-1">
+                                    <x-ui.input wire:model="form.cliente_texto" placeholder="Escribe el nombre del cliente…" />
+                                </div>
+                                @can('create', App\Models\Cliente::class)
+                                    <x-ui.button type="button" variant="success" icon="heroicon-o-plus"
+                                                 x-on:click="$wire.crearCliente().then(() => modo = true)"
+                                                 wire:loading.attr="disabled" wire:target="crearCliente">
+                                        Crear
+                                    </x-ui.button>
+                                @endcan
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">Crea el cliente en el sistema para poder convertir el borrador en albarán.</p>
                         </div>
                     </x-ui.field>
 
@@ -153,6 +179,7 @@
                             <x-ui.searchable-select
                                 wire:key="concepto-select"
                                 wire-model="form.concepto_id"
+                                :value="$form->concepto_id"
                                 :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
                                 placeholder="— Sin concepto —"
                             />
@@ -167,6 +194,7 @@
                         <x-ui.searchable-select
                             wire:key="responsable-select"
                             wire-model="form.responsable_id"
+                            :value="$form->responsable_id"
                             :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
                             placeholder="— Sin responsable —"
                         />
@@ -235,6 +263,7 @@
                                             <x-ui.searchable-select
                                                 wire:key="trab-select-{{ $i }}"
                                                 wire-model="form.lineasPersonal.{{ $i }}.trabajador_id"
+                                                :value="$linea['trabajador_id'] ?? null"
                                                 :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
                                                 placeholder="— Selecciona —"
                                             />
@@ -300,6 +329,7 @@
                                             <x-ui.searchable-select
                                                 wire:key="mat-select-{{ $i }}"
                                                 wire-model="form.lineasMaterial.{{ $i }}.material_id"
+                                                :value="$linea['material_id'] ?? null"
                                                 :options="$this->materialesDisponibles->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion])"
                                                 placeholder="— Selecciona —"
                                             />

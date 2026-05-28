@@ -102,7 +102,8 @@
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan make:migration update_tipo_incidencia_values 2>&1)",
       "PowerShell(& \"D:\\\\xampp\\\\php\\\\php.exe\" artisan migrate 2>&1)",
       "Bash(Get-ChildItem -Path \"d:\\\\xampp\\\\htdocs\\\\CLIENTES\\\\ELECIND\" -Force)",
-      "Bash(Select-Object Name, PSIsContainer)"
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(grep -v \"^Psy\\\\|^>>>\\\\|^\\\\.\\\\.\\\\.\\\\|InteractiveProgram\\\\|^$\")"
     ],
     "additionalDirectories": [
       "\\tmp",

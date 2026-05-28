@@ -78,7 +78,14 @@ class Ajustes extends Component
 
     public string $mail_username = '';
 
+    /**
+     * SOLO-ESCRITURA: nunca se carga el valor guardado aquí (no viaja al
+     * navegador). Vacío = no cambiar la contraseña actual.
+     */
     public string $mail_password = '';
+
+    /** Indica si ya hay una contraseña guardada (para el placeholder). No es el secreto. */
+    public bool $tieneMailPassword = false;
 
     public string $mail_from_address = '';
 
@@ -111,7 +118,8 @@ class Ajustes extends Component
         $this->mail_port          = (string) ($empresa->mail_port ?? '587');
         $this->mail_encryption    = $empresa->mail_encryption ?? 'tls';
         $this->mail_username      = $empresa->mail_username ?? '';
-        $this->mail_password      = $empresa->mail_password ?? '';
+        $this->mail_password      = ''; // solo-escritura: nunca se envía al navegador
+        $this->tieneMailPassword  = ! empty($empresa->mail_password);
         $this->mail_from_address  = $empresa->mail_from_address ?? '';
         $this->mail_from_name     = $empresa->mail_from_name ?? '';
     }
@@ -194,7 +202,8 @@ class Ajustes extends Component
         $this->mail_port         = (string) ($empresa->mail_port ?? '587');
         $this->mail_encryption   = $empresa->mail_encryption ?? 'tls';
         $this->mail_username     = $empresa->mail_username ?? '';
-        $this->mail_password     = $empresa->mail_password ?? '';
+        $this->mail_password     = ''; // solo-escritura
+        $this->tieneMailPassword = ! empty($empresa->mail_password);
         $this->mail_from_address = $empresa->mail_from_address ?? '';
         $this->mail_from_name    = $empresa->mail_from_name ?? '';
         $this->nuevoLogoApp = null;
@@ -240,6 +249,10 @@ class Ajustes extends Component
         $empresa->mail_from_name    = $this->mail_from_name;
         $empresa->save();
 
+        // Limpiar el campo (solo-escritura) y refrescar el indicador.
+        $this->mail_password     = '';
+        $this->tieneMailPassword = ! empty($empresa->mail_password);
+
         session()->flash('correo_status', 'Configuración de correo guardada correctamente.');
     }
 
@@ -255,13 +268,19 @@ class Ajustes extends Component
             'mail_from_address' => ['required', 'email'],
         ]);
 
+        // Si el campo viene vacío, usar la contraseña ya guardada (se descifra en
+        // servidor; nunca se expone al navegador).
+        $password = $this->mail_password !== ''
+            ? $this->mail_password
+            : (Empresa::actual()->mail_password ?? '');
+
         config(['mail.mailers.prueba_smtp' => [
             'transport'  => 'smtp',
             'host'       => $this->mail_host,
             'port'       => (int) $this->mail_port,
             'encryption' => $this->mail_encryption === 'none' ? null : $this->mail_encryption,
             'username'   => $this->mail_username,
-            'password'   => $this->mail_password,
+            'password'   => $password,
             'timeout'    => 15,
         ]]);
 

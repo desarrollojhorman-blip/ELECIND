@@ -111,13 +111,7 @@
                 </x-ui.field>
 
                 <x-ui.field label="Tipo de jornada">
-                    <x-ui.input :value="match($borrador->tipo_hora) {
-                        'laboral'        => 'Laboral',
-                        'laboral_noche'  => 'Laboral (noche)',
-                        'festivo'        => 'Festivo',
-                        'festivo_noche'  => 'Festivo (noche)',
-                        default          => $borrador->tipo_hora,
-                    }" readonly />
+                    <x-ui.input :value="$borrador->tipo_hora?->etiqueta()" readonly />
                 </x-ui.field>
 
                 <x-ui.field label="Observaciones" class="md:col-span-2">

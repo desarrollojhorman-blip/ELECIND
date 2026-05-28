@@ -323,21 +323,17 @@
                         <x-ui.input wire:model="mail_username" placeholder="correo@tuempresa.com" autocomplete="off" />
                     </x-ui.field>
 
-                    <x-ui.field label="Contraseña" :error="$errors->first('mail_password')"
-                                x-data="{ mostrar: false }">
-                        <div class="relative">
-                            <x-ui.input wire:model="mail_password"
-                                        x-bind:type="mostrar ? 'text' : 'password'"
-                                        placeholder="••••••••"
-                                        autocomplete="new-password" />
-                            <button type="button"
-                                    x-on:click="mostrar = !mostrar"
-                                    class="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600">
-                                <x-heroicon-o-eye x-show="!mostrar" class="size-4" />
-                                <x-heroicon-o-eye-slash x-show="mostrar" class="size-4" />
-                            </button>
-                        </div>
-                        <p class="mt-1 text-xs text-slate-500">Gmail: usa una "contraseña de aplicación", no la de tu cuenta.</p>
+                    <x-ui.field label="Contraseña" :error="$errors->first('mail_password')">
+                        <x-ui.input wire:model="mail_password"
+                                    type="password"
+                                    :placeholder="$tieneMailPassword ? '•••••••• (guardada · déjala vacía para no cambiarla)' : 'Contraseña de aplicación'"
+                                    autocomplete="new-password" />
+                        <p class="mt-1 text-xs text-slate-500">
+                            Gmail: usa una "contraseña de aplicación", no la de tu cuenta.
+                            @if ($tieneMailPassword)
+                                <span class="text-emerald-600">Hay una contraseña guardada; déjala vacía si no quieres cambiarla.</span>
+                            @endif
+                        </p>
                     </x-ui.field>
 
                     <x-ui.field label="Correo remitente (From)" required :error="$errors->first('mail_from_address')">

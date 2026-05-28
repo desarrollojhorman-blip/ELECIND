@@ -3,10 +3,13 @@
 namespace App\Livewire\Mobile\Albaranes;
 
 use App\Models\Albaran;
+use App\Models\Borrador;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -15,7 +18,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    /** Filtros: todos | pendiente_firma | firmado | facturado */
+    /** Filtros: todos | borrador | pendiente_firma | firmado | facturado */
     #[Url(as: 'estado')]
     public string $filtroEstado = 'todos';
 
@@ -27,13 +30,15 @@ class Index extends Component
         Gate::authorize('viewAny', Albaran::class);
     }
 
-    public function setFiltro(string $estado): void
+    public function updatedFiltroEstado(): void
     {
-        $this->filtroEstado = $estado;
         $this->resetPage();
     }
 
-    public function updatedBuscar(): void { $this->resetPage(); }
+    public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
 
     public function limpiarBuscar(): void
     {
@@ -41,43 +46,103 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function render(): View
+    /**
+     * Lista combinada de albaranes + borradores, normalizada y paginada.
+     *
+     * @return LengthAwarePaginator
+     */
+    #[Computed]
+    public function items(): LengthAwarePaginator
     {
-        $userId = (int) Auth::id();
-        $puedeVerTodos = Auth::user()?->can('albaranes.ver_todos') ?? false;
+        $userId           = (int) Auth::id();
+        $puedeVerTodosAlb = Auth::user()?->can('albaranes.ver_todos') ?? false;
+        $puedeVerTodosBor = Auth::user()?->can('borradores.ver_todos') ?? false;
 
-        $query = Albaran::query()->with(['cliente:id,nombre', 'proyecto:id,nombre', 'concepto:id,nombre']);
+        $incluirAlbaranes  = in_array($this->filtroEstado, ['todos', 'albaran', 'pendiente_firma', 'firmado', 'facturado'], true);
+        $incluirBorradores = in_array($this->filtroEstado, ['todos', 'borrador'], true);
 
-        if (! $puedeVerTodos) {
-            $query->where(function (Builder $q) use ($userId): void {
-                $q->where('creado_por', $userId)
-                    ->orWhereHas('lineasPersonal', fn ($qp) => $qp->where('trabajador_id', $userId));
-            });
+        $items = collect();
+
+        if ($incluirAlbaranes) {
+            $albaranes = Albaran::query()
+                ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
+                ->when(! $puedeVerTodosAlb, fn (Builder $q) => $q->where(function (Builder $qq) use ($userId): void {
+                    $qq->where('creado_por', $userId)
+                        ->orWhereHas('lineasPersonal', fn (Builder $qp) => $qp->where('trabajador_id', $userId));
+                }))
+                ->when(
+                    in_array($this->filtroEstado, ['pendiente_firma', 'firmado', 'facturado'], true),
+                    fn (Builder $q) => $q->where('estado', $this->filtroEstado),
+                )
+                ->get()
+                ->map(fn (Albaran $a): array => [
+                    'tipo'        => 'albaran',
+                    'numero'      => $a->numero,
+                    'cliente'     => $a->cliente?->nombre,
+                    'proyecto'    => $a->proyecto?->nombre,
+                    'estadoLabel' => $a->estado->etiqueta(),
+                    'estadoTone'  => $a->estado->tono(),
+                    'fecha'       => $a->fecha,
+                    'url'         => route('mobile.albaranes.firmar', ['albaran' => $a->id]),
+                ]);
+
+            $items = $items->concat($albaranes);
         }
 
-        if ($this->filtroEstado !== 'todos') {
-            $query->where('estado', $this->filtroEstado);
+        if ($incluirBorradores) {
+            $borradores = Borrador::query()
+                ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
+                ->when(! $puedeVerTodosBor, fn (Builder $q) => $q->where('creado_por', $userId))
+                ->get()
+                ->map(function (Borrador $b): array {
+                    $convertido = $b->estado === 'convertido';
+
+                    return [
+                        'tipo'        => 'borrador',
+                        'numero'      => $b->numero_borrador,
+                        'cliente'     => ($n = $b->clienteNombre()) === '—' ? null : $n,
+                        'proyecto'    => ($p = $b->proyectoNombre()) === '—' ? null : $p,
+                        'estadoLabel' => $convertido ? 'Convertido' : 'Borrador',
+                        'estadoTone'  => $convertido ? 'success' : 'neutral',
+                        'fecha'       => $b->fecha,
+                        'url'         => null,
+                    ];
+                });
+
+            $items = $items->concat($borradores);
         }
 
         if ($this->buscar !== '') {
-            $termino = '%'.trim($this->buscar).'%';
-            $query->where(function (Builder $q) use ($termino): void {
-                $q->where('numero', 'like', $termino)
-                    ->orWhereHas('cliente', fn (Builder $c) => $c->where('nombre', 'like', $termino))
-                    ->orWhereHas('proyecto', fn (Builder $p) => $p->where('nombre', 'like', $termino))
-                    ->orWhereHas('concepto', fn (Builder $c) => $c->where('nombre', 'like', $termino))
-                    ->orWhereRaw("DATE_FORMAT(fecha, '%d/%m/%Y') LIKE ?", [$termino]);
-            });
+            $termino = mb_strtolower(trim($this->buscar));
+            $items = $items->filter(fn (array $i): bool =>
+                str_contains(mb_strtolower((string) $i['numero']), $termino)
+                || str_contains(mb_strtolower((string) ($i['cliente'] ?? '')), $termino)
+                || str_contains(mb_strtolower((string) ($i['proyecto'] ?? '')), $termino));
         }
 
-        $query->orderByDesc('fecha')->orderByDesc('id');
+        $ordenados = $items
+            ->sortByDesc(fn (array $i) => $i['fecha'])
+            ->values();
 
-        return view('livewire.mobile.albaranes.index', [
-            'albaranes' => $query->paginate(20),
-        ])->layout('components.layouts.mobile', [
-            'title' => 'Mis albaranes',
-            'showBack' => true,
-            'backRoute' => route('mobile.dashboard'),
-        ]);
+        $page    = $this->getPage();
+        $perPage = 20;
+
+        return new LengthAwarePaginator(
+            $ordenados->forPage($page, $perPage)->values(),
+            $ordenados->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'pageName' => 'page'],
+        );
+    }
+
+    public function render(): View
+    {
+        return view('livewire.mobile.albaranes.index')
+            ->layout('components.layouts.mobile', [
+                'title'     => 'Mis albaranes',
+                'showBack'  => true,
+                'backRoute' => route('mobile.dashboard'),
+            ]);
     }
 }

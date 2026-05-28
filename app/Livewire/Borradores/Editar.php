@@ -12,6 +12,7 @@ use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\TokenFirma;
 use App\Models\User;
+use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -101,6 +102,71 @@ class Editar extends Component
 
         session()->flash('status', "Borrador «{$numero}» eliminado.");
         $this->redirectRoute('borradores.index', navigate: false);
+    }
+
+    // ── Normalización: crear entidades desde el texto libre ───────────────────
+
+    /**
+     * Crea un Cliente a partir del texto libre y lo deja seleccionado (FK).
+     * Paso necesario para poder convertir el borrador en albarán.
+     */
+    public function crearCliente(): void
+    {
+        Gate::authorize('create', Cliente::class);
+
+        $nombre = trim((string) $this->form->cliente_texto);
+        if ($nombre === '') {
+            $this->addError('form.cliente_texto', 'Escribe el nombre del cliente antes de crearlo.');
+            return;
+        }
+
+        $cliente = Cliente::create([
+            'codigo_cliente' => app(NumeracionService::class)->siguienteNumeroCliente(),
+            'nombre'         => $nombre,
+            'activo'         => true,
+        ]);
+
+        $this->form->cliente_id    = $cliente->id;
+        $this->form->cliente_texto = null;
+        unset($this->clientesDisponibles); // refrescar el listado cacheado
+
+        session()->flash('status', "Cliente «{$cliente->nombre}» creado y seleccionado.");
+    }
+
+    /**
+     * Crea un Proyecto bajo el cliente seleccionado a partir del texto libre.
+     * Exige un cliente real (FK) primero, porque el proyecto cuelga de él.
+     */
+    public function crearProyecto(): void
+    {
+        Gate::authorize('create', Proyecto::class);
+
+        if (! $this->form->cliente_id) {
+            $this->addError('form.proyecto_texto', 'Primero selecciona o crea el cliente; el proyecto se crea bajo ese cliente.');
+            return;
+        }
+
+        $nombre = trim((string) $this->form->proyecto_texto);
+        if ($nombre === '') {
+            $this->addError('form.proyecto_texto', 'Escribe el nombre del proyecto antes de crearlo.');
+            return;
+        }
+
+        $num = app(NumeracionService::class)->siguienteProyecto();
+
+        $proyecto = Proyecto::create([
+            'cliente_id'        => $this->form->cliente_id,
+            'nombre'            => $nombre,
+            'codigo'            => $num['codigo'],
+            'codigo_secuencial' => $num['secuencial'],
+            'estado'            => 'activo',
+        ]);
+
+        $this->form->proyecto_id    = $proyecto->id;
+        $this->form->proyecto_texto = null;
+        unset($this->proyectosDisponibles);
+
+        session()->flash('status', "Proyecto «{$proyecto->nombre}» creado y seleccionado.");
     }
 
     // ── Notificaciones de firma ───────────────────────────────────────────────

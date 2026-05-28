@@ -3,70 +3,62 @@
 
     {{-- ── Filtros ──────────────────────────────────────────────── --}}
     <div class="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
 
-            <div class="lg:col-span-2">
-                <label class="mb-1 block text-xs font-medium text-slate-600">Buscar</label>
-                <input wire:model.live.debounce.400ms="busqueda"
-                       type="text" placeholder="Descripción…"
-                       class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-3 text-sm focus:border-primary-500 focus:ring-primary-500" />
+        <div wire:key="filtros-logs-{{ $filtrosVersion }}">
+            {{-- Fila 1: buscar · usuario · entidad · evento --}}
+            <div class="grid grid-cols-4 gap-3">
+                <x-ui.field label="Buscar">
+                    <x-ui.input wire:model.live.debounce.400ms="busqueda" placeholder="Descripción…" />
+                </x-ui.field>
+
+                <x-ui.field label="Usuario">
+                    <x-ui.searchable-select
+                        wire-model="filtroUsuario"
+                        :value="$filtroUsuario"
+                        :options="$this->usuarios->map(fn($u) => ['value' => $u->id, 'label' => trim($u->apellidos.' '.$u->nombre)])"
+                        placeholder="Todos"
+                    />
+                </x-ui.field>
+
+                <x-ui.field label="Entidad">
+                    <x-ui.select wire:model.live="filtroModelo">
+                        <option value="">Todas</option>
+                        @foreach ($modelos as $class => $label)
+                            <option value="{{ $class }}">{{ $label }}</option>
+                        @endforeach
+                    </x-ui.select>
+                </x-ui.field>
+
+                <x-ui.field label="Evento">
+                    <x-ui.select wire:model.live="filtroEvento">
+                        <option value="">Todos</option>
+                        @foreach ($eventos as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </x-ui.select>
+                </x-ui.field>
             </div>
 
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Usuario</label>
-                <select wire:model.live="filtroUsuario"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($this->usuarios as $u)
-                        <option value="{{ $u->id }}">{{ trim($u->apellidos . ' ' . $u->nombre) }}</option>
-                    @endforeach
-                </select>
-            </div>
+            {{-- Fila 2: fechas --}}
+            <div class="mt-3 grid grid-cols-4 gap-3">
+                <x-ui.field label="Desde">
+                    <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
+                </x-ui.field>
 
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Entidad</label>
-                <select wire:model.live="filtroModelo"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todas</option>
-                    @foreach ($modelos as $class => $label)
-                        <option value="{{ $class }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-ui.field label="Hasta">
+                    <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
+                </x-ui.field>
             </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Evento</label>
-                <select wire:model.live="filtroEvento"
-                        class="w-full rounded-md border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Todos</option>
-                    @foreach ($eventos as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Desde</label>
-                <x-ui.date-input wireModel="fechaDesde" :value="$fechaDesde" :live="true" placeholder="dd/mm/aaaa" />
-            </div>
-
         </div>
 
-        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-600">Hasta</label>
-                <x-ui.date-input wireModel="fechaHasta" :value="$fechaHasta" :live="true" placeholder="dd/mm/aaaa" />
+        @if ($busqueda || $filtroUsuario || $filtroModelo || $filtroEvento || $fechaDesde || $fechaHasta)
+            <div class="mt-3 flex justify-end">
+                <button wire:click="limpiarFiltros"
+                        class="text-xs text-primary-600 underline hover:text-primary-800">
+                    Limpiar filtros
+                </button>
             </div>
-
-            @if ($busqueda || $filtroUsuario || $filtroModelo || $filtroEvento || $fechaDesde || $fechaHasta)
-                <div class="flex items-end">
-                    <button wire:click="$set('busqueda', ''); $set('filtroUsuario', ''); $set('filtroModelo', ''); $set('filtroEvento', ''); $set('fechaDesde', ''); $set('fechaHasta', '');"
-                            class="text-xs text-slate-500 underline hover:text-slate-700">
-                        Limpiar filtros
-                    </button>
-                </div>
-            @endif
-        </div>
+        @endif
     </div>
 
     {{-- ── Tabla ─────────────────────────────────────────────────── --}}
@@ -83,9 +75,10 @@
                     <tr class="bg-slate-800 text-left text-xs font-bold uppercase tracking-wider text-white">
                         <th class="px-4 py-3 whitespace-nowrap">Fecha / Hora</th>
                         <th class="px-4 py-3">Usuario</th>
+                        <th class="px-4 py-3">IP</th>
                         <th class="px-4 py-3">Evento</th>
                         <th class="px-4 py-3">Entidad</th>
-                        <th class="px-4 py-3">Descripción / Cambios</th>
+                        <th class="px-4 py-3">Descripción</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -95,6 +88,8 @@
                             $etiqueta   = $this->etiquetaEvento($log);
                             $claseEvento = $this->claseEvento($log);
                             $modelo     = $this->etiquetaModelo($log->subject_type);
+                            $ip         = $this->ip($log);
+                            $navegador  = $this->navegador($log);
                         @endphp
                         <tr class="hover:bg-slate-50">
 
@@ -117,6 +112,18 @@
                                     <span class="block text-xs text-slate-400">{{ $log->causer->username }}</span>
                                 @else
                                     <span class="text-slate-400">—</span>
+                                @endif
+                            </td>
+
+                            {{-- IP / Navegador --}}
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                @if ($ip)
+                                    <span class="block font-mono text-xs text-slate-700">{{ $ip }}</span>
+                                @else
+                                    <span class="block text-xs text-slate-400">—</span>
+                                @endif
+                                @if ($navegador)
+                                    <span class="block text-xs text-slate-400">{{ $navegador }}</span>
                                 @endif
                             </td>
 
@@ -156,8 +163,6 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif ($log->description === 'login' && $log->properties->get('ip'))
-                                    <span class="text-xs text-slate-400">IP: {{ $log->properties->get('ip') }}</span>
                                 @endif
                             </td>
 

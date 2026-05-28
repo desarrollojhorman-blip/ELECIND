@@ -20,6 +20,7 @@
                     <div wire:key="cli-fixed">
                         <x-ui.searchable-select
                             wire-model="form.cliente_id"
+                            :value="$form->cliente_id"
                             :options="$this->clientesDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->id.' · '.$c->nombre])"
                             placeholder="— Selecciona cliente —"
                         />
@@ -49,6 +50,7 @@
                     <div wire:key="proj-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.proyecto_id"
+                            :value="$form->proyecto_id"
                             :options="$this->proyectosPorCliente->map(fn($p) => ['value' => $p->id, 'label' => $p->nombre.($p->codigo ? ' ('.$p->codigo.')' : '')])"
                             placeholder="{{ $form->cliente_id ? '— Selecciona proyecto —' : '— Selecciona cliente primero —' }}"
                         />
@@ -75,6 +77,7 @@
                     <div wire:key="conc-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.concepto_id"
+                            :value="$form->concepto_id"
                             :options="$this->conceptosDisponibles->map(fn($c) => ['value' => $c->id, 'label' => $c->nombre])"
                             placeholder="— Sin concepto —"
                         />
@@ -99,6 +102,7 @@
                     <div wire:key="resp-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.responsable_id"
+                            :value="$form->responsable_id"
                             :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
                             placeholder="— Sin asignar —"
                         />
@@ -173,6 +177,7 @@
                             <div wire:key="comp-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.companeros.{{ $index }}.trabajador_id"
+                                    :value="$companero['trabajador_id'] ?? null"
                                     :options="$this->companerosDisponibles->reject(fn($u) => isset($compOcupados[$u->id]))->map(fn($u) => ['value' => $u->id, 'label' => ($u->numero_empleado ? $u->numero_empleado.' · ' : '').trim($u->nombre.' '.$u->apellidos)])->values()"
                                     placeholder="— Selecciona —"
                                 />
@@ -219,6 +224,7 @@
                             <div wire:key="mat-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.materiales.{{ $index }}.material_id"
+                                    :value="$material['material_id'] ?? null"
                                     :options="$this->materialesDisponibles->reject(fn($m) => isset($matOcupados[$m->id]))->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock,2,',',''),'0'),',').' '.$m->unidad_medida])->values()"
                                     placeholder="— Selecciona —"
                                 />

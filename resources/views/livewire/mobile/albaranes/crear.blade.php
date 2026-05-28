@@ -7,6 +7,7 @@
             <x-mobile.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
                 <x-ui.searchable-select
                     wire-model="form.proyecto_id"
+                    :value="$form->proyecto_id"
                     :options="$this->proyectosDisponibles->map(fn($p) => ['value' => $p->id, 'label' => $p->cliente->nombre.' · '.$p->nombre.($p->codigo ? ' ('.$p->codigo.')' : '')])"
                     placeholder="— Selecciona proyecto —"
                 />
@@ -26,6 +27,7 @@
                 <div wire:key="resp-{{ $selectKey }}">
                     <x-ui.searchable-select
                         wire-model="form.responsable_id"
+                        :value="$form->responsable_id"
                         :options="$this->responsablesDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
                         placeholder="— Sin asignar —"
                     />
@@ -89,6 +91,7 @@
                             <div wire:key="comp-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.companeros.{{ $index }}.trabajador_id"
+                                    :value="$companero['trabajador_id'] ?? null"
                                     :options="$this->companerosDisponibles->reject(fn($u) => isset($compOcupados[$u->id]))->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])->values()"
                                     placeholder="— Selecciona —"
                                 />
@@ -137,6 +140,7 @@
                             <div wire:key="mat-sel-{{ $selectKey }}-{{ $index }}">
                                 <x-ui.searchable-select
                                     wire-model="form.materiales.{{ $index }}.material_id"
+                                    :value="$material['material_id'] ?? null"
                                     :options="$this->materialesProyecto->reject(fn($m) => isset($matOcupados[$m->id]))->map(fn($m) => ['value' => $m->id, 'label' => $m->descripcion.' | '.rtrim(rtrim(number_format((float)$m->stock,2,',',''),'0'),',').' '.$m->unidad_medida])->values()"
                                     placeholder="— Selecciona —"
                                 />
