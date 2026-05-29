@@ -21,9 +21,6 @@
 /vendor
 
 # Excluir documentación interna/no publicable
-/docs/errores/
-/docs/imagenes/
-/docs/resumen/
 Homestead.json
 Homestead.yaml
 Thumbs.db
