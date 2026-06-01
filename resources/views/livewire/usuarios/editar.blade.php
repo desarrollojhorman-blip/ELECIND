@@ -131,9 +131,9 @@
                     </x-ui.field>
 
                     <x-ui.field label="Rol" required :error="$errors->first('form.rol')">
-                        <x-ui.select wire:model="form.rol">
+                        <x-ui.select wire:model.live="form.rol">
                             @foreach ($this->rolesDisponibles as $rol)
-                                <option value="{{ $rol->name }}">{{ ucfirst($rol->name) }} (nivel {{ $rol->nivel }})</option>
+                                <option value="{{ $rol->name }}">{{ $rol->nombreVisible() }} (nivel {{ $rol->nivel }})</option>
                             @endforeach
                         </x-ui.select>
                         <p class="mt-1 text-xs text-slate-400">Acceso del rol: {{ ucfirst($this->accesoRolSeleccionado) }}</p>
@@ -159,6 +159,39 @@
                         />
                     </x-ui.field>
                 </div>
+
+                {{-- Clientes gestionados (solo roles con scoping, ej: Jefe de equipo) --}}
+                @if ($this->rolTieneScoping)
+                    <div class="mb-6">
+                        <x-ui.field
+                            label="Clientes gestionados"
+                            hint="Los clientes cuyos borradores y albaranes puede gestionar. Sin clientes asignados no verá ningún dato."
+                            :error="$errors->first('form.clientesGestionados')"
+                        >
+                            <div class="max-h-52 overflow-y-auto rounded-md border border-slate-300 bg-white p-2">
+                                @forelse ($this->empresasDisponibles as $c)
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
+                                        <input
+                                            type="checkbox"
+                                            wire:model.live="form.clientesGestionados"
+                                            value="{{ $c->id }}"
+                                            class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <span class="text-sm text-slate-700">
+                                            <span class="font-mono text-xs text-slate-400">{{ $c->codigo_cliente }}</span>
+                                            · {{ $c->nombre }}
+                                        </span>
+                                    </label>
+                                @empty
+                                    <p class="px-2 py-2 text-sm text-slate-400">No hay clientes activos.</p>
+                                @endforelse
+                            </div>
+                            @if (count($form->clientesGestionados) === 0)
+                                <p class="mt-1 text-xs text-amber-600">Sin clientes asignados: el usuario no verá ningún dato.</p>
+                            @endif
+                        </x-ui.field>
+                    </div>
+                @endif
 
                 {{-- Datos personales --}}
                 <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Datos personales</h3>

@@ -96,6 +96,32 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /** Clientes que gestiona este usuario (solo roles con solo_clientes_asignados). */
+    public function clientesGestionados(): BelongsToMany
+    {
+        return $this->belongsToMany(Cliente::class, 'cliente_user_gestion');
+    }
+
+    /**
+     * IDs de clientes gestionados para aplicar scoping en listados.
+     * Devuelve null si el usuario no tiene restricción de scope (ve todo).
+     * Devuelve un array (vacío o con IDs) si tiene el flag solo_clientes_asignados.
+     *
+     * @return int[]|null
+     */
+    public function idsClientesGestionados(): ?array
+    {
+        $tieneScoping = $this->roles->contains(
+            fn (Role $r): bool => (bool) $r->getAttribute('solo_clientes_asignados')
+        );
+
+        if (! $tieneScoping) {
+            return null;
+        }
+
+        return $this->clientesGestionados()->pluck('id')->all();
+    }
+
     public function nivelMaximo(): int
     {
         $roles = $this->roles;

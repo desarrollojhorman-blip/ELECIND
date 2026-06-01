@@ -223,7 +223,9 @@
                 <x-ui.sortable-header column="nombre" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre
                 </x-ui.sortable-header>
-                <x-ui.sortable-header>Rol</x-ui.sortable-header>
+                <x-ui.sortable-header column="rol" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
+                    Rol
+                </x-ui.sortable-header>
                 <x-ui.sortable-header column="email" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Email
                 </x-ui.sortable-header>

@@ -29,6 +29,7 @@ class UserPolicy
     {
         return $user->can('usuarios.crear_superadmin')
             || $user->can('usuarios.crear_administrador')
+            || $user->can('usuarios.crear_jefe_equipo')
             || $user->can('usuarios.crear_trabajador')
             || $user->can('usuarios.crear_responsable');
     }
@@ -107,11 +108,12 @@ class UserPolicy
     public function puedeAsignarRol(User $user, string $rolNombre): bool
     {
         $permiso = match ($rolNombre) {
-            'superadmin' => 'usuarios.crear_superadmin',
-            'administrador' => 'usuarios.crear_administrador',
-            'trabajador' => 'usuarios.crear_trabajador',
-            'responsable' => 'usuarios.crear_responsable',
-            default => null,
+            'superadmin'      => 'usuarios.crear_superadmin',
+            'administrador'   => 'usuarios.crear_administrador',
+            'jefe_de_equipo'  => 'usuarios.crear_jefe_equipo',
+            'trabajador'      => 'usuarios.crear_trabajador',
+            'responsable'     => 'usuarios.crear_responsable',
+            default           => null,
         };
 
         // Rol conocido: comprobar permiso específico.

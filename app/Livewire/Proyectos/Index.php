@@ -236,10 +236,12 @@ class Index extends Component
     #[Computed]
     public function clientesDisponibles(): Collection
     {
-        return Cliente::query()
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+        $q = Cliente::query()->where('activo', true)->orderBy('nombre');
+        $ids = auth()->user()?->idsClientesGestionados();
+        if ($ids !== null) {
+            $q->whereIn('id', $ids);
+        }
+        return $q->get(['id', 'nombre']);
     }
 
     /**
@@ -262,6 +264,11 @@ class Index extends Component
         $query = Proyecto::query()
             ->with(['cliente:id,nombre', 'tipoProyecto:id,nombre'])
             ->withCount('albaranes');
+
+        $clientesScope = auth()->user()?->idsClientesGestionados();
+        if ($clientesScope !== null) {
+            $query->whereIn('cliente_id', $clientesScope);
+        }
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();

@@ -144,6 +144,11 @@ class Index extends Component
         $query = Borrador::query()
             ->with(['creador:id,nombre,apellidos']);
 
+        $clientesScope = auth()->user()?->idsClientesGestionados();
+        if ($clientesScope !== null) {
+            $query->whereIn('cliente_id', $clientesScope);
+        }
+
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();
         } elseif ($this->filtroEstado !== '') {

@@ -165,7 +165,12 @@ class Index extends Component
     #[Computed]
     public function clientesDisponibles(): Collection
     {
-        return Cliente::query()->orderBy('nombre')->get(['id', 'nombre']);
+        $q = Cliente::query()->orderBy('nombre');
+        $ids = auth()->user()?->idsClientesGestionados();
+        if ($ids !== null) {
+            $q->whereIn('id', $ids);
+        }
+        return $q->get(['id', 'nombre']);
     }
 
     public function render(): View
@@ -177,6 +182,11 @@ class Index extends Component
                 'concepto:id,nombre',
                 'creador:id,nombre,apellidos',
             ]);
+
+        $clientesScope = auth()->user()?->idsClientesGestionados();
+        if ($clientesScope !== null) {
+            $query->whereIn('cliente_id', $clientesScope);
+        }
 
         if ($this->filtroEstado === 'papelera') {
             $query->onlyTrashed();

@@ -192,7 +192,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $columnasPermitidas = ['id', 'username', 'nombre', 'email', 'tipo_usuario', 'created_at'];
+        $columnasPermitidas = ['id', 'username', 'nombre', 'email', 'tipo_usuario', 'created_at', 'rol'];
         if (! \in_array($columna, $columnasPermitidas, true)) {
             return;
         }
@@ -666,7 +666,18 @@ class Index extends Component
             });
         }
 
-        $query->orderBy($this->ordenColumna, $this->ordenDireccion);
+        if ($this->ordenColumna === 'rol') {
+            $query->select('users.*')
+                ->leftJoin('model_has_roles', function ($join): void {
+                    $join->on('model_has_roles.model_id', '=', 'users.id')
+                         ->where('model_has_roles.model_type', '=', User::class);
+                })
+                ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->orderBy('roles.nivel', $this->ordenDireccion)
+                ->orderBy('roles.name', $this->ordenDireccion);
+        } else {
+            $query->orderBy($this->ordenColumna, $this->ordenDireccion);
+        }
 
         return view('livewire.usuarios.index', [
             'usuarios' => $query->paginate($this->porPagina)->onEachSide(2),

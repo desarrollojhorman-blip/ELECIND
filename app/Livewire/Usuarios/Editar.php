@@ -275,6 +275,12 @@ class Editar extends Component
         return $rol?->acceso ?? '—';
     }
 
+    #[Computed]
+    public function rolTieneScoping(): bool
+    {
+        return (bool) Role::firstWhere('name', $this->form->rol)?->getAttribute('solo_clientes_asignados');
+    }
+
     /** @return Collection<int, Cliente> */
     #[Computed]
     public function empresasDisponibles(): Collection

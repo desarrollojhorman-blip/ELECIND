@@ -59,6 +59,11 @@ class RolesAndPermissionsSeeder extends Seeder
             ['etiqueta' => 'Responsable', 'nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
         );
 
+        $jefeEquipo = Role::updateOrCreate(
+            ['name' => 'jefe_de_equipo', 'guard_name' => 'web'],
+            ['etiqueta' => 'Jefe de equipo', 'nivel' => 30, 'acceso' => 'web', 'es_sistema' => true, 'solo_clientes_asignados' => true]
+        );
+
         // Superadmin: todos los permisos.
         $superadmin->syncPermissions(Permission::all());
 
@@ -98,6 +103,27 @@ class RolesAndPermissionsSeeder extends Seeder
             'albaranes.firmar',
             'albaranes.descargar_pdf',
         ]);
+
+        // Jefe de equipo: gestiona borradores/albaranes de sus clientes asignados (scoping activo).
+        $jefeEquipo->syncPermissions([
+            'borradores.ver_todos',
+            'borradores.modificar',
+            'borradores.convertir',
+            'albaranes.ver_todos',
+            'albaranes.crear_web',
+            'albaranes.modificar',
+            'albaranes.imprimir',
+            'albaranes.exportar',
+            'albaranes.descargar_pdf',
+            'albaranes.solicitar_firma',
+            'albaranes.facturar',
+            'clientes.ver',
+            'proyectos.ver',
+            'conceptos.ver',
+            'conceptos.crear',
+            'materiales.ver',
+            'materiales.crear',
+        ]);
     }
 
     /**
@@ -135,6 +161,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'usuarios.ver_todos', 'ambito' => 'web', 'descripcion' => 'Ver lista de usuarios', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.crear_superadmin', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol superadmin', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.crear_administrador', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol administrador', 'categoria' => 'usuarios'],
+            ['name' => 'usuarios.crear_jefe_equipo', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol jefe de equipo', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.crear_trabajador', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol trabajador', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.crear_responsable', 'ambito' => 'web', 'descripcion' => 'Crear usuarios con rol responsable', 'categoria' => 'usuarios'],
             ['name' => 'usuarios.modificar', 'ambito' => 'web', 'descripcion' => 'Modificar usuarios', 'categoria' => 'usuarios'],

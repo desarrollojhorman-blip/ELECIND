@@ -59,6 +59,14 @@ class UserForm extends Form
     #[Validate]
     public string $rol = 'trabajador';
 
+    /**
+     * IDs de los clientes gestionados (solo roles con solo_clientes_asignados).
+     * Los checkboxes del blade envían strings; se castean a int al guardar.
+     *
+     * @var string[]
+     */
+    public array $clientesGestionados = [];
+
     #[Validate]
     public bool $activo = true;
 
@@ -169,6 +177,8 @@ class UserForm extends Form
         $this->activo = (bool) $user->activo;
         $this->rol = $user->getRoleNames()->first() ?? 'trabajador';
         $this->password = null;
+        $this->clientesGestionados = $user->clientesGestionados()->pluck('id')
+            ->map(fn ($id) => (string) $id)->all();
     }
 
     public function save(): User
@@ -207,6 +217,13 @@ class UserForm extends Form
         $user->save();
 
         $user->syncRoles([$this->rol]);
+
+        $rolObj = \App\Models\Role::firstWhere('name', $this->rol);
+        if ($rolObj?->solo_clientes_asignados) {
+            $user->clientesGestionados()->sync(array_map('intval', $this->clientesGestionados));
+        } else {
+            $user->clientesGestionados()->detach();
+        }
 
         return $user;
     }
