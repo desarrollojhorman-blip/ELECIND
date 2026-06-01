@@ -41,6 +41,12 @@ class Editar extends Component
 
     public ?string $bloqueadoEliminarMensaje = null;
 
+    /** Cliente temporalmente seleccionado en el desplegable "Añadir cliente" (chips). */
+    public ?int $clienteAAgregar = null;
+
+    /** Fuerza el re-render del searchable-select tras añadir un cliente. */
+    public int $selectAddClienteKey = 0;
+
     public string $ordenProyectos = 'nombre';
     public string $dirProyectos = 'asc';
 
@@ -168,6 +174,67 @@ class Editar extends Component
         }
     }
 
+    /**
+     * Al cambiar el rol limpiamos los campos asociados que ya no aplican,
+     * para evitar arrastrar un cliente_id o una lista de clientes gestionados
+     * del rol anterior.
+     */
+    public function updatedFormRol(): void
+    {
+        $rol = Role::firstWhere('name', $this->form->rol);
+
+        if (! $rol?->es_externo) {
+            $this->form->cliente_id = null;
+        }
+
+        if (! $rol?->solo_clientes_asignados) {
+            $this->form->clientesGestionados = [];
+            $this->form->gestionaTodosClientes = false;
+        }
+
+        $this->clienteAAgregar = null;
+        $this->selectAddClienteKey++;
+    }
+
+    /**
+     * Disparado por el desplegable "Buscar y añadir cliente" del bloque de
+     * clientes gestionados. Añade el cliente a la lista y resetea el select.
+     */
+    public function updatedClienteAAgregar(): void
+    {
+        if ($this->clienteAAgregar === null) {
+            return;
+        }
+
+        $idsActuales = array_map('intval', $this->form->clientesGestionados);
+        if (! in_array((int) $this->clienteAAgregar, $idsActuales, true)) {
+            $idsActuales[] = (int) $this->clienteAAgregar;
+            $this->form->clientesGestionados = $idsActuales;
+        }
+
+        $this->clienteAAgregar = null;
+        $this->selectAddClienteKey++;
+    }
+
+    /** Quita un cliente de la lista de gestionados (X del chip). */
+    public function quitarClienteGestionado(int $clienteId): void
+    {
+        $this->form->clientesGestionados = array_values(array_filter(
+            array_map('intval', $this->form->clientesGestionados),
+            fn (int $id): bool => $id !== $clienteId,
+        ));
+    }
+
+    /** Cuando se marca/desmarca "Asignar todos los clientes" limpiamos la lista. */
+    public function updatedFormGestionaTodosClientes(): void
+    {
+        if ($this->form->gestionaTodosClientes) {
+            $this->form->clientesGestionados = [];
+            $this->clienteAAgregar = null;
+            $this->selectAddClienteKey++;
+        }
+    }
+
     private function actualizarSugerenciaUsername(): void
     {
         if ($this->form->id !== null || $this->usernameTocadoManual) {
@@ -279,6 +346,13 @@ class Editar extends Component
     public function rolTieneScoping(): bool
     {
         return (bool) Role::firstWhere('name', $this->form->rol)?->getAttribute('solo_clientes_asignados');
+    }
+
+    /** ¿El rol actual es "externo" (usuario del cliente)? Decide si pedir cliente_id en el form. */
+    #[Computed]
+    public function rolEsExterno(): bool
+    {
+        return (bool) Role::firstWhere('name', $this->form->rol)?->getAttribute('es_externo');
     }
 
     /** @return Collection<int, Cliente> */

@@ -31,6 +31,16 @@ class Index extends Component
     #[Url(as: 'hasta')]
     public string $filtroHasta = '';
 
+    /**
+     * Para usuarios con scope por cliente (Jefe de equipo):
+     *   todos      = sus clientes + los borradores con cliente en texto libre
+     *   asignados  = solo los borradores cuyo cliente FK está entre los suyos
+     *   por_revisar = solo borradores con cliente en texto libre (sin asignar)
+     * Para admins/superadmin: este filtro se ignora (ven todo).
+     */
+    #[Url(as: 'asignacion')]
+    public string $filtroAsignacion = 'todos';
+
     #[Url(as: 'orden')]
     public string $ordenColumna = 'fecha';
 
@@ -55,7 +65,24 @@ class Index extends Component
     public function updatedFiltroEstado(): void { $this->resetPage(); }
     public function updatedFiltroDesde(): void { $this->resetPage(); }
     public function updatedFiltroHasta(): void { $this->resetPage(); }
+    public function updatedFiltroAsignacion(): void { $this->resetPage(); }
     public function updatedPorPagina(): void { $this->resetPage(); }
+
+    public function setFiltroAsignacion(string $valor): void
+    {
+        if (! in_array($valor, ['todos', 'asignados', 'por_revisar'], true)) {
+            return;
+        }
+        $this->filtroAsignacion = $valor;
+        $this->resetPage();
+    }
+
+    /** True si el usuario actual tiene scoping por cliente (jefe de equipo). */
+    #[Computed]
+    public function usuarioEsScoped(): bool
+    {
+        return auth()->user()?->idsClientesGestionados() !== null;
+    }
 
     public function togglePanelFiltros(): void
     {
@@ -144,9 +171,23 @@ class Index extends Component
         $query = Borrador::query()
             ->with(['creador:id,nombre,apellidos']);
 
+        // Scoping por cliente para roles tipo "Jefe de equipo".
+        //   - Un borrador con cliente_id en sus clientes → claramente suyo.
+        //   - Un borrador con cliente_id NULL (cliente escrito en texto libre)
+        //     → "por revisar": cualquier jefe lo ve y decide si es de su cliente
+        //     al convertirlo. El admin (sin scope) ve todo en cualquier caso.
         $clientesScope = auth()->user()?->idsClientesGestionados();
         if ($clientesScope !== null) {
-            $query->whereIn('cliente_id', $clientesScope);
+            if ($this->filtroAsignacion === 'asignados') {
+                $query->whereIn('cliente_id', $clientesScope);
+            } elseif ($this->filtroAsignacion === 'por_revisar') {
+                $query->whereNull('cliente_id');
+            } else { // 'todos' (default)
+                $query->where(function (Builder $q) use ($clientesScope): void {
+                    $q->whereIn('cliente_id', $clientesScope)
+                        ->orWhereNull('cliente_id');
+                });
+            }
         }
 
         if ($this->filtroEstado === 'papelera') {

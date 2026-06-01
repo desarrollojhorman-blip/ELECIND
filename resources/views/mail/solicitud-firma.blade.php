@@ -114,8 +114,7 @@
                                     <tr style="background:#1f2937;">
                                         <th align="left" style="padding:6px 10px;font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.04em;border-right:1px solid #475569;">Trabajo realizado</th>
                                         <th align="left" style="padding:6px 10px;font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.04em;border-right:1px solid #475569;">Nombre del trabajador</th>
-                                        <th align="center" style="padding:6px 10px;font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;border-right:1px solid #475569;">Horas normales</th>
-                                        <th align="center" style="padding:6px 10px;font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Horas extras</th>
+                                        <th align="center" style="padding:6px 10px;font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Horas</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -127,8 +126,7 @@
                                             <td style="padding:7px 10px;font-size:11px;color:#1e293b;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
                                                 {{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}
                                             </td>
-                                            <td align="center" style="padding:7px 10px;font-size:11px;color:#1e293b;font-weight:600;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">{{ number_format((float) $linea->horas, 2) }}</td>
-                                            <td align="center" style="padding:7px 10px;font-size:11px;color:#1e293b;border-top:1px solid #e2e8f0;">{{ number_format((float) $linea->horas_extra, 2) }}</td>
+                                            <td align="center" style="padding:7px 10px;font-size:11px;color:#1e293b;font-weight:600;border-top:1px solid #e2e8f0;">{{ number_format((float) $linea->horas + (float) $linea->horas_extra, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

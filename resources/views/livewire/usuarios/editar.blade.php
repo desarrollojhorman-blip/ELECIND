@@ -139,57 +139,97 @@
                         <p class="mt-1 text-xs text-slate-400">Acceso del rol: {{ ucfirst($this->accesoRolSeleccionado) }}</p>
                     </x-ui.field>
 
-                    <x-ui.field label="Tipo usuario" required :error="$errors->first('form.tipo_usuario')">
-                        <x-ui.select wire:model.live="form.tipo_usuario">
-                            <option value="interno">Interno (Elecind)</option>
-                            <option value="externo">Externo (cliente)</option>
-                        </x-ui.select>
+                    {{-- Tipo de usuario: derivado del rol, solo informativo --}}
+                    <x-ui.field label="Tipo usuario">
+                        <x-ui.input
+                            :value="$this->rolEsExterno ? 'Externo' : 'Interno'"
+                            disabled
+                            class="bg-slate-50 text-slate-600"
+                        />
+                        <p class="mt-1 text-xs text-slate-400">Se establece automáticamente según el rol.</p>
                     </x-ui.field>
 
-                    <x-ui.field label="Cliente"
-                                :required="$form->tipo_usuario === 'externo'"
-                                :error="$errors->first('form.cliente_id')">
-                        <x-ui.searchable-select
-                            wire:key="empresa-select-{{ $form->tipo_usuario }}"
-                            wire-model="form.cliente_id"
-                            :value="$form->cliente_id"
-                            :options="$this->empresasDisponibles->map(fn($e) => ['value' => $e->id, 'label' => $e->codigo_cliente.' · '.$e->nombre])->all()"
-                            placeholder="— Ninguna —"
-                            :disabled="$form->tipo_usuario !== 'externo'"
-                        />
-                    </x-ui.field>
+                    {{-- Cliente único (solo para roles externos, p. ej. Responsable) --}}
+                    @if ($this->rolEsExterno)
+                        <x-ui.field label="Cliente" required :error="$errors->first('form.cliente_id')">
+                            <x-ui.searchable-select
+                                wire:key="cliente-externo-{{ $form->rol }}-{{ $form->cliente_id ?? 'null' }}"
+                                wire-model="form.cliente_id"
+                                :value="$form->cliente_id"
+                                :options="$this->empresasDisponibles->map(fn($e) => ['value' => $e->id, 'label' => $e->codigo_cliente.' · '.$e->nombre])->all()"
+                                placeholder="— Selecciona cliente —"
+                            />
+                        </x-ui.field>
+                    @endif
                 </div>
 
-                {{-- Clientes gestionados (solo roles con scoping, ej: Jefe de equipo) --}}
+                {{-- Clientes gestionados (rol con scoping: Jefe de equipo) --}}
                 @if ($this->rolTieneScoping)
-                    <div class="mb-6">
-                        <x-ui.field
-                            label="Clientes gestionados"
-                            hint="Los clientes cuyos borradores y albaranes puede gestionar. Sin clientes asignados no verá ningún dato."
-                            :error="$errors->first('form.clientesGestionados')"
-                        >
-                            <div class="max-h-52 overflow-y-auto rounded-md border border-slate-300 bg-white p-2">
-                                @forelse ($this->empresasDisponibles as $c)
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50">
-                                        <input
-                                            type="checkbox"
-                                            wire:model.live="form.clientesGestionados"
-                                            value="{{ $c->id }}"
-                                            class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                        />
-                                        <span class="text-sm text-slate-700">
-                                            <span class="font-mono text-xs text-slate-400">{{ $c->codigo_cliente }}</span>
-                                            · {{ $c->nombre }}
-                                        </span>
-                                    </label>
-                                @empty
-                                    <p class="px-2 py-2 text-sm text-slate-400">No hay clientes activos.</p>
-                                @endforelse
+                    <div class="mb-6 mt-2 rounded-lg border border-slate-200 bg-slate-50/40 p-4">
+                        <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-semibold text-slate-800">Clientes gestionados</h3>
+                                <p class="text-xs text-slate-500">
+                                    Los clientes cuyos borradores, albaranes y proyectos podrá ver y gestionar.
+                                </p>
                             </div>
-                            @if (count($form->clientesGestionados) === 0)
-                                <p class="mt-1 text-xs text-amber-600">Sin clientes asignados: el usuario no verá ningún dato.</p>
-                            @endif
-                        </x-ui.field>
+                            <label class="inline-flex shrink-0 cursor-pointer items-center gap-2">
+                                <input type="checkbox"
+                                       wire:model.live="form.gestionaTodosClientes"
+                                       class="size-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                                <span class="text-sm font-medium text-slate-700">
+                                    Asignar todos los clientes
+                                    <span class="text-xs font-normal text-slate-400">(incluido los futuros)</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        @if ($form->gestionaTodosClientes)
+                            <div class="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                                <x-heroicon-o-check-circle class="mt-0.5 size-4 shrink-0" />
+                                <span>
+                                    Verá los datos de <strong>todos los clientes</strong>, incluidos los que se den de alta en el futuro.
+                                </span>
+                            </div>
+                        @else
+                            @php
+                                $idsSeleccionados = array_map('intval', $form->clientesGestionados);
+                                $disponibles      = $this->empresasDisponibles->whereNotIn('id', $idsSeleccionados)->values();
+                                $seleccionados    = $this->empresasDisponibles->whereIn('id', $idsSeleccionados)->values();
+                            @endphp
+
+                            <div class="space-y-2">
+                                <x-ui.field :error="$errors->first('form.clientesGestionados')">
+                                    <x-ui.searchable-select
+                                        wire:key="cliente-add-{{ $selectAddClienteKey }}"
+                                        wire-model="clienteAAgregar"
+                                        :value="null"
+                                        :options="$disponibles->map(fn($e) => ['value' => $e->id, 'label' => $e->codigo_cliente.' · '.$e->nombre])->all()"
+                                        placeholder="Buscar y añadir cliente…"
+                                    />
+                                </x-ui.field>
+
+                                @if ($seleccionados->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1.5 pt-1">
+                                        @foreach ($seleccionados as $sel)
+                                            <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white py-1 pl-2.5 pr-1 text-xs">
+                                                <span class="font-mono text-slate-500">{{ $sel->codigo_cliente }}</span>
+                                                <span class="text-slate-700">· {{ $sel->nombre }}</span>
+                                                <button type="button"
+                                                        wire:click="quitarClienteGestionado({{ $sel->id }})"
+                                                        class="ml-1 flex size-5 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600">
+                                                    <x-heroicon-m-x-mark class="size-3" />
+                                                </button>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="pt-1 text-xs text-amber-600">
+                                        Sin clientes asignados: el usuario no verá ningún dato.
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endif
 

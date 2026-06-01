@@ -56,7 +56,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $responsable = Role::updateOrCreate(
             ['name' => 'responsable', 'guard_name' => 'web'],
-            ['etiqueta' => 'Responsable', 'nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true]
+            ['etiqueta' => 'Responsable', 'nivel' => 10, 'acceso' => 'movil', 'es_sistema' => true, 'es_externo' => true]
         );
 
         $jefeEquipo = Role::updateOrCreate(
@@ -118,11 +118,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'albaranes.solicitar_firma',
             'albaranes.facturar',
             'clientes.ver',
+            // Permite crear clientes durante la conversión de un borrador. El
+            // ClienteObserver auto-asigna el cliente nuevo a sus clientes
+            // gestionados, así no rompe el scope (paradoja resuelta).
+            'clientes.crear',
             'proyectos.ver',
+            // El jefe puede dar de alta proyectos durante el wizard de
+            // conversión del borrador (el proyecto hereda el cliente, que ya
+            // está dentro de su scope).
+            'proyectos.crear',
             'conceptos.ver',
             'conceptos.crear',
             'materiales.ver',
-            'materiales.crear',
+            // Necesario para que el jefe pueda crear un responsable nuevo
+            // durante el wizard. El responsable queda vinculado al cliente
+            // del borrador (que está bajo su scope).
+            'usuarios.crear_responsable',
         ]);
     }
 

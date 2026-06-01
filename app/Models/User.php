@@ -48,6 +48,7 @@ class User extends Authenticatable
         'tasa_festivo',
         'tipo_usuario',
         'cliente_id',
+        'gestiona_todos_clientes',
         'activo',
         'preferencias_notificaciones',
         'deleted_by',
@@ -76,6 +77,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'activo' => 'boolean',
+            'gestiona_todos_clientes' => 'boolean',
             'preferencias_notificaciones' => 'array',
             'snapshot_data' => 'array',
             'tasa_hora' => 'decimal:3',
@@ -104,8 +106,10 @@ class User extends Authenticatable
 
     /**
      * IDs de clientes gestionados para aplicar scoping en listados.
-     * Devuelve null si el usuario no tiene restricción de scope (ve todo).
-     * Devuelve un array (vacío o con IDs) si tiene el flag solo_clientes_asignados.
+     *
+     * - null: el usuario no tiene restricción → ve TODOS los clientes
+     *         (admins, superadmin… y también jefes con gestiona_todos_clientes).
+     * - array (posiblemente vacío): el usuario está scoped → solo los de la lista.
      *
      * @return int[]|null
      */
@@ -116,6 +120,12 @@ class User extends Authenticatable
         );
 
         if (! $tieneScoping) {
+            return null;
+        }
+
+        // Marca "ve todos los clientes (presentes y futuros)" para jefes que
+        // gestionan toda la cartera. Anula el scoping aunque el rol tenga el flag.
+        if ($this->gestiona_todos_clientes) {
             return null;
         }
 

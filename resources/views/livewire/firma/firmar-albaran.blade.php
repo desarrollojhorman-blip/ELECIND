@@ -114,8 +114,7 @@
                             <tr class="bg-gray-800">
                                 <th class="border-r border-slate-600 px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wide text-white">Trabajo realizado</th>
                                 <th class="border-r border-slate-600 px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wide text-white">Nombre del trabajador</th>
-                                <th class="whitespace-nowrap border-r border-slate-600 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white">Horas normales</th>
-                                <th class="whitespace-nowrap px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white">Horas extras</th>
+                                <th class="whitespace-nowrap px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white">Horas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,11 +128,8 @@
                                     <td class="border-t border-r border-slate-200 px-3 py-2 font-medium text-slate-800">
                                         {{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}
                                     </td>
-                                    <td class="border-t border-r border-slate-200 px-3 py-2 text-center font-semibold text-slate-800">
-                                        {{ number_format((float) $linea->horas, 2) }}
-                                    </td>
-                                    <td class="border-t border-slate-200 px-3 py-2 text-center text-slate-700">
-                                        {{ number_format((float) $linea->horas_extra, 2) }}
+                                    <td class="border-t border-slate-200 px-3 py-2 text-center font-semibold text-slate-800">
+                                        {{ number_format((float) $linea->horas + (float) $linea->horas_extra, 2) }}
                                     </td>
                                 </tr>
                             @endforeach

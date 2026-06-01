@@ -148,8 +148,7 @@
                 <tr>
                     <th>Trabajo realizado</th>
                     <th>Nombre del trabajador</th>
-                    <th class="center">Horas normales</th>
-                    <th class="center">Horas extras</th>
+                    <th class="center">Horas</th>
                 </tr>
             </thead>
             <tbody>
@@ -161,8 +160,7 @@
                             </td>
                         @endif
                         <td>{{ trim(($linea->trabajador->nombre ?? '') . ' ' . ($linea->trabajador->apellidos ?? '')) ?: '—' }}</td>
-                        <td class="center bold">{{ number_format((float) $linea->horas, 2) }}</td>
-                        <td class="center">{{ number_format((float) $linea->horas_extra, 2) }}</td>
+                        <td class="center bold">{{ number_format((float) $linea->horas + (float) $linea->horas_extra, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>

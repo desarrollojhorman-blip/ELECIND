@@ -15,7 +15,8 @@
                 </x-ui.button>
             @endcan
             @can('convertir', $borrador)
-                <x-ui.button variant="primary" wire:click="abrirConfirmarConvertir" icon="heroicon-o-arrow-right-circle">
+                <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
+                             variant="primary" icon="heroicon-o-arrow-right-circle">
                     Convertir a albarán
                 </x-ui.button>
             @endcan

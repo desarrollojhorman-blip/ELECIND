@@ -2,15 +2,12 @@
 
 namespace App\Livewire\Usuarios;
 
-use App\Livewire\Forms\UserForm;
-use App\Models\Cliente;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -23,8 +20,6 @@ use Livewire\WithPagination;
 class Index extends Component
 {
     use WithPagination;
-
-    public UserForm $form;
 
     #[Url(as: 'q')]
     public string $buscar = '';
@@ -62,8 +57,6 @@ class Index extends Component
 
     public bool $panelFiltrosAbierto = false;
 
-    public bool $modalAbierto = false;
-
     public ?int $confirmarEliminarId = null;
 
     /**
@@ -72,22 +65,7 @@ class Index extends Component
      */
     public ?string $bloqueadoEliminarMensaje = null;
 
-    /** @var array<int, array{campo: string, valor: string, usuario_id: int, usuario_nombre: string, eliminado: bool}> */
-    public array $duplicadosEncontrados = [];
-
-    public bool $modalDuplicadosAbierto = false;
-
-    public bool $bypassDuplicados = false;
-
-    public bool $usernameTocadoManual = false;
-
-    public bool $mostrarPassword = false;
-
-    public int $passwordRenderKey = 0;
-
     public int $resetKey = 0;
-
-    public bool $modoSoloLectura = false;
 
     public function mount(): void
     {
@@ -203,197 +181,6 @@ class Index extends Component
             $this->ordenColumna = $columna;
             $this->ordenDireccion = 'asc';
         }
-    }
-
-    /* ───────────────────────── Modal alta / edición ────────────────────── */
-
-    public function abrirCrear(): void
-    {
-        Gate::authorize('create', User::class);
-
-        $this->form->reset();
-        $this->form->activo = true;
-        $this->form->tipo_usuario = 'interno';
-        $this->form->rol = $this->primerRolDisponible();
-        $this->usernameTocadoManual = false;
-        $this->mostrarPassword = false;
-        $this->passwordRenderKey++;
-        $this->bypassDuplicados = false;
-        $this->duplicadosEncontrados = [];
-        $this->resetErrorBag();
-        $this->modalAbierto = true;
-    }
-
-    public function abrirVer(int $id): void
-    {
-        /** @var User $usuario */
-        $usuario = User::withTrashed()->findOrFail($id);
-
-        Gate::authorize('view', $usuario);
-
-        $this->form->fromModel($usuario);
-        $this->usernameTocadoManual = true;
-        $this->mostrarPassword = false;
-        $this->passwordRenderKey++;
-        $this->bypassDuplicados = false;
-        $this->duplicadosEncontrados = [];
-        $this->modoSoloLectura = true;
-        $this->resetErrorBag();
-        $this->modalAbierto = true;
-    }
-
-    public function abrirEditar(int $id): void
-    {
-        /** @var User $usuario */
-        $usuario = User::withTrashed()->findOrFail($id);
-
-        Gate::authorize('update', $usuario);
-
-        $this->form->fromModel($usuario);
-        $this->usernameTocadoManual = true;
-        $this->mostrarPassword = false;
-        $this->passwordRenderKey++;
-        $this->bypassDuplicados = false;
-        $this->duplicadosEncontrados = [];
-        $this->modoSoloLectura = false;
-        $this->resetErrorBag();
-        $this->modalAbierto = true;
-    }
-
-    public function guardar(): void
-    {
-        $esNuevo = $this->form->id === null;
-
-        if ($esNuevo) {
-            Gate::authorize('create', User::class);
-        } else {
-            /** @var User $existente */
-            $existente = User::withTrashed()->findOrFail($this->form->id);
-            Gate::authorize('update', $existente);
-        }
-
-        if (! Gate::forUser(auth()->user())->allows('puedeAsignarRol', [User::class, $this->form->rol])) {
-            $this->addError('form.rol', 'No tienes permiso para asignar este rol.');
-
-            return;
-        }
-
-        if (! $this->bypassDuplicados) {
-            $this->form->validate();
-
-            $duplicados = $this->form->buscarDuplicados();
-            if (count($duplicados) > 0) {
-                $this->duplicadosEncontrados = $duplicados;
-                $this->modalDuplicadosAbierto = true;
-
-                return;
-            }
-        }
-
-        $usuario = $this->form->save();
-
-        $this->modalAbierto = false;
-        $this->modalDuplicadosAbierto = false;
-        $this->bypassDuplicados = false;
-        $this->duplicadosEncontrados = [];
-        $this->form->reset();
-        $this->usernameTocadoManual = false;
-        $this->passwordRenderKey++;
-
-        session()->flash('status', $esNuevo
-            ? "Usuario «{$usuario->username}» creado correctamente."
-            : "Usuario «{$usuario->username}» actualizado correctamente.");
-    }
-
-    public function cerrarModal(): void
-    {
-        $this->modalAbierto = false;
-        $this->modalDuplicadosAbierto = false;
-        $this->bypassDuplicados = false;
-        $this->duplicadosEncontrados = [];
-        $this->form->reset();
-        $this->usernameTocadoManual = false;
-        $this->mostrarPassword = false;
-        $this->modoSoloLectura = false;
-        $this->passwordRenderKey++;
-        $this->resetErrorBag();
-    }
-
-    /* ─────────────────── Duplicados (no bloqueantes) ───────────────────── */
-
-    public function confirmarCrearAunqueDuplicado(): void
-    {
-        $this->bypassDuplicados = true;
-        $this->modalDuplicadosAbierto = false;
-        $this->guardar();
-    }
-
-    public function cancelarDuplicados(): void
-    {
-        $this->modalDuplicadosAbierto = false;
-        $this->duplicadosEncontrados = [];
-    }
-
-    public function usarExistente(int $id): void
-    {
-        $this->modalDuplicadosAbierto = false;
-        $this->duplicadosEncontrados = [];
-        $this->modalAbierto = false;
-        $this->form->reset();
-        $this->abrirEditar($id);
-    }
-
-    /* ───────────────── Autosugerencia username ─────────────────────────── */
-
-    public function updatedFormNombre(): void
-    {
-        $this->actualizarSugerenciaUsername();
-    }
-
-    public function updatedFormApellidos(): void
-    {
-        $this->actualizarSugerenciaUsername();
-    }
-
-    public function updatedFormUsername(): void
-    {
-        if ($this->form->id !== null) {
-            return;
-        }
-
-        $sugerido = UserForm::sugerirUsername($this->form->nombre, $this->form->apellidos);
-        if ($this->form->username !== $sugerido) {
-            $this->usernameTocadoManual = true;
-        }
-    }
-
-    private function actualizarSugerenciaUsername(): void
-    {
-        if ($this->form->id !== null) {
-            return;
-        }
-
-        if ($this->usernameTocadoManual) {
-            return;
-        }
-
-        $this->form->username = UserForm::sugerirUsername($this->form->nombre, $this->form->apellidos);
-    }
-
-    public function generarPasswordSegura(): void
-    {
-        $password = Str::password(14, true, true, false, false);
-
-        $this->form->password = $password;
-        $this->mostrarPassword = true;
-        $this->passwordRenderKey++;
-        $this->resetValidation(['form.password']);
-    }
-
-    public function toggleMostrarPassword(): void
-    {
-        $this->mostrarPassword = ! $this->mostrarPassword;
-        $this->passwordRenderKey++;
     }
 
     /* ───────────────────────── Eliminar / restaurar ────────────────────── */
@@ -562,19 +349,8 @@ class Index extends Component
     }
 
     /**
-     * @return Collection<int, Cliente>
-     */
-    #[Computed]
-    public function empresasDisponibles(): Collection
-    {
-        return Cliente::query()
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get(['id', 'codigo_cliente', 'nombre']);
-    }
-
-    /**
      * Roles que el usuario actual puede asignar (según jerarquía + permisos).
+     * Usado por el filtro de Rol del listado.
      *
      * @return Collection<int, Role>
      */
@@ -591,22 +367,6 @@ class Index extends Component
             ->get()
             ->filter(fn (Role $rol): bool => Gate::forUser($actual)->allows('puedeAsignarRol', [User::class, $rol->name]))
             ->values();
-    }
-
-    #[Computed]
-    public function accesoRolSeleccionado(): string
-    {
-        /** @var Role|null $rol */
-        $rol = $this->rolesDisponibles()->firstWhere('name', $this->form->rol);
-
-        return $rol?->acceso ?? '—';
-    }
-
-    private function primerRolDisponible(): string
-    {
-        $rol = $this->rolesDisponibles()->first();
-
-        return $rol instanceof Role ? $rol->name : 'trabajador';
     }
 
     /* ───────────────────────── Render ───────────────────────────────────── */

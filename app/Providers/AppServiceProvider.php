@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Observers\AlbaranLineaMaterialObserver;
 use App\Observers\AlbaranLineaPersonalObserver;
 use App\Observers\AlbaranObserver;
+use App\Observers\ClienteObserver;
 use App\Policies\AlbaranPolicy;
 use App\Policies\BorradorPolicy;
 use App\Policies\ClientePolicy;
@@ -82,6 +83,10 @@ class AppServiceProvider extends ServiceProvider
         AlbaranLineaMaterial::observe(AlbaranLineaMaterialObserver::class);
         AlbaranLineaPersonal::observe(AlbaranLineaPersonalObserver::class);
         Albaran::observe(AlbaranObserver::class);
+
+        // Cuando un usuario scoped (Jefe de equipo) crea un cliente, lo añade
+        // a su lista de clientes gestionados para no perderlo de vista.
+        Cliente::observe(ClienteObserver::class);
 
         // Adjuntar IP y navegador a TODA actividad registrada (CRUD, login, etc.)
         // siempre que haya una petición HTTP real. En consola (seeders, comandos)

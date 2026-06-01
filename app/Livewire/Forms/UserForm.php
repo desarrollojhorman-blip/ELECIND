@@ -48,8 +48,12 @@ class UserForm extends Form
     #[Validate]
     public ?string $tasa_festivo = null;
 
-    /** interno | externo */
-    #[Validate]
+    /**
+     * interno | externo — DERIVADO del rol (no se edita en el form).
+     * Se rellena automáticamente en fromModel() y save() a partir de
+     * roles.es_externo. Se mantiene como propiedad por retrocompatibilidad
+     * (consultas existentes que filtran por tipo_usuario).
+     */
     public string $tipo_usuario = 'interno';
 
     #[Validate]
@@ -60,12 +64,15 @@ class UserForm extends Form
     public string $rol = 'trabajador';
 
     /**
-     * IDs de los clientes gestionados (solo roles con solo_clientes_asignados).
-     * Los checkboxes del blade envían strings; se castean a int al guardar.
+     * IDs de los clientes que gestiona (solo roles con solo_clientes_asignados).
+     * Se castean a int al guardar.
      *
-     * @var string[]
+     * @var array<int|string>
      */
     public array $clientesGestionados = [];
+
+    /** Marca "ve todos los clientes (presentes y futuros)". Solo aplica a roles scoped. */
+    public bool $gestionaTodosClientes = false;
 
     #[Validate]
     public bool $activo = true;
@@ -96,11 +103,29 @@ class UserForm extends Form
             $rules[$campo][] = Rule::unique('users', $campo)->ignore($this->id);
         }
 
-        // cliente_id: required SOLO si tipo_usuario es externo.
+        // Las reglas dinámicas de cliente dependen ahora del ROL (es_externo /
+        // solo_clientes_asignados), no del tipo_usuario manual.
+        $rolObj = \App\Models\Role::firstWhere('name', $this->rol);
+        $rolEsExterno = (bool) $rolObj?->es_externo;
+        $rolEsScoped  = (bool) $rolObj?->solo_clientes_asignados;
+
+        // cliente_id: required SOLO si el rol es externo (responsable y similares).
         $rules['cliente_id'] = array_merge(
-            [Rule::requiredIf(fn (): bool => $this->tipo_usuario === 'externo')],
+            [Rule::requiredIf(fn (): bool => $rolEsExterno)],
             $rules['cliente_id'] ?? []
         );
+
+        // clientesGestionados: required (≥1) solo si el rol es scoped Y NO ve "todos".
+        if ($rolEsScoped && ! $this->gestionaTodosClientes) {
+            $rules['clientesGestionados']   = ['required', 'array', 'min:1'];
+            $rules['clientesGestionados.*'] = ['integer', 'exists:clientes,id'];
+        } else {
+            $rules['clientesGestionados']   = ['array'];
+            $rules['clientesGestionados.*'] = ['integer', 'exists:clientes,id'];
+        }
+
+        // tipo_usuario: ya no es editable. Se deriva del rol al guardar.
+        unset($rules['tipo_usuario']);
 
         // password: required al crear, nullable al editar.
         $rules['password'] = [
@@ -147,10 +172,10 @@ class UserForm extends Form
             'username.regex' => 'El usuario solo puede contener letras minúsculas, números, puntos, guiones y guiones bajos.',
             'nombre.required' => 'El nombre es obligatorio.',
             'email.email' => 'El email no tiene un formato válido.',
-            'tipo_usuario.required' => 'El tipo de usuario es obligatorio.',
-            'tipo_usuario.in' => 'El tipo de usuario seleccionado no es válido.',
-            'cliente_id.required' => 'Debes seleccionar un cliente cuando el tipo de usuario es externo.',
+            'cliente_id.required' => 'Debes seleccionar un cliente para este rol.',
             'cliente_id.exists' => 'El cliente seleccionado no existe.',
+            'clientesGestionados.required' => 'Selecciona al menos un cliente o marca "Asignar todos los clientes".',
+            'clientesGestionados.min' => 'Selecciona al menos un cliente o marca "Asignar todos los clientes".',
             'rol.required' => 'El rol es obligatorio.',
             'rol.exists' => 'El rol seleccionado no existe.',
             'password.required' => 'La contraseña es obligatoria.',
@@ -178,12 +203,23 @@ class UserForm extends Form
         $this->rol = $user->getRoleNames()->first() ?? 'trabajador';
         $this->password = null;
         $this->clientesGestionados = $user->clientesGestionados()->pluck('id')
-            ->map(fn ($id) => (string) $id)->all();
+            ->map(fn ($id) => (int) $id)->all();
+        $this->gestionaTodosClientes = (bool) $user->gestiona_todos_clientes;
     }
 
     public function save(): User
     {
         $this->validate();
+
+        // Derivar todo lo dependiente del rol antes de guardar.
+        $rolObj       = \App\Models\Role::firstWhere('name', $this->rol);
+        $rolEsExterno = (bool) $rolObj?->es_externo;
+        $rolEsScoped  = (bool) $rolObj?->solo_clientes_asignados;
+
+        $tipoUsuario           = $rolEsExterno ? 'externo' : 'interno';
+        $this->tipo_usuario    = $tipoUsuario; // sincronizar la propiedad pública por si el blade la lee
+        $clienteIdFinal        = $rolEsExterno ? $this->cliente_id : null;
+        $gestionaTodosFinal    = $rolEsScoped ? $this->gestionaTodosClientes : false;
 
         $datos = [
             'username' => $this->username,
@@ -197,8 +233,9 @@ class UserForm extends Form
             'tasa_hora' => $this->tasa_hora === null || $this->tasa_hora === '' ? null : (float) str_replace(',', '.', $this->tasa_hora),
             'tasa_extra' => $this->tasa_extra === null || $this->tasa_extra === '' ? null : (float) str_replace(',', '.', $this->tasa_extra),
             'tasa_festivo' => $this->tasa_festivo === null || $this->tasa_festivo === '' ? null : (float) str_replace(',', '.', $this->tasa_festivo),
-            'tipo_usuario' => $this->tipo_usuario,
-            'cliente_id' => $this->tipo_usuario === 'externo' ? $this->cliente_id : null,
+            'tipo_usuario' => $tipoUsuario,
+            'cliente_id' => $clienteIdFinal,
+            'gestiona_todos_clientes' => $gestionaTodosFinal,
             'activo' => $this->activo,
         ];
 
@@ -218,8 +255,11 @@ class UserForm extends Form
 
         $user->syncRoles([$this->rol]);
 
-        $rolObj = \App\Models\Role::firstWhere('name', $this->rol);
-        if ($rolObj?->solo_clientes_asignados) {
+        // Pivote de clientes gestionados:
+        //  - Rol scoped + "todos los clientes": pivote vacía (el flag ya hace el trabajo).
+        //  - Rol scoped + lista concreta: sincroniza esa lista.
+        //  - Rol no scoped: pivote vacía (no debería tener nada que gestionar).
+        if ($rolEsScoped && ! $gestionaTodosFinal) {
             $user->clientesGestionados()->sync(array_map('intval', $this->clientesGestionados));
         } else {
             $user->clientesGestionados()->detach();

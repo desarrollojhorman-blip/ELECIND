@@ -42,6 +42,30 @@
         </x-ui.search-and-filter>
     </div>
 
+    {{-- Pills de asignación (solo para usuarios con scope por cliente) --}}
+    @if ($this->usuarioEsScoped)
+        <div class="mb-3 flex flex-wrap items-center gap-1.5">
+            @php
+                $pillsAsignacion = [
+                    'todos'       => 'Todos',
+                    'asignados'   => 'Asignados a mis clientes',
+                    'por_revisar' => 'Por revisar (texto libre)',
+                ];
+            @endphp
+            @foreach ($pillsAsignacion as $valor => $label)
+                <button type="button"
+                        wire:click="setFiltroAsignacion('{{ $valor }}')"
+                        @class([
+                            'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+                            'bg-primary-700 text-white' => $filtroAsignacion === $valor,
+                            'bg-slate-100 text-slate-700 hover:bg-slate-200' => $filtroAsignacion !== $valor,
+                        ])>
+                    {{ $label }}
+                </button>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Chips de filtros activos --}}
     @if ($this->filtrosAplicados > 0)
         <div class="mb-3 flex flex-wrap gap-2">
@@ -108,7 +132,15 @@
                         </td>
                         <td class="px-6 py-3">
                             <div class="font-medium text-slate-800">{{ $borrador->proyectoNombre() }}</div>
-                            <div class="text-xs text-slate-400">{{ $borrador->clienteNombre() }}</div>
+                            <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+                                <span>{{ $borrador->clienteNombre() }}</span>
+                                @if ($borrador->cliente_id === null && trim((string) $borrador->cliente_texto) !== '')
+                                    <span class="inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                                          title="Cliente en texto libre — pendiente de asignar al convertir">
+                                        Texto libre
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-3 text-slate-500">
                             {{ $borrador->fecha?->format('d/m/Y') }}

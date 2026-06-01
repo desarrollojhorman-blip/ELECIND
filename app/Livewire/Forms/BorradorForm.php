@@ -27,7 +27,8 @@ class BorradorForm extends Form
     public ?int    $concepto_id    = null;
     public ?string $concepto_texto = null;
 
-    public ?int $responsable_id = null;
+    public ?int    $responsable_id    = null;
+    public ?string $responsable_texto = null;
 
     public string  $fecha     = '';
     public string  $tipo_hora = 'laboral';
@@ -74,7 +75,8 @@ class BorradorForm extends Form
             'concepto_id'    => ['nullable', 'integer', 'exists:conceptos,id'],
             'concepto_texto' => ['nullable', 'string', 'max:255'],
 
-            'responsable_id' => ['nullable', 'integer', 'exists:users,id'],
+            'responsable_id'    => ['nullable', 'integer', 'exists:users,id'],
+            'responsable_texto' => ['nullable', 'string', 'max:255'],
 
             'lineasPersonal'                   => ['array'],
             'lineasPersonal.*.trabajador_id'   => ['nullable', 'integer', 'exists:users,id'],
@@ -112,7 +114,8 @@ class BorradorForm extends Form
         $this->cliente_texto  = $borrador->cliente_texto;
         $this->concepto_id    = $borrador->concepto_id;
         $this->concepto_texto = $borrador->concepto_texto;
-        $this->responsable_id = $borrador->responsable_id;
+        $this->responsable_id    = $borrador->responsable_id;
+        $this->responsable_texto = $borrador->responsable_texto;
         $this->fecha          = Carbon::parse($borrador->fecha)->format('Y-m-d');
         $this->tipo_hora      = $borrador->tipo_hora instanceof \App\Enums\TipoHora
             ? $borrador->tipo_hora->value
@@ -203,7 +206,8 @@ class BorradorForm extends Form
             $borrador->cliente_texto  = $this->cliente_id ? null : $this->cliente_texto;
             $borrador->concepto_id    = $this->concepto_id;
             $borrador->concepto_texto = $this->concepto_id ? null : $this->concepto_texto;
-            $borrador->responsable_id = $this->responsable_id;
+            $borrador->responsable_id    = $this->responsable_id;
+            $borrador->responsable_texto = $this->responsable_id ? null : $this->responsable_texto;
             $borrador->fecha          = Carbon::parse($this->fecha);
             $borrador->tipo_hora      = $this->tipo_hora;
             $borrador->observaciones  = $this->observaciones;

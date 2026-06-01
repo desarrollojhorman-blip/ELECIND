@@ -125,3 +125,4 @@ Borrador inicial (se afina al implementar):
 ## 8. Estado
 
 🟡 **Diseño acordado, pendiente de confirmación de las 4 decisiones abiertas (sección 6) para empezar la Fase 1.** No se ha tocado código todavía.
+

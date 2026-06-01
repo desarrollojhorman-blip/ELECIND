@@ -16,6 +16,7 @@ use App\Livewire\Albaranes\Editar as AlbaranesEditar;
 use App\Livewire\Firma\FirmarAlbaran;
 use App\Livewire\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Borradores\Convertir as BorradoresConvertir;
 use App\Livewire\Borradores\Editar as BorradoresEditar;
 use App\Livewire\Borradores\Index as BorradoresIndex;
 use App\Livewire\Ausencias\Index as AusenciasIndex;
@@ -99,6 +100,10 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/borradores/crear', BorradoresEditar::class)
         ->middleware('can:borradores.crear_web')
         ->name('borradores.crear');
+
+    Route::get('/borradores/{borrador}/convertir', BorradoresConvertir::class)
+        ->middleware('can:borradores.convertir')
+        ->name('borradores.convertir');
 
     Route::get('/borradores/{borrador}', BorradoresVer::class)
         ->middleware('can:borradores.ver_todos')

@@ -8,6 +8,14 @@
                 <x-ui.button as="a" href="{{ route('borradores.ver', $borrador) }}" wire:navigate variant="neutral" icon="heroicon-o-eye">
                     Ver
                 </x-ui.button>
+                @if ($borrador->estado !== 'convertido')
+                    @can('convertir', $borrador)
+                        <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
+                                     variant="primary" icon="heroicon-o-arrow-right-circle">
+                            Convertir a albarán
+                        </x-ui.button>
+                    @endcan
+                @endif
             @endif
             @can('create', App\Models\Borrador::class)
                 <x-ui.button as="a" href="{{ route('borradores.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
@@ -117,19 +125,7 @@
                             />
                         </div>
                         <div x-show="!modo">
-                            <div class="flex items-start gap-2">
-                                <div class="flex-1">
-                                    <x-ui.input wire:model="form.proyecto_texto" placeholder="Escribe el nombre del proyecto…" />
-                                </div>
-                                @can('create', App\Models\Proyecto::class)
-                                    <x-ui.button type="button" variant="success" icon="heroicon-o-plus"
-                                                 x-on:click="$wire.crearProyecto().then(() => { if ($wire.get('form.proyecto_id')) modo = true })"
-                                                 wire:loading.attr="disabled" wire:target="crearProyecto">
-                                        Crear
-                                    </x-ui.button>
-                                @endcan
-                            </div>
-                            <p class="mt-1 text-xs text-slate-400">Se crea bajo el cliente seleccionado. Selecciona o crea el cliente primero.</p>
+                            <x-ui.input wire:model="form.proyecto_texto" placeholder="Escribe el nombre del proyecto…" />
                         </div>
                     </x-ui.field>
 
@@ -151,19 +147,7 @@
                             />
                         </div>
                         <div x-show="!modo">
-                            <div class="flex items-start gap-2">
-                                <div class="flex-1">
-                                    <x-ui.input wire:model="form.cliente_texto" placeholder="Escribe el nombre del cliente…" />
-                                </div>
-                                @can('create', App\Models\Cliente::class)
-                                    <x-ui.button type="button" variant="success" icon="heroicon-o-plus"
-                                                 x-on:click="$wire.crearCliente().then(() => modo = true)"
-                                                 wire:loading.attr="disabled" wire:target="crearCliente">
-                                        Crear
-                                    </x-ui.button>
-                                @endcan
-                            </div>
-                            <p class="mt-1 text-xs text-slate-400">Crea el cliente en el sistema para poder convertir el borrador en albarán.</p>
+                            <x-ui.input wire:model="form.cliente_texto" placeholder="Escribe el nombre del cliente…" />
                         </div>
                     </x-ui.field>
 
@@ -174,6 +158,13 @@
                             <button type="button" @click="modo = true" :class="modo ? 'text-primary-700 font-semibold' : 'text-slate-400'" class="text-xs">Seleccionar existente</button>
                             <span class="text-slate-300">|</span>
                             <button type="button" @click="modo = false" :class="!modo ? 'text-primary-700 font-semibold' : 'text-slate-400'" class="text-xs">Texto libre</button>
+                            @can('create', App\Models\Concepto::class)
+                                <span class="text-slate-300">|</span>
+                                <button type="button" wire:click="abrirNuevoConcepto" @click="modo = true"
+                                        class="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600 hover:text-emerald-800">
+                                    <x-heroicon-m-plus class="size-3" /> Crear nuevo
+                                </button>
+                            @endcan
                         </div>
                         <div x-show="modo">
                             <x-ui.searchable-select
@@ -189,15 +180,26 @@
                         </div>
                     </x-ui.field>
 
-                    {{-- Responsable --}}
-                    <x-ui.field label="Responsable" :error="$errors->first('form.responsable_id')">
-                        <x-ui.searchable-select
-                            wire:key="responsable-select"
-                            wire-model="form.responsable_id"
-                            :value="$form->responsable_id"
-                            :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
-                            placeholder="— Sin responsable —"
-                        />
+                    {{-- Responsable: select existente o texto libre --}}
+                    <x-ui.field label="Responsable" :error="$errors->first('form.responsable_id') ?: $errors->first('form.responsable_texto')"
+                        x-data="{ modo: {{ $form->responsable_id ? 'true' : 'false' }} }">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <button type="button" @click="modo = true" :class="modo ? 'text-primary-700 font-semibold' : 'text-slate-400'" class="text-xs">Seleccionar existente</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" @click="modo = false" :class="!modo ? 'text-primary-700 font-semibold' : 'text-slate-400'" class="text-xs">Texto libre</button>
+                        </div>
+                        <div x-show="modo">
+                            <x-ui.searchable-select
+                                wire:key="responsable-select"
+                                wire-model="form.responsable_id"
+                                :value="$form->responsable_id"
+                                :options="$this->trabajadoresDisponibles->map(fn($u) => ['value' => $u->id, 'label' => trim($u->nombre.' '.$u->apellidos)])"
+                                placeholder="— Sin responsable —"
+                            />
+                        </div>
+                        <div x-show="!modo">
+                            <x-ui.input wire:model="form.responsable_texto" placeholder="Escribe el nombre del responsable…" />
+                        </div>
                     </x-ui.field>
 
                     {{-- Fecha --}}
@@ -597,6 +599,36 @@
                 </svg>
                 <span wire:loading.remove wire:target="eliminar">Eliminar</span>
                 <span wire:loading wire:target="eliminar">Eliminando…</span>
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+    {{-- ═══ Modal: Crear nuevo concepto (inline) ═══ --}}
+    <x-ui.modal
+        :show="$modalNuevoConceptoAbierto"
+        title="Nuevo concepto"
+        close-action="cerrarNuevoConcepto"
+        size="md">
+
+        <form wire:submit="crearConcepto" id="form-nuevo-concepto" class="space-y-4">
+            <x-ui.field label="Nombre" required :error="$errors->first('nuevoConceptoNombre')">
+                <x-ui.input wire:model="nuevoConceptoNombre" maxlength="150" autofocus placeholder="Ej: Mantenimiento eléctrico" />
+            </x-ui.field>
+
+            <x-ui.field label="Descripción" :error="$errors->first('nuevoConceptoDescripcion')">
+                <x-ui.textarea wire:model="nuevoConceptoDescripcion" rows="3" maxlength="500"
+                               placeholder="Descripción opcional…" />
+            </x-ui.field>
+        </form>
+
+        <x-slot:footer>
+            <x-ui.button type="button" variant="neutral" wire:click="cerrarNuevoConcepto">
+                Cancelar
+            </x-ui.button>
+            <x-ui.button type="submit" form="form-nuevo-concepto" variant="success" icon="heroicon-o-plus"
+                         wire:loading.attr="disabled" wire:target="crearConcepto">
+                <span wire:loading.remove wire:target="crearConcepto">Crear y asignar</span>
+                <span wire:loading wire:target="crearConcepto">Creando…</span>
             </x-ui.button>
         </x-slot:footer>
     </x-ui.modal>

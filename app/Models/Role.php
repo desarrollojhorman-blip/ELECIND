@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * @property string $acceso
  * @property bool $es_sistema
  * @property bool $solo_clientes_asignados
+ * @property bool $es_externo
  */
 class Role extends SpatieRole
 {
@@ -24,6 +25,7 @@ class Role extends SpatieRole
         'acceso',
         'es_sistema',
         'solo_clientes_asignados',
+        'es_externo',
     ];
 
     protected function casts(): array
@@ -32,6 +34,7 @@ class Role extends SpatieRole
             'nivel' => 'integer',
             'es_sistema' => 'boolean',
             'solo_clientes_asignados' => 'boolean',
+            'es_externo' => 'boolean',
         ];
     }
 
