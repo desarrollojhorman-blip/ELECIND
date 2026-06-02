@@ -6,6 +6,11 @@ import { Spanish } from 'flatpickr/dist/l10n/es.js';
 import 'flatpickr/dist/flatpickr.min.css';
 
 document.addEventListener('alpine:init', () => {
+	if (window.__alpinePersistInstalled) {
+		return;
+	}
+
+	window.__alpinePersistInstalled = true;
 	window.Alpine.plugin(persist);
 });
 
