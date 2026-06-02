@@ -88,6 +88,28 @@ sudo journalctl -u nginx -n 120 --no-pager
 - Warning `lock file is not up to date`:
 	- No suele bloquear deploy, pero conviene alinear `composer.lock` en desarrollo.
 
+## Estado actual de la guia
+
+Nos quedamos en la parte de verificar en produccion los errores que solo aparecen en el servidor, sobre todo los relacionados con Livewire, Alpine, HTTPS y las cookies/sesion.
+
+El motivo de los problemas es que local y servidor no se comportan igual:
+
+- En local normalmente trabajamos sin proxy, sin HTTPS real y con menos caché.
+- En produccion Nginx, PHP-FPM, las cookies de sesion, APP_URL, el dominio real y los certificados HTTPS influyen mucho.
+- Si Laravel no detecta bien el esquema o el host, las URLs firmadas de Livewire pueden fallar con `401 Unauthorized`.
+- Tambien pueden aparecer errores por cargar Alpine o sus plugins dos veces, o por diferencias entre el build local y el build de produccion.
+
+Por eso en el servidor estamos comprobando:
+
+- `APP_URL`
+- `SESSION_SECURE_COOKIE`
+- `SESSION_DOMAIN`
+- `SESSION_SAME_SITE`
+- el vhost correcto de Nginx
+- los logs de `uceda-bellon.access.log` y `uceda-bellon.error.log`
+
+La idea es que esta guia sirva como referencia para subir nuevas versiones y, si vuelve a pasar algo parecido, saber por donde empezar a revisar.
+
 
 local
 PS C:\Users\PC7>
@@ -121,3 +143,8 @@ grep -R "plugin(persist)" resources/js public/build/assets
 tail -n 120 /opt/entreredes/apps/uceda-bellon/current/storage/logs/laravel.log
 sudo journalctl -u php8.3-fpm -n 120 --no-pager
 sudo journalctl -u nginx -n 120 --no-pager
+
+
+
+
+
