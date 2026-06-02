@@ -2,7 +2,6 @@ import './bootstrap';
 
 import flatpickr from 'flatpickr';
 import { Spanish } from 'flatpickr/dist/l10n/es.js';
-import 'flatpickr/dist/flatpickr.min.css';
 
 // Locale español por defecto en todos los flatpickr de la app.
 flatpickr.localize(Spanish);

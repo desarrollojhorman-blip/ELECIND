@@ -289,7 +289,8 @@ class Ajustes extends Component
                 ->raw(
                     'Este es un correo de prueba enviado desde la configuración SMTP de la aplicación.',
                     function ($m) {
-                        $m->to(auth()->user()->email)
+                        $destino = $this->mail_from_address ?: $this->mail_username;
+                        $m->to($destino)
                           ->from(
                               $this->mail_from_address ?: $this->mail_username,
                               $this->mail_from_name ?: null
@@ -298,7 +299,8 @@ class Ajustes extends Component
                     }
                 );
 
-            session()->flash('correo_status', 'Correo de prueba enviado a ' . auth()->user()->email . '. Revisa tu bandeja.');
+            $destino = $this->mail_from_address ?: $this->mail_username;
+            session()->flash('correo_status', 'Correo de prueba enviado a ' . $destino . '. Revisa tu bandeja.');
         } catch (\Exception $e) {
             $this->addError('mail_host', 'Error de conexión: ' . $e->getMessage());
         }
