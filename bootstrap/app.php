@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureWebAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -20,6 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Producción va detrás de proxy/reverse-proxy; confiar en cabeceras
+        // forwarded evita desajustes de esquema/host en URLs firmadas (Livewire uploads).
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
         $middleware->alias([
             'ensure.web.access'      => EnsureWebAccess::class,
             'ensure.mobile.access'   => EnsureMobileAccess::class,
