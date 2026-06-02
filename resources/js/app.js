@@ -1,8 +1,12 @@
 import './bootstrap';
+import Alpine from 'alpinejs';
 
 import flatpickr from 'flatpickr';
 import { Spanish } from 'flatpickr/dist/l10n/es.js';
 import 'flatpickr/dist/flatpickr.min.css';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 // Locale español por defecto en todos los flatpickr de la app.
 flatpickr.localize(Spanish);
