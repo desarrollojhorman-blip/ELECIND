@@ -56,7 +56,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ mostrarPassword: false }">
+                <form method="POST" action="{{ route('login') }}" class="space-y-4">
                     @csrf
 
                     {{-- Usuario --}}
@@ -95,17 +95,17 @@
                             <input id="password"
                                    name="password"
                                    type="password"
-                                   :type="mostrarPassword ? 'text' : 'password'"
                                    autocomplete="current-password"
                                    required
                                    placeholder="Contraseña"
                                    class="block w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-700 @error('password') border-red-400 @enderror" />
                             <button type="button"
-                                    x-on:click="mostrarPassword = !mostrarPassword"
+                                    id="toggle-password"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
-                                    :title="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-                                <x-heroicon-o-eye x-show="!mostrarPassword" class="size-4" />
-                                <x-heroicon-o-eye-slash x-show="mostrarPassword" class="size-4" x-cloak />
+                                    title="Mostrar contraseña"
+                                    aria-label="Mostrar contraseña">
+                                <x-heroicon-o-eye id="icon-eye" class="size-4" />
+                                <x-heroicon-o-eye-slash id="icon-eye-slash" class="hidden size-4" />
                             </button>
                         </div>
                         @error('password')
@@ -144,4 +144,26 @@
     </div>
 
 </body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const toggleButton = document.getElementById('toggle-password');
+        const eyeIcon = document.getElementById('icon-eye');
+        const eyeSlashIcon = document.getElementById('icon-eye-slash');
+
+        if (!passwordInput || !toggleButton || !eyeIcon || !eyeSlashIcon) {
+            return;
+        }
+
+        toggleButton.addEventListener('click', function () {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            toggleButton.title = isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña';
+            toggleButton.setAttribute('aria-label', toggleButton.title);
+            eyeIcon.classList.toggle('hidden', !isVisible);
+            eyeSlashIcon.classList.toggle('hidden', isVisible);
+        });
+    });
+</script>
 </html>
