@@ -5,6 +5,7 @@ namespace App\Livewire\Usuarios;
 use App\Models\Cliente;
 use App\Models\Role;
 use App\Models\User;
+use App\Rules\PasswordPolicy;
 use App\Support\UserFields;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
@@ -516,14 +517,19 @@ class Importar extends Component
             // Validación de formato (fuente: UserFields).
             $reglas = UserFields::getValidationRules();
             unset($reglas['cliente_id'], $reglas['tipo_usuario'], $reglas['rol']); // ya resueltos arriba
-            $reglas['password'] = ['required', 'string', 'min:6', 'max:100'];
+            // Misma política de fortaleza que en el formulario manual: el DNI
+            // de un trabajador como contraseña inicial pasa, pero rechaza basura.
+            $reglas['password'] = [
+                'required', 'string', 'max:100',
+                new PasswordPolicy([$datos['username'], $datos['nombre'], $datos['apellidos']]),
+            ];
 
             $mensajes = [
                 'required' => 'El campo :attribute es obligatorio.',
                 'min' => 'El campo :attribute debe tener al menos :min caracteres.',
                 'max' => 'El campo :attribute no puede superar :max.',
                 'email' => 'El :attribute no tiene un formato válido.',
-                'regex' => 'El :attribute solo admite minúsculas, números, puntos, guiones y guiones bajos.',
+                'regex' => 'El :attribute solo admite letras, números, puntos, guiones y guiones bajos.',
                 'boolean' => 'El campo :attribute no es válido.',
             ];
 

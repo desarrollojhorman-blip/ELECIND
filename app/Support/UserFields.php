@@ -26,8 +26,14 @@ class UserFields
     public static function validationTemplates(): array
     {
         return [
-            'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9._-]+$/'],
-            'password' => ['nullable', 'string', 'min:6', 'max:100'],
+            // Aceptamos mayúsculas y minúsculas. Las comparaciones de login y unicidad
+            // son case-insensitive (collation utf8mb4_unicode_ci de MySQL): `Pepe`,
+            // `pepe` y `PEPE` se tratan como el mismo usuario.
+            'username' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9._-]+$/'],
+            // La política completa vive en App\Rules\PasswordPolicy y se aplica
+            // desde UserForm/Importar. Aquí dejamos solo min/max como red de
+            // seguridad por si alguien usa el template sin envolverlo.
+            'password' => ['nullable', 'string', 'min:8', 'max:100'],
             'nombre' => ['required', 'string', 'max:100'],
             'apellidos' => ['nullable', 'string', 'max:150'],
             'email' => ['nullable', 'email', 'max:150'],
@@ -50,8 +56,8 @@ class UserFields
     public static function config(): array
     {
         return [
-            'username' => ['type' => 'text', 'validation' => 'username', 'help' => 'Minúsculas, números, puntos, guiones y guiones bajos.'],
-            'password' => ['type' => 'password', 'validation' => 'password'],
+            'username' => ['type' => 'text', 'validation' => 'username', 'help' => 'Letras, números, puntos, guiones y guiones bajos. No distingue mayúsculas/minúsculas al iniciar sesión.'],
+            'password' => ['type' => 'password', 'validation' => 'password', 'help' => 'Mínimo 8 caracteres con letras y números. Un DNI/NIF vale. No puede contener el usuario, nombre o apellidos.'],
             'nombre' => ['type' => 'text', 'validation' => 'nombre'],
             'apellidos' => ['type' => 'text', 'validation' => 'apellidos'],
             'email' => ['type' => 'email', 'validation' => 'email'],

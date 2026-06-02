@@ -94,6 +94,7 @@
                             </span>
                             <input id="password"
                                    name="password"
+                                   type="password"
                                    :type="mostrarPassword ? 'text' : 'password'"
                                    autocomplete="current-password"
                                    required

@@ -3,21 +3,15 @@
 namespace App\Livewire\Borradores;
 
 use App\Livewire\Forms\BorradorForm;
-use App\Mail\SolicitudFirmaEmail;
 use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Concepto;
-use App\Models\Empresa;
 use App\Models\Material;
 use App\Models\Proyecto;
-use App\Models\TokenFirma;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -33,17 +27,12 @@ class Editar extends Component
 
     public ?int $confirmarEliminarId = null;
 
-    /* ── Estado del modal "Nuevo concepto" (creación inline desde el borrador) ── */
-    public bool $modalNuevoConceptoAbierto = false;
-    public string $nuevoConceptoNombre = '';
-    public ?string $nuevoConceptoDescripcion = null;
-
     public function mount(?Borrador $borrador = null): void
     {
         if ($borrador !== null && $borrador->exists) {
             Gate::authorize('update', $borrador);
             $this->borrador = $borrador;
-            $this->borrador->load(['lineasPersonal.trabajador', 'lineasMaterial.material', 'firmas', 'tokensFirma']);
+            $this->borrador->load(['lineasPersonal.trabajador', 'lineasMaterial.material']);
             $this->form->fromModel($borrador);
         } else {
             Gate::authorize('create', Borrador::class);
@@ -108,155 +97,6 @@ class Editar extends Component
         $this->redirectRoute('borradores.index', navigate: false);
     }
 
-    // ── Notificaciones de firma ───────────────────────────────────────────────
-
-    public function notificarFirmantes(bool $trabajador, bool $responsable): void
-    {
-        if ($this->borrador === null) {
-            return;
-        }
-
-        $empresa = Empresa::actual();
-
-        if (! $empresa->mail_host) {
-            $this->addError('firma', 'Configura el servidor de correo en Ajustes → Correo antes de enviar notificaciones.');
-            return;
-        }
-
-        config(['mail.mailers.empresa_smtp' => [
-            'transport'  => 'smtp',
-            'host'       => $empresa->mail_host,
-            'port'       => $empresa->mail_port,
-            'encryption' => $empresa->mail_encryption,
-            'username'   => $empresa->mail_username,
-            'password'   => $empresa->mail_password,
-            'timeout'    => 15,
-        ]]);
-
-        $enviados      = 0;
-        $caducidadDias = $empresa->token_caducidad_dias ?? 7;
-
-        if ($trabajador) {
-            $email  = $this->form->firma_trabajador_otro_correo;
-            $nombre = $this->form->firma_trabajador_otro_nombre;
-
-            if (! $email && $this->form->firma_trabajador_user_id) {
-                $user   = User::find($this->form->firma_trabajador_user_id);
-                $email  = $user?->email;
-                $nombre = $user ? trim($user->nombre . ' ' . $user->apellidos) : null;
-            }
-
-            if ($email) {
-                $this->enviarTokenFirma('trabajador', $email, $nombre, $caducidadDias, $empresa);
-                $enviados++;
-            } else {
-                $this->addError('firma', 'El empleado firmante no tiene correo configurado.');
-            }
-        }
-
-        if ($responsable) {
-            $email  = $this->form->firma_responsable_otro_correo;
-            $nombre = $this->form->firma_responsable_otro_nombre;
-
-            if (! $email && $this->form->responsable_id) {
-                $user   = User::find($this->form->responsable_id);
-                $email  = $user?->email;
-                $nombre = $user ? trim($user->nombre . ' ' . $user->apellidos) : null;
-            }
-
-            if ($email) {
-                $this->enviarTokenFirma('responsable', $email, $nombre, $caducidadDias, $empresa);
-                $enviados++;
-            } else {
-                $this->addError('firma', 'El responsable firmante no tiene correo configurado.');
-            }
-        }
-
-        $this->borrador->load('tokensFirma');
-
-        if ($enviados > 0) {
-            session()->flash('status', $enviados === 1 ? 'Notificación enviada correctamente.' : 'Notificaciones enviadas correctamente.');
-        }
-    }
-
-    private function enviarTokenFirma(string $tipo, string $email, ?string $nombre, int $caducidadDias, Empresa $empresa): void
-    {
-        $this->borrador->tokensFirma()
-            ->where('tipo_firmante', $tipo)
-            ->whereNull('usado_at')
-            ->whereNull('invalidado_at')
-            ->update(['invalidado_at' => now()]);
-
-        /** @var TokenFirma $tokenFirma */
-        $tokenFirma = $this->borrador->tokensFirma()->create([
-            'tipo_firmante'        => $tipo,
-            'token'                => Str::random(64),
-            'email_destino'        => $email,
-            'nombre_destino'       => $nombre,
-            'caduca_at'            => now()->addDays($caducidadDias),
-            'generado_por_user_id' => Auth::id(),
-        ]);
-
-        $tokenFirma->load([
-            'firmable.proyecto',
-            'firmable.cliente',
-            'firmable.concepto',
-            'firmable.lineasPersonal.trabajador',
-        ]);
-
-        Mail::mailer('empresa_smtp')
-            ->to($email)
-            ->send(new SolicitudFirmaEmail($tokenFirma));
-    }
-
-    /* ── Modal: Nuevo concepto ─────────────────────────────────── */
-
-    public function abrirNuevoConcepto(): void
-    {
-        Gate::authorize('create', Concepto::class);
-
-        $this->nuevoConceptoNombre      = '';
-        $this->nuevoConceptoDescripcion = null;
-        $this->resetValidation(['nuevoConceptoNombre', 'nuevoConceptoDescripcion']);
-        $this->modalNuevoConceptoAbierto = true;
-    }
-
-    public function cerrarNuevoConcepto(): void
-    {
-        $this->modalNuevoConceptoAbierto = false;
-        $this->nuevoConceptoNombre      = '';
-        $this->nuevoConceptoDescripcion = null;
-        $this->resetValidation(['nuevoConceptoNombre', 'nuevoConceptoDescripcion']);
-    }
-
-    public function crearConcepto(): void
-    {
-        Gate::authorize('create', Concepto::class);
-
-        $datos = $this->validate([
-            'nuevoConceptoNombre'      => ['required', 'string', 'max:150', 'unique:conceptos,nombre'],
-            'nuevoConceptoDescripcion' => ['nullable', 'string', 'max:500'],
-        ], [
-            'nuevoConceptoNombre.required' => 'El nombre del concepto es obligatorio.',
-            'nuevoConceptoNombre.unique'   => 'Ya existe un concepto con ese nombre.',
-        ]);
-
-        $concepto = Concepto::create([
-            'nombre'      => trim($datos['nuevoConceptoNombre']),
-            'descripcion' => $datos['nuevoConceptoDescripcion'] !== null ? trim($datos['nuevoConceptoDescripcion']) : null,
-            'activo'      => true,
-        ]);
-
-        // Asigna el nuevo concepto al borrador y desactiva el modo "texto libre".
-        $this->form->concepto_id    = $concepto->id;
-        $this->form->concepto_texto = null;
-
-        unset($this->conceptosDisponibles); // refresca el computed
-        $this->cerrarNuevoConcepto();
-
-        session()->flash('status', "Concepto «{$concepto->nombre}» creado y asignado al borrador.");
-    }
-
     /* ── Computeds ─────────────────────────────────────────────── */
 
     /** @return Collection<int, Proyecto> */
@@ -315,15 +155,6 @@ class Editar extends Component
             ? "Borrador {$this->borrador->numero_borrador}"
             : 'Nuevo borrador';
 
-        $tokenTrabajador  = $this->borrador?->tokensFirma->where('tipo_firmante.value', 'trabajador')->sortByDesc('created_at')->first();
-        $tokenResponsable = $this->borrador?->tokensFirma->where('tipo_firmante.value', 'responsable')->sortByDesc('created_at')->first();
-        $firmaTrabajador  = $this->borrador?->firmas->where('tipo.value', 'trabajador')->first();
-        $firmaResponsable = $this->borrador?->firmas->where('tipo.value', 'responsable')->first();
-
-        return view('livewire.borradores.editar', compact(
-            'titulo',
-            'tokenTrabajador', 'tokenResponsable',
-            'firmaTrabajador', 'firmaResponsable',
-        ));
+        return view('livewire.borradores.editar', compact('titulo'));
     }
 }

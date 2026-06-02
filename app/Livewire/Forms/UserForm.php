@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\User;
+use App\Rules\PasswordPolicy;
 use App\Support\UserFields;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -127,10 +128,13 @@ class UserForm extends Form
         // tipo_usuario: ya no es editable. Se deriva del rol al guardar.
         unset($rules['tipo_usuario']);
 
-        // password: required al crear, nullable al editar.
+        // password: required al crear, nullable al editar. Política de fortaleza:
+        // ≥8 caracteres, una letra y un número, no contiene username/nombre/apellidos,
+        // no es una contraseña común. Un DNI/NIF español la cumple por defecto.
         $rules['password'] = [
             $esNuevo ? 'required' : 'nullable',
-            'nullable', 'string', 'min:6', 'max:100',
+            'string', 'max:100',
+            new PasswordPolicy([$this->username, $this->nombre, $this->apellidos]),
         ];
 
         return $rules;
@@ -169,7 +173,7 @@ class UserForm extends Form
         return [
             'username.required' => 'El usuario es obligatorio.',
             'username.unique' => 'Ese usuario ya está en uso.',
-            'username.regex' => 'El usuario solo puede contener letras minúsculas, números, puntos, guiones y guiones bajos.',
+            'username.regex' => 'El usuario solo puede contener letras, números, puntos, guiones y guiones bajos.',
             'nombre.required' => 'El nombre es obligatorio.',
             'email.email' => 'El email no tiene un formato válido.',
             'cliente_id.required' => 'Debes seleccionar un cliente para este rol.',
@@ -179,7 +183,7 @@ class UserForm extends Form
             'rol.required' => 'El rol es obligatorio.',
             'rol.exists' => 'El rol seleccionado no existe.',
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos :min caracteres.',
+            'password.max' => 'La contraseña no puede superar :max caracteres.',
         ];
     }
 

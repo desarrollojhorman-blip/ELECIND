@@ -76,9 +76,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'clientes.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de clientes
                 'usuarios.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de usuarios
                 'conceptos.gestionar_papelera', // por defecto solo superadmin gestiona la papelera de conceptos
-                'usuarios.gestionar_tarifas',   // por defecto solo superadmin ve/modifica las tasas (dato sensible)
                 'materiales.gestionar_precios', // por defecto solo superadmin ve/modifica los precios (dato sensible)
                 'api_tokens.gestionar',         // por defecto solo superadmin gestiona los tokens de API externos
+                'ajustes.ver',                  // por defecto solo superadmin ve los ajustes del sistema
+                'ajustes.editar',               // por defecto solo superadmin edita los ajustes del sistema
             ])
             ->pluck('name')
             ->all());

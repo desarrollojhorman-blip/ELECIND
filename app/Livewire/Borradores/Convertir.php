@@ -10,6 +10,7 @@ use App\Models\Concepto;
 use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\User;
+use App\Rules\PasswordPolicy;
 use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -332,15 +333,18 @@ class Convertir extends Component
 
         // crear
         $this->validate([
-            'responsableUsuarioNuevo'  => ['required', 'string', 'max:50', 'unique:users,username'],
-            'responsablePasswordNuevo' => ['required', 'string', 'min:4', 'max:255'],
+            'responsableUsuarioNuevo'  => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9._-]+$/', 'unique:users,username'],
+            'responsablePasswordNuevo' => [
+                'required', 'string', 'max:100',
+                new PasswordPolicy([$this->responsableUsuarioNuevo, $this->responsableNombreNuevo]),
+            ],
             'responsableNombreNuevo'   => ['required', 'string', 'max:100'],
             'responsableEmailNuevo'    => ['nullable', 'email', 'max:150'],
         ], [
             'responsableUsuarioNuevo.unique' => 'Ese nombre de usuario ya existe.',
             'responsableUsuarioNuevo.required' => 'Indica el nombre de usuario.',
+            'responsableUsuarioNuevo.regex' => 'El usuario solo puede contener letras, números, puntos, guiones y guiones bajos.',
             'responsablePasswordNuevo.required' => 'Indica una contraseña.',
-            'responsablePasswordNuevo.min' => 'La contraseña debe tener al menos 4 caracteres.',
             'responsableNombreNuevo.required' => 'Indica el nombre del responsable.',
         ]);
     }
