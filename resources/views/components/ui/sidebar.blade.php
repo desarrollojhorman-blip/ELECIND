@@ -173,15 +173,43 @@
     En móvil (< md):      posición fixed, siempre w-64, entra/sale con translate.
 --}}
 <aside x-data="{
-        open: $persist(true).as('sidebar-open'),
+        open: true,
         drawerOpen: false,
         menuOpen: false,
-        expanded: $persist([]).as('sidebar-expanded'),
+        expanded: [],
+        init() {
+            try {
+                const storedOpen = localStorage.getItem('sidebar-open');
+                const storedExpanded = localStorage.getItem('sidebar-expanded');
+
+                if (storedOpen !== null) {
+                    this.open = storedOpen === 'true';
+                }
+
+                if (storedExpanded !== null) {
+                    const parsedExpanded = JSON.parse(storedExpanded);
+                    if (Array.isArray(parsedExpanded)) {
+                        this.expanded = parsedExpanded;
+                    }
+                }
+            } catch (error) {
+                // Si localStorage no está disponible, mantenemos el estado por defecto.
+            }
+        },
+        persistState() {
+            try {
+                localStorage.setItem('sidebar-open', String(this.open));
+                localStorage.setItem('sidebar-expanded', JSON.stringify(this.expanded));
+            } catch (error) {
+                // Sin persistencia si el navegador la bloquea.
+            }
+        },
         isExpanded(key) { return this.expanded.includes(key); },
         toggleExpand(key) {
             this.expanded = this.isExpanded(key)
                 ? []
                 : [key];
+            this.persistState();
         }
        }"
        @drawer:open.window="drawerOpen = true"
@@ -292,7 +320,7 @@
                 <li>
                     @if ($isToggle)
                         <button type="button"
-                                @click="(open || drawerOpen) ? toggleExpand('{{ $item['key'] }}') : (open = true, expanded = isExpanded('{{ $item['key'] }}') ? expanded : [...expanded, '{{ $item['key'] }}'])"
+                                @click="(open || drawerOpen) ? toggleExpand('{{ $item['key'] }}') : (open = true, persistState(), expanded = isExpanded('{{ $item['key'] }}') ? expanded : [...expanded, '{{ $item['key'] }}'])"
                                 @class($itemClasses)>
                             <x-dynamic-component :component="$item['icon']" class="size-5 shrink-0" />
                             <span x-show="open || drawerOpen" x-transition.opacity class="flex-1 truncate text-left">
