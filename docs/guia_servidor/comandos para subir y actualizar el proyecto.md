@@ -90,12 +90,18 @@ sudo journalctl -u nginx -n 120 --no-pager
 
 
 local
+PS C:\Users\PC7>
+
+
 scp "C:\Users\PC7\Downloads\uceda-bellon-main\uceda-bellon-main.zip" jhorman@212.227.169.102:/home/jhorman/uploads/
 
 
 
 
 servidor
+jhorman@entreredes-enia:/opt/entreredes/apps/uceda-bellon/current$
+
+
 
 ssh jhorman@212.227.169.102
 ls -lh /home/jhorman/uploads
