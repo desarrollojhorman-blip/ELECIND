@@ -20,11 +20,9 @@
 /storage/pail
 /vendor
 /storage/logs/*.log
-npm-debug.log*
-yarn-error.log*
+
 
 # Excluir documentación interna/no publicable
-/docs
 Homestead.json
 Homestead.yaml
 Thumbs.db
