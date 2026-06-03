@@ -190,7 +190,7 @@ class Convertir extends Component
             ->where('activo', true)
             ->whereHas('proyectos', function ($q): void {
                 $q->where('proyectos.id', (int) $this->proyectoIdElegido)
-                    ->wherePivot('rol_en_proyecto', 'responsable');
+                    ->where('proyecto_usuario.rol_en_proyecto', 'responsable');
             })
             ->orderBy('apellidos')
             ->orderBy('nombre')
