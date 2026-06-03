@@ -407,6 +407,11 @@ public function guardar(): void
             'timeout'    => 15,
         ]]);
 
+        config(['mail.from' => [
+            'address' => $empresa->mail_from_address ?: $empresa->mail_username,
+            'name'    => $empresa->mail_from_name ?: config('app.name'),
+        ]]);
+
         $caducidadDias = $empresa->token_caducidad_dias ?? 7;
         $caducaEl = now()->addDays($caducidadDias)->format('d/m/Y');
 

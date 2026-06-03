@@ -15,6 +15,9 @@ class Fase4DemoSeeder extends Seeder
     public function run(): void
     {
         // ── 1. Crear / asegurar usuarios demo ───────────────────────────────
+        // Restaurar si fueron soft-deleted en ejecución anterior
+        User::withTrashed()->whereIn('username', ['Jorge10', 'JesúsLop', 'Patricia20'])->restore();
+
         $rolTrabajador = Role::where('name', 'trabajador')->firstOrFail();
 
         $jorge = User::updateOrCreate(
