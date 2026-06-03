@@ -37,7 +37,6 @@
             <p class="font-bold text-slate-900 mb-3">USO Y MÓDULOS</p>
             <p class="text-sm text-slate-700"><span class="font-semibold">USUARIOS ACTIVOS:</span> {{ $usuariosActivos }} de {{ $licencia['max_usuarios'] }}</p>
             <p class="text-sm text-slate-700"><span class="font-semibold">PLAN:</span> {{ $licencia['plan'] }}</p>
-            <p class="text-sm text-slate-700"><span class="font-semibold">MÓDULOS:</span> {{ collect($modulos)->where('activo', true)->pluck('nombre')->implode(', ') }}</p>
         </div>
 
     </div>

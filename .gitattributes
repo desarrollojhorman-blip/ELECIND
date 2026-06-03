@@ -9,3 +9,9 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# No incluir en los ZIP de despliegue (git archive):
+#  - .claude/: config local de Claude Code (no aplica en producción).
+#  - docs/  : documentación interna (no es necesaria en el VPS).
+/.claude export-ignore
+/docs export-ignore

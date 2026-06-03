@@ -35,7 +35,7 @@ class Licencias extends Component
             'plan'         => 'Profesional',
             'producto'     => 'Gestión de Procesos KD Getradi — ELECIND',
             'fabricante'   => 'Entreredes Consultoría Tecnológica SL',
-            'version'      => '10.2025',
+            'version'      => '3.26',
             'emision'      => Carbon::parse('2025-10-09'),
             'caducidad'    => Carbon::parse('2026-10-09'),
             'max_usuarios' => 25,
