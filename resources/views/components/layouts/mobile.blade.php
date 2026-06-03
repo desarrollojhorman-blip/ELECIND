@@ -15,7 +15,6 @@
     @if (! app()->runningUnitTests())
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
-    @livewireStyles
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
     <div class="mx-auto flex min-h-screen max-w-[480px] flex-col bg-white shadow-sm sm:my-4 sm:min-h-[calc(100vh-2rem)] sm:rounded-lg">

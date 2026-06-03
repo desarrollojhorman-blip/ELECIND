@@ -94,7 +94,7 @@
                 <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Acceso y rol</h3>
                 <div class="mb-6 grid gap-4 md:grid-cols-2">
                     <x-ui.field label="Usuario" required :error="$errors->first('form.username')">
-                        <x-ui.input wire:model.blur="form.username" autofocus />
+                        <x-ui.input wire:model.blur="form.username" autofocus autocomplete="off" />
                     </x-ui.field>
 
                     <x-ui.field label="Contraseña"
@@ -107,6 +107,7 @@
                                         wire:key="password-{{ $passwordRenderKey }}"
                                         :type="$mostrarPassword ? 'text' : 'password'"
                                         wire:model.blur="form.password"
+                                        autocomplete="new-password"
                                         class="rounded-none border-0 bg-transparent focus:border-0" />
                                 </div>
                                 <button type="button"
@@ -119,8 +120,8 @@
                                 <button type="button"
                                         wire:click.prevent="toggleMostrarPassword"
                                         class="inline-flex w-8 items-center justify-center self-stretch border-l border-slate-300 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
-                                        :title="$mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                                        :aria-label="$mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                                        title="{{ $mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña' }}"
+                                        aria-label="{{ $mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña' }}">
                                     <x-dynamic-component :component="$mostrarPassword ? 'heroicon-o-eye-slash' : 'heroicon-o-eye'" class="size-3.5" />
                                 </button>
                             </div>

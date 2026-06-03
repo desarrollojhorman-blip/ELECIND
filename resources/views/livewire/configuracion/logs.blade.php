@@ -8,11 +8,12 @@
             {{-- Fila 1: buscar · usuario · entidad · evento --}}
             <div class="grid grid-cols-4 gap-3">
                 <x-ui.field label="Buscar">
-                    <x-ui.input wire:model.live.debounce.400ms="busqueda" placeholder="Descripción…" />
+                    <x-ui.input wire:key="busqueda-{{ $filtrosVersion }}" wire:model.live.debounce.400ms="busqueda" placeholder="Descripción…" />
                 </x-ui.field>
 
                 <x-ui.field label="Usuario">
                     <x-ui.searchable-select
+                        wire:key="filtro-usuario-{{ $filtrosVersion }}"
                         wire-model="filtroUsuario"
                         :value="$filtroUsuario"
                         :options="$this->usuarios->map(fn($u) => ['value' => $u->id, 'label' => trim($u->apellidos.' '.$u->nombre)])"

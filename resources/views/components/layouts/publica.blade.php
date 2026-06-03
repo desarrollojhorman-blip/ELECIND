@@ -7,7 +7,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' · '.\App\Support\Branding::nombre() : \App\Support\Branding::nombre() }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
 </head>
 <body class="min-h-screen bg-slate-100 antialiased">
     <header class="border-b border-slate-200 bg-white shadow-sm">
