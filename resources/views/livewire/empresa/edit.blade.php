@@ -110,6 +110,7 @@
                             <x-heroicon-o-photo class="size-8 text-slate-300" />
                         @endif
                     </div>
+                    
 
                     <div class="space-y-2">
                         <input type="file"
