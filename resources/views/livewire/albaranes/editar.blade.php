@@ -2,6 +2,19 @@
 
     {{-- Page Header --}}
     <x-ui.page-header :title="$titulo" subtitle="Cabecera y líneas del albarán.">
+        @if ($albaran)
+            <x-slot:actions>
+                <div class="text-right">
+                    @if ($albaran->numero)
+                        <div class="text-xl font-semibold text-slate-900 font-mono">{{ $albaran->numero }}</div>
+                    @endif
+                    @if ($albaran->estado)
+                        <div class="text-sm text-slate-500">{{ $albaran->estado->etiqueta() }}</div>
+                    @endif
+                </div>
+            </x-slot:actions>
+        @endif
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos

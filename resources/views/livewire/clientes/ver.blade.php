@@ -1,5 +1,15 @@
 <div class="space-y-4" x-data="{ tab: 'cliente' }">
     <x-ui.page-header title="Ver cliente" :subtitle="$cliente->nombre">
+        <x-slot:actions>
+            {{-- Info contextual: nombre + CIF, sin marco. --}}
+            <div class="text-right">
+                <div class="text-xl font-semibold text-slate-900">{{ $cliente->nombre }}</div>
+                @if ($cliente->cif)
+                    <div class="font-mono text-sm text-slate-500">{{ $cliente->cif }}</div>
+                @endif
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos
@@ -37,11 +47,17 @@
                 Cliente
             </button>
 
-            @foreach ([
-                ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $this->albaranesDelCliente->count()],
-                ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $this->proyectosDelCliente->count()],
-                ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $this->usuariosDeLosProyectos->count()],
-            ] as $t)
+            @php
+                // Orden: Cliente → Tarifas → Albaranes → Proyectos → Usuarios.
+                $tabsVer = [];
+                if (auth()->user()?->can('tarifas.ver')) {
+                    $tabsVer[] = ['key' => 'tarifas', 'label' => 'Tarifas', 'count' => null];
+                }
+                $tabsVer[] = ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $this->albaranesDelCliente->count()];
+                $tabsVer[] = ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $this->proyectosDelCliente->count()];
+                $tabsVer[] = ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $this->usuariosDeLosProyectos->count()];
+            @endphp
+            @foreach ($tabsVer as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
                         :class="tab === '{{ $t['key'] }}'
@@ -308,6 +324,19 @@
                 </div>
             @endif
         </div>
+
+        {{-- ═══ Tab: Tarifas ═══ ───────────────────────────────────────
+             Modo lectura: el componente Bloque se monta con soloLectura=true
+             para esconder los botones de edición. La modificación se hace
+             desde Editar o desde /tarifas/clientes. --}}
+        @can('tarifas.ver')
+            <div x-show="tab === 'tarifas'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                @livewire('tarifas.clientes.bloque', [
+                    'clienteId' => $cliente->id,
+                    'soloLectura' => true,
+                ], key('cli-tarifas-ver-'.$cliente->id))
+            </div>
+        @endcan
     </div>
 
     {{-- Modal confirmar eliminación --}}

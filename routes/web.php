@@ -47,6 +47,9 @@ use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Roles\Index as RolesIndex;
+use App\Livewire\Tarifas\Clientes\Index as TarifasClientesIndex;
+use App\Livewire\Tarifas\Historial\Index as TarifasHistorialIndex;
+use App\Livewire\Tarifas\Trabajadores\Index as TarifasTrabajadoresIndex;
 use App\Livewire\Usuarios\Editar as UsuariosEditar;
 use App\Livewire\Usuarios\Importar as UsuariosImportar;
 use App\Livewire\Dashboard;
@@ -265,6 +268,19 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->where('orientacion', 'vertical|horizontal')
         ->middleware('can:conceptos.exportar')
         ->name('conceptos.exportar.pdf');
+
+    // ── Tarifas (v2) ───────────────────────────────────────────────
+    Route::get('/tarifas/clientes', TarifasClientesIndex::class)
+        ->middleware('can:tarifas.ver')
+        ->name('tarifas.clientes');
+
+    Route::get('/tarifas/trabajadores', TarifasTrabajadoresIndex::class)
+        ->middleware('can:tarifas.ver')
+        ->name('tarifas.trabajadores');
+
+    Route::get('/tarifas/historial', TarifasHistorialIndex::class)
+        ->middleware('can:tarifas.historial_ver')
+        ->name('tarifas.historial');
 
     Route::get('/configuracion/empresa', EmpresaEdit::class)
         ->middleware('can:empresa.ver')

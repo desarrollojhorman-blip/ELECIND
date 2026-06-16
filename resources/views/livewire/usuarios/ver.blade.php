@@ -3,6 +3,19 @@
         title="Ver usuario"
         :id-badge="$usuario->id"
         :subtitle="$usuario->nombre.' '.trim($usuario->apellidos ?? '')">
+        @php
+            $nombreCompleto = trim($usuario->apellidos.' '.$usuario->nombre);
+        @endphp
+        <x-slot:actions>
+            {{-- Info contextual: usuario + nombre completo, sin marco. --}}
+            <div class="text-right">
+                <div class="text-xl font-semibold text-slate-900">{{ $usuario->username }}</div>
+                @if ($nombreCompleto !== '')
+                    <div class="text-sm text-slate-500">{{ $nombreCompleto }}</div>
+                @endif
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('usuarios.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos
@@ -37,10 +50,17 @@
                 Usuario
             </button>
 
-            @foreach ([
-                ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $this->albaranesDelUsuario->count()],
-                ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $this->proyectosDelUsuario->count()],
-            ] as $t)
+            @php
+                // Orden: Usuario → Tarifas → Albaranes → Proyectos.
+                $esInterno = ! $usuario->roles->contains(fn ($r) => (bool) $r->es_externo);
+                $tabsVer = [];
+                if ($esInterno && auth()->user()?->can('usuarios.gestionar_tarifas')) {
+                    $tabsVer[] = ['key' => 'tarifas', 'label' => 'Tarifas', 'count' => null];
+                }
+                $tabsVer[] = ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $this->albaranesDelUsuario->count()];
+                $tabsVer[] = ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $this->proyectosDelUsuario->count()];
+            @endphp
+            @foreach ($tabsVer as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
                         :class="tab === '{{ $t['key'] }}'
@@ -107,21 +127,8 @@
                 </x-ui.field>
             </div>
 
-            {{-- Tasas (€/hora) — solo si tiene `usuarios.gestionar_tarifas`. --}}
-            @can('usuarios.gestionar_tarifas')
-                <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Tasas (€/hora)</h3>
-                <div class="grid gap-4 md:grid-cols-3">
-                    <x-ui.field label="Tasa base €/h">
-                        <x-ui.input :value="$usuario->tasa_hora !== null ? number_format((float) $usuario->tasa_hora, 3, ',', '.') : '—'" readonly />
-                    </x-ui.field>
-                    <x-ui.field label="Tasa extra €/h">
-                        <x-ui.input :value="$usuario->tasa_extra !== null ? number_format((float) $usuario->tasa_extra, 3, ',', '.') : '—'" readonly />
-                    </x-ui.field>
-                    <x-ui.field label="Tasa festivo €/h">
-                        <x-ui.input :value="$usuario->tasa_festivo !== null ? number_format((float) $usuario->tasa_festivo, 3, ',', '.') : '—'" readonly />
-                    </x-ui.field>
-                </div>
-            @endcan
+            {{-- Tarifas (€/hora) — viven en su propia pestaña "Tarifas",
+                 no en esta. Visible solo si el usuario es interno. --}}
 
             {{-- Usuario activo: standalone al final, después de Tasas. --}}
             <div class="mt-6 border-t border-slate-100 pt-4">
@@ -271,6 +278,59 @@
                 </div>
             @endif
         </div>
+
+        {{-- ═══ Tab: Tarifas ═══ ───────────────────────────────────────
+             Solo se renderiza si el usuario es interno y el actor tiene
+             `usuarios.gestionar_tarifas`. Modo lectura. La edición vive
+             en el `Editar` (pestaña Tarifas) o en /tarifas/trabajadores.
+        --}}
+        @can('usuarios.gestionar_tarifas')
+            @if ($esInterno)
+                @php
+                    $fmt = fn ($v): string => (float) $v == 0.0
+                        ? '0'
+                        : rtrim(rtrim(number_format((float) $v, 3, ',', '.'), '0'), ',');
+                @endphp
+                <div x-show="tab === 'tarifas'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                    <div class="mb-4">
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tarifas (€/hora)</h3>
+                        <p class="mt-0.5 text-xs text-slate-400">Tarifas que paga la empresa a este trabajador por cada tipo de hora.</p>
+                    </div>
+
+                    <div class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">Normales</div>
+                    <div class="grid gap-4 md:grid-cols-4">
+                        <x-ui.field label="Labor">
+                            <x-ui.input :value="$fmt($usuario->tasa_hora)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Lab Noche">
+                            <x-ui.input :value="$fmt($usuario->tasa_lab_noche)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Fest">
+                            <x-ui.input :value="$fmt($usuario->tasa_festivo)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Fest Noct">
+                            <x-ui.input :value="$fmt($usuario->tasa_fest_noche)" readonly />
+                        </x-ui.field>
+                    </div>
+
+                    <div class="mb-1 mt-5 text-[10px] font-medium uppercase tracking-wider text-slate-400">Extras</div>
+                    <div class="grid gap-4 md:grid-cols-4">
+                        <x-ui.field label="Ex Lab">
+                            <x-ui.input :value="$fmt($usuario->tasa_extra)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Lab Noc">
+                            <x-ui.input :value="$fmt($usuario->tasa_ex_lab_noc)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Fes">
+                            <x-ui.input :value="$fmt($usuario->tasa_ex_fes)" readonly />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Fes Noct">
+                            <x-ui.input :value="$fmt($usuario->tasa_ex_fes_noct)" readonly />
+                        </x-ui.field>
+                    </div>
+                </div>
+            @endif
+        @endcan
     </div>
 
     {{-- Modal confirmar eliminación --}}

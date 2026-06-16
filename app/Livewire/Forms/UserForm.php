@@ -39,15 +39,40 @@ class UserForm extends Form
     #[Validate]
     public ?string $numero_empleado = null;
 
-    /** Tarifas (€/hora). Aplican principalmente a internos; opcionales para todos. */
+    /**
+     * Tarifas (€/hora) — 8 tasas por trabajador.
+     *
+     * Vinculadas a users.tasa_*. Se pueden editar desde dos sitios distintos
+     * y ambos persisten en las mismas columnas:
+     *   - Ficha del usuario (pestaña "Tarifas"), si el rol es interno.
+     *   - Módulo dedicado /tarifas/trabajadores (vista masiva).
+     *
+     * NOT NULL DEFAULT 0 en BD. Si el rol final es externo, save() las
+     * fuerza a 0 ignorando lo que haya en el form.
+     */
     #[Validate]
     public ?string $tasa_hora = null;
+
+    #[Validate]
+    public ?string $tasa_lab_noche = null;
+
+    #[Validate]
+    public ?string $tasa_festivo = null;
+
+    #[Validate]
+    public ?string $tasa_fest_noche = null;
 
     #[Validate]
     public ?string $tasa_extra = null;
 
     #[Validate]
-    public ?string $tasa_festivo = null;
+    public ?string $tasa_ex_lab_noc = null;
+
+    #[Validate]
+    public ?string $tasa_ex_fes = null;
+
+    #[Validate]
+    public ?string $tasa_ex_fes_noct = null;
 
     /**
      * interno | externo — DERIVADO del rol (no se edita en el form).
@@ -154,9 +179,14 @@ class UserForm extends Form
             'cif' => 'CIF',
             'telefono' => 'teléfono',
             'numero_empleado' => 'nº empleado',
-            'tasa_hora' => 'tasa por hora',
-            'tasa_extra' => 'tasa extra',
+            'tasa_hora' => 'tasa labor',
+            'tasa_lab_noche' => 'tasa labor noche',
             'tasa_festivo' => 'tasa festivo',
+            'tasa_fest_noche' => 'tasa festivo noche',
+            'tasa_extra' => 'tasa extra laboral',
+            'tasa_ex_lab_noc' => 'tasa extra laboral noche',
+            'tasa_ex_fes' => 'tasa extra festivo',
+            'tasa_ex_fes_noct' => 'tasa extra festivo noche',
             'tipo_usuario' => 'tipo de usuario',
             'cliente_id' => 'cliente',
             'rol' => 'rol',
@@ -187,6 +217,16 @@ class UserForm extends Form
         ];
     }
 
+    /** Vacío/null → 0. Soporta coma como separador decimal. */
+    private function parseTasa(?string $valor): float
+    {
+        if ($valor === null || $valor === '') {
+            return 0.0;
+        }
+
+        return (float) str_replace(',', '.', $valor);
+    }
+
     public function fromModel(User $user): void
     {
         $this->id = (int) $user->getKey();
@@ -198,9 +238,14 @@ class UserForm extends Form
         $this->cif = $user->cif;
         $this->telefono = $user->telefono;
         $this->numero_empleado = $user->numero_empleado;
-        $this->tasa_hora = $user->tasa_hora !== null ? (string) $user->tasa_hora : null;
-        $this->tasa_extra = $user->tasa_extra !== null ? (string) $user->tasa_extra : null;
-        $this->tasa_festivo = $user->tasa_festivo !== null ? (string) $user->tasa_festivo : null;
+        $this->tasa_hora = (string) $user->tasa_hora;
+        $this->tasa_lab_noche = (string) $user->tasa_lab_noche;
+        $this->tasa_festivo = (string) $user->tasa_festivo;
+        $this->tasa_fest_noche = (string) $user->tasa_fest_noche;
+        $this->tasa_extra = (string) $user->tasa_extra;
+        $this->tasa_ex_lab_noc = (string) $user->tasa_ex_lab_noc;
+        $this->tasa_ex_fes = (string) $user->tasa_ex_fes;
+        $this->tasa_ex_fes_noct = (string) $user->tasa_ex_fes_noct;
         $this->tipo_usuario = $user->tipo_usuario;
         $this->cliente_id = $user->cliente_id;
         $this->activo = (bool) $user->activo;
@@ -234,14 +279,42 @@ class UserForm extends Form
             'cif' => $this->cif,
             'telefono' => $this->telefono,
             'numero_empleado' => $this->numero_empleado,
-            'tasa_hora' => $this->tasa_hora === null || $this->tasa_hora === '' ? null : (float) str_replace(',', '.', $this->tasa_hora),
-            'tasa_extra' => $this->tasa_extra === null || $this->tasa_extra === '' ? null : (float) str_replace(',', '.', $this->tasa_extra),
-            'tasa_festivo' => $this->tasa_festivo === null || $this->tasa_festivo === '' ? null : (float) str_replace(',', '.', $this->tasa_festivo),
             'tipo_usuario' => $tipoUsuario,
             'cliente_id' => $clienteIdFinal,
             'gestiona_todos_clientes' => $gestionaTodosFinal,
             'activo' => $this->activo,
         ];
+
+        // Tarifas (8 columnas tasa_*):
+        //   - Rol INTERNO: se guardan los valores del form (pestaña "Tarifas").
+        //     Vacío → 0. La pantalla /tarifas/trabajadores edita lo mismo, por
+        //     lo que ambos sitios actualizan la misma BD.
+        //   - Rol EXTERNO: se FUERZAN a 0. Ignora lo que haya en el form
+        //     (impide rellenar tasas y cambiar a externo antes de guardar) Y
+        //     resetea valores previos si pasa de interno a externo.
+        if ($rolEsExterno) {
+            $datos += [
+                'tasa_hora' => 0.0,
+                'tasa_lab_noche' => 0.0,
+                'tasa_festivo' => 0.0,
+                'tasa_fest_noche' => 0.0,
+                'tasa_extra' => 0.0,
+                'tasa_ex_lab_noc' => 0.0,
+                'tasa_ex_fes' => 0.0,
+                'tasa_ex_fes_noct' => 0.0,
+            ];
+        } else {
+            $datos += [
+                'tasa_hora' => $this->parseTasa($this->tasa_hora),
+                'tasa_lab_noche' => $this->parseTasa($this->tasa_lab_noche),
+                'tasa_festivo' => $this->parseTasa($this->tasa_festivo),
+                'tasa_fest_noche' => $this->parseTasa($this->tasa_fest_noche),
+                'tasa_extra' => $this->parseTasa($this->tasa_extra),
+                'tasa_ex_lab_noc' => $this->parseTasa($this->tasa_ex_lab_noc),
+                'tasa_ex_fes' => $this->parseTasa($this->tasa_ex_fes),
+                'tasa_ex_fes_noct' => $this->parseTasa($this->tasa_ex_fes_noct),
+            ];
+        }
 
         if ($this->password !== null && $this->password !== '') {
             $datos['password'] = Hash::make($this->password);

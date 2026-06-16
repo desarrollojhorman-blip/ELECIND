@@ -1,6 +1,12 @@
 <div class="space-y-4" x-data="{ tab: 'pedido' }">
     <x-ui.page-header title="Ver pedido" :id-badge="$pedido->id"
                        subtitle="Datos del pedido y materiales que lo componen.">
+        <x-slot:actions>
+            <div class="text-right">
+                <div class="text-xl font-semibold text-slate-900 font-mono">{{ $pedido->numero }}</div>
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('materiales.pedidos') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos

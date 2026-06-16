@@ -65,6 +65,33 @@
             'key' => 'usuarios',
             'permission' => 'usuarios.ver_todos',
         ],
+        [
+            'label' => 'Tarifas',
+            'icon' => 'heroicon-o-banknotes',
+            'route' => null,
+            'key' => 'tarifas',
+            'permission' => 'tarifas.ver',
+            'children' => [
+                [
+                    'label' => 'Clientes',
+                    'route' => 'tarifas.clientes',
+                    'key' => 'tarifas_clientes',
+                    'permission' => 'tarifas.ver',
+                ],
+                [
+                    'label' => 'Trabajadores',
+                    'route' => 'tarifas.trabajadores',
+                    'key' => 'tarifas_trabajadores',
+                    'permission' => 'tarifas.ver',
+                ],
+                [
+                    'label' => 'Historial',
+                    'route' => 'tarifas.historial',
+                    'key' => 'tarifas_historial',
+                    'permission' => 'tarifas.historial_ver',
+                ],
+            ],
+        ],
         ...(\App\Support\Modulos::materialesAvanzado() ? [[
             'label' => 'Materiales',
             'icon' => 'heroicon-o-cube',

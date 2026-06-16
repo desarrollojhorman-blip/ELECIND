@@ -16,10 +16,13 @@ use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\TiposProyecto;
 use App\Models\User;
+use App\Models\TarifaCliente;
 use App\Observers\AlbaranLineaMaterialObserver;
 use App\Observers\AlbaranLineaPersonalObserver;
 use App\Observers\AlbaranObserver;
 use App\Observers\ClienteObserver;
+use App\Observers\TarifaClienteObserver;
+use App\Observers\UserTasasObserver;
 use App\Policies\AlbaranPolicy;
 use App\Policies\BorradorPolicy;
 use App\Policies\ClientePolicy;
@@ -87,6 +90,15 @@ class AppServiceProvider extends ServiceProvider
         // Cuando un usuario scoped (Jefe de equipo) crea un cliente, lo añade
         // a su lista de clientes gestionados para no perderlo de vista.
         Cliente::observe(ClienteObserver::class);
+
+        // Tarifas v2:
+        //   - TarifaCliente: registra cambios de importe en tarifas_historial
+        //     con tipo='cliente'.
+        //   - User (tasas): registra cambios de cualquier tasa_* en
+        //     tarifas_historial con tipo='trabajador'. El atributo correspondiente
+        //     se deriva del mapeo_tasa del catálogo atributos_hora.
+        TarifaCliente::observe(TarifaClienteObserver::class);
+        User::observe(UserTasasObserver::class);
 
         // Adjuntar IP y navegador a TODA actividad registrada (CRUD, login, etc.)
         // siempre que haya una petición HTTP real. En consola (seeders, comandos)

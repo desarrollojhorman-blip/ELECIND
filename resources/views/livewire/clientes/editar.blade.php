@@ -1,5 +1,17 @@
 <div class="space-y-4" x-data="{ tab: 'cliente' }">
     <x-ui.page-header :title="$titulo" subtitle="Datos, proyectos y usuarios vinculados al cliente.">
+        @if ($cliente)
+            <x-slot:actions>
+                {{-- Info contextual: nombre + CIF, sin marco. --}}
+                <div class="text-right">
+                    <div class="text-xl font-semibold text-slate-900">{{ $cliente->nombre }}</div>
+                    @if ($cliente->cif)
+                        <div class="font-mono text-sm text-slate-500">{{ $cliente->cif }}</div>
+                    @endif
+                </div>
+            </x-slot:actions>
+        @endif
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('clientes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos
@@ -56,11 +68,20 @@
             Cliente
         </button>
 
-        @foreach ([
-            ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $cliente ? $this->albaranesDelCliente->count() : null],
-            ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $cliente ? $this->proyectosDelCliente->count() : null],
-            ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $cliente ? $this->usuariosDeLosProyectos->count() : null],
-        ] as $t)
+        @php
+            // Orden de pestañas: Cliente → Tarifas → Albaranes → Proyectos → Usuarios.
+            // "Tarifas" aparece siempre que el cliente exista (no en alta) y el
+            // actor tenga el permiso correspondiente. A diferencia de usuarios,
+            // no hay distinción interno/externo.
+            $tabs = [];
+            if ($cliente && auth()->user()?->can('tarifas.ver')) {
+                $tabs[] = ['key' => 'tarifas', 'label' => 'Tarifas', 'count' => null];
+            }
+            $tabs[] = ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $cliente ? $this->albaranesDelCliente->count() : null];
+            $tabs[] = ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $cliente ? $this->proyectosDelCliente->count() : null];
+            $tabs[] = ['key' => 'usuarios',  'label' => 'Usuarios',  'count' => $cliente ? $this->usuariosDeLosProyectos->count() : null];
+        @endphp
+        @foreach ($tabs as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
                       title="Guarda primero el cliente para acceder a esta sección">
@@ -349,6 +370,20 @@
             </div>
         @endif
     </div>
+
+    {{-- ═══ Tab: Tarifas ═══ ───────────────────────────────────────
+         Solo si el cliente ya existe (no en alta) y el actor tiene
+         permiso. Embebe el componente Bloque que replica la lógica de
+         /tarifas/clientes filtrada por este cliente. --}}
+    @can('tarifas.ver')
+        @if ($cliente)
+            <div x-show="tab === 'tarifas'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                @livewire('tarifas.clientes.bloque', [
+                    'clienteId' => $cliente->id,
+                ], key('cli-tarifas-'.$cliente->id))
+            </div>
+        @endif
+    @endcan
     </div>{{-- /tabs + contenido --}}
 
     {{-- Modal confirmar eliminación --}}

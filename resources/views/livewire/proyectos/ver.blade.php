@@ -1,5 +1,16 @@
 <div class="space-y-4" x-data="{ tab: 'proyecto' }">
-    <x-ui.page-header :title="$proyecto->nombre" subtitle="Ver proyecto">
+    <x-ui.page-header title="Ver proyecto" subtitle="Cabecera, equipo y recursos del proyecto.">
+        <x-slot:actions>
+            <div class="text-right">
+                @if ($proyecto->codigo)
+                    <div class="text-xl font-semibold text-slate-900 font-mono">{{ $proyecto->codigo }}</div>
+                @endif
+                @if ($proyecto->nombre)
+                    <div class="text-sm text-slate-500">{{ $proyecto->nombre }}</div>
+                @endif
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('proyectos.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos

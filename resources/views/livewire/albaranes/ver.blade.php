@@ -1,5 +1,16 @@
 <div class="space-y-4" x-data="{ tab: 'albaran' }">
-    <x-ui.page-header title="Albarán {{ $albaran->numero }}" subtitle="Detalle del parte de trabajo.">
+    <x-ui.page-header title="Ver albarán" subtitle="Detalle del parte de trabajo.">
+        <x-slot:actions>
+            <div class="text-right">
+                @if ($albaran->numero)
+                    <div class="text-xl font-semibold text-slate-900 font-mono">{{ $albaran->numero }}</div>
+                @endif
+                @if ($albaran->estado)
+                    <div class="text-sm text-slate-500">{{ $albaran->estado->etiqueta() }}</div>
+                @endif
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('albaranes.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos

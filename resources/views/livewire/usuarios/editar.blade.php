@@ -1,5 +1,20 @@
 <div class="space-y-4" x-data="{ tab: 'usuario' }">
     <x-ui.page-header :title="$titulo" :id-badge="$usuario?->id" subtitle="Datos del usuario y relaciones vinculadas.">
+        @if ($usuario)
+            @php
+                $nombreCompleto = trim($usuario->apellidos.' '.$usuario->nombre);
+            @endphp
+            <x-slot:actions>
+                {{-- Info contextual: usuario + nombre completo, sin marco. --}}
+                <div class="text-right">
+                    <div class="text-xl font-semibold text-slate-900">{{ $usuario->username }}</div>
+                    @if ($nombreCompleto !== '')
+                        <div class="text-sm text-slate-500">{{ $nombreCompleto }}</div>
+                    @endif
+                </div>
+            </x-slot:actions>
+        @endif
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('usuarios.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos
@@ -58,10 +73,20 @@
                 @endif
             </button>
 
-            @foreach ([
-                ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $usuario ? $this->albaranesDelUsuario->count() : null],
-                ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $usuario ? $this->proyectosDelUsuario->count() : null],
-            ] as $t)
+            @php
+                // Pestañas dinámicas en orden: Usuario → Tarifas → Albaranes → Proyectos.
+                // "Tarifas" solo si:
+                //   - el usuario ya existe (no estamos en alta),
+                //   - el rol seleccionado es interno (no externo),
+                //   - el actor tiene `usuarios.gestionar_tarifas`.
+                $tabs = [];
+                if ($usuario && ! $this->rolEsExterno && auth()->user()?->can('usuarios.gestionar_tarifas')) {
+                    $tabs[] = ['key' => 'tarifas', 'label' => 'Tarifas', 'count' => null];
+                }
+                $tabs[] = ['key' => 'albaranes', 'label' => 'Albaranes', 'count' => $usuario ? $this->albaranesDelUsuario->count() : null];
+                $tabs[] = ['key' => 'proyectos', 'label' => 'Proyectos', 'count' => $usuario ? $this->proyectosDelUsuario->count() : null];
+            @endphp
+            @foreach ($tabs as $t)
                 @if ($modoCrear)
                     <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
                           title="Guarda primero el usuario para acceder a esta sección">
@@ -263,31 +288,10 @@
                     </x-ui.field>
                 </div>
 
-                {{-- Tasas (€/hora) como subsección dentro del mismo bloque.
-                     Visible solo a quien tenga `usuarios.gestionar_tarifas`
-                     (por defecto solo superadmin). --}}
-                @can('usuarios.gestionar_tarifas')
-                    <h3 class="mt-6 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Tasas (€/hora)</h3>
-                    <div class="grid gap-4 md:grid-cols-3">
-                        <x-ui.field label="Tasa base €/h" :error="$errors->first('form.tasa_hora')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_hora"
-                                        placeholder="0,000" />
-                        </x-ui.field>
-
-                        <x-ui.field label="Tasa extra €/h" :error="$errors->first('form.tasa_extra')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_extra"
-                                        placeholder="0,000" />
-                        </x-ui.field>
-
-                        <x-ui.field label="Tasa festivo €/h" :error="$errors->first('form.tasa_festivo')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_festivo"
-                                        placeholder="0,000" />
-                        </x-ui.field>
-                    </div>
-                @endcan
+                {{-- Tarifas (€/hora) — viven en su propia pestaña "Tarifas",
+                     no en esta. Solo aparece si el usuario es interno (el
+                     mismo dato se puede editar también desde
+                     /tarifas/trabajadores). --}}
 
                 {{-- Usuario activo: standalone al final, después de Tasas. --}}
                 <div class="mt-6 border-t border-slate-100 pt-4">
@@ -428,6 +432,74 @@
                 </div>
             @endif
         </div>
+
+        {{-- ═══ Tab: Tarifas ═══ ───────────────────────────────────────
+             Solo se renderiza si el usuario ya existe, el rol es interno
+             y el actor tiene `usuarios.gestionar_tarifas`. Vinculado a
+             form.tasa_* (las mismas columnas users.tasa_* que edita la
+             pantalla /tarifas/trabajadores). Al pulsar Guardar del form
+             principal, se persisten junto al resto de campos.
+        --}}
+        @can('usuarios.gestionar_tarifas')
+            @if ($usuario && ! $this->rolEsExterno)
+                <div x-show="tab === 'tarifas'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white p-6 shadow-sm">
+                    <div class="mb-4">
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tarifas (€/hora)</h3>
+                        <p class="mt-0.5 text-xs text-slate-400">Tarifas que paga la empresa a este trabajador por cada tipo de hora. También se pueden editar desde el módulo <a href="{{ route('tarifas.trabajadores') }}" class="text-primary-600 underline" wire:navigate>Tarifas → Trabajadores</a>.</p>
+                    </div>
+
+                    {{-- Normales --}}
+                    <div class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">Normales</div>
+                    <div class="grid gap-4 md:grid-cols-4">
+                        <x-ui.field label="Labor" :error="$errors->first('form.tasa_hora')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_hora" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Lab Noche" :error="$errors->first('form.tasa_lab_noche')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_lab_noche" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Fest" :error="$errors->first('form.tasa_festivo')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_festivo" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Fest Noct" :error="$errors->first('form.tasa_fest_noche')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_fest_noche" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                    </div>
+
+                    {{-- Extras --}}
+                    <div class="mb-1 mt-5 text-[10px] font-medium uppercase tracking-wider text-slate-400">Extras</div>
+                    <div class="grid gap-4 md:grid-cols-4">
+                        <x-ui.field label="Ex Lab" :error="$errors->first('form.tasa_extra')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_extra" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Lab Noc" :error="$errors->first('form.tasa_ex_lab_noc')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_ex_lab_noc" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Fes" :error="$errors->first('form.tasa_ex_fes')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_ex_fes" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                        <x-ui.field label="Ex Fes Noct" :error="$errors->first('form.tasa_ex_fes_noct')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_ex_fes_noct" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                    </div>
+                </div>
+            @endif
+        @endcan
     </div>
 
     {{-- Modal duplicados --}}

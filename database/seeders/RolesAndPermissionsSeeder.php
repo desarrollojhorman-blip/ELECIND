@@ -269,6 +269,12 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'roles.ver',       'ambito' => 'web', 'descripcion' => 'Ver roles y permisos',                'categoria' => 'roles'],
             ['name' => 'roles.gestionar', 'ambito' => 'web', 'descripcion' => 'Crear, editar y eliminar roles',      'categoria' => 'roles'],
             ['name' => 'permisos.gestionar', 'ambito' => 'web', 'descripcion' => 'Gestionar permisos (avanzado)',    'categoria' => 'roles'],
+
+            // ─────────────── Tarifas (v2) ───────────────
+            ['name' => 'tarifas.ver',                 'ambito' => 'web', 'descripcion' => 'Ver el módulo de tarifas (clientes, trabajadores e historial)', 'categoria' => 'tarifas'],
+            ['name' => 'tarifas.editar_clientes',     'ambito' => 'web', 'descripcion' => 'Modificar tarifas que se cobran al cliente',                      'categoria' => 'tarifas'],
+            ['name' => 'tarifas.editar_trabajadores', 'ambito' => 'web', 'descripcion' => 'Modificar tasas (€/hora) de los trabajadores',                    'categoria' => 'tarifas'],
+            ['name' => 'tarifas.historial_ver',       'ambito' => 'web', 'descripcion' => 'Ver el historial de cambios de tarifas',                          'categoria' => 'tarifas'],
         ];
     }
 }

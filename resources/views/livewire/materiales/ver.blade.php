@@ -3,6 +3,15 @@
         title="Ver material"
         :id-badge="$material->id"
         :subtitle="$material->descripcion">
+        <x-slot:actions>
+            <div class="text-right">
+                <div class="text-xl font-semibold text-slate-900">{{ $material->descripcion }}</div>
+                @if ($material->numeroPedido?->numero)
+                    <div class="font-mono text-sm text-slate-500">{{ $material->numeroPedido->numero }}</div>
+                @endif
+            </div>
+        </x-slot:actions>
+
         <x-slot:actionsLeft>
             <x-ui.button as="a" href="{{ route('materiales.index') }}" wire:navigate variant="neutral" icon="heroicon-o-list-bullet">
                 Todos

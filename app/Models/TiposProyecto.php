@@ -15,6 +15,12 @@ class TiposProyecto extends Model
         'nombre',
         'descripcion',
         'activo',
+        'genera_albaran_por_defecto',
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+        'genera_albaran_por_defecto' => 'boolean',
     ];
 
     public function proyectos(): HasMany

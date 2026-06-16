@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         // En producción sembramos solo base mínima; los datos demo se reservan para local/testing.
         $seeders = [
             RolesAndPermissionsSeeder::class,
+            AtributosHoraSeeder::class,
         ];
 
         if (App::environment(['local', 'development', 'testing'])) {

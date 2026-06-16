@@ -662,7 +662,7 @@ public function guardar(): void
 
     public function render(): View
     {
-        $titulo   = $this->albaran ? "Albarán {$this->albaran->numero}" : 'Nuevo albarán';
+        $titulo   = $this->albaran ? 'Editar albarán' : 'Nuevo albarán';
         $tiposHora = TipoHora::cases();
         $estados   = EstadoAlbaran::cases();
 
