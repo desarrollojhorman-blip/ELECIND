@@ -46,6 +46,9 @@ use App\Livewire\Proyectos\Editar as ProyectosEditar;
 use App\Livewire\Proyectos\Grupos\Index as GruposProyectosIndex;
 use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Proyectos\Ver as ProyectosVer;
+use App\Livewire\Partes\Editar as PartesEditar;
+use App\Livewire\Partes\Index as PartesIndex;
+use App\Livewire\Partes\Ver as PartesVer;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Tarifas\Clientes\Index as TarifasClientesIndex;
 use App\Livewire\Tarifas\Historial\Index as TarifasHistorialIndex;
@@ -268,6 +271,23 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
         ->where('orientacion', 'vertical|horizontal')
         ->middleware('can:conceptos.exportar')
         ->name('conceptos.exportar.pdf');
+
+    // ── Partes (v2 — Fase 4) ───────────────────────────────────────
+    Route::get('/partes', PartesIndex::class)
+        ->middleware('can:partes.ver_todos')
+        ->name('partes.index');
+
+    Route::get('/partes/crear', PartesEditar::class)
+        ->middleware('can:partes.crear_web')
+        ->name('partes.crear');
+
+    Route::get('/partes/{parte}/editar', PartesEditar::class)
+        ->middleware('can:partes.modificar')
+        ->name('partes.editar');
+
+    Route::get('/partes/{parte}', PartesVer::class)
+        ->middleware('can:partes.ver_todos')
+        ->name('partes.ver');
 
     // ── Tarifas (v2) ───────────────────────────────────────────────
     Route::get('/tarifas/clientes', TarifasClientesIndex::class)

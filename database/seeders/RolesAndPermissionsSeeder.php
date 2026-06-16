@@ -92,6 +92,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'albaranes.crear_movil',
             'albaranes.firmar',
             'albaranes.descargar_pdf',
+            'partes.ver_propios',
+            'partes.crear_movil',
             'ausencias.ver_propias',
             'ausencias.solicitar',
             'incidencias.ver_propias',
@@ -118,6 +120,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'albaranes.descargar_pdf',
             'albaranes.solicitar_firma',
             'albaranes.facturar',
+            'partes.ver_todos',
+            'partes.crear_web',
+            'partes.modificar',
+            'partes.exportar',
             'clientes.ver',
             // Permite crear clientes durante la conversión de un borrador. El
             // ClienteObserver auto-asigna el cliente nuevo a sus clientes
@@ -275,6 +281,15 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'tarifas.editar_clientes',     'ambito' => 'web', 'descripcion' => 'Modificar tarifas que se cobran al cliente',                      'categoria' => 'tarifas'],
             ['name' => 'tarifas.editar_trabajadores', 'ambito' => 'web', 'descripcion' => 'Modificar tasas (€/hora) de los trabajadores',                    'categoria' => 'tarifas'],
             ['name' => 'tarifas.historial_ver',       'ambito' => 'web', 'descripcion' => 'Ver el historial de cambios de tarifas',                          'categoria' => 'tarifas'],
+
+            // ─────────────── Partes (v2) ───────────────
+            ['name' => 'partes.ver_todos',   'ambito' => 'ambos', 'descripcion' => 'Ver partes de TODA la empresa',                          'categoria' => 'partes'],
+            ['name' => 'partes.ver_propios', 'ambito' => 'movil', 'descripcion' => 'Ver SOLO los partes en los que participo',               'categoria' => 'partes'],
+            ['name' => 'partes.crear_web',   'ambito' => 'web',   'descripcion' => 'Crear partes desde web',                                  'categoria' => 'partes'],
+            ['name' => 'partes.crear_movil', 'ambito' => 'movil', 'descripcion' => 'Crear partes desde móvil',                                'categoria' => 'partes'],
+            ['name' => 'partes.modificar',   'ambito' => 'web',   'descripcion' => 'Modificar partes de otros',                               'categoria' => 'partes'],
+            ['name' => 'partes.eliminar',    'ambito' => 'web',   'descripcion' => 'Eliminar partes',                                         'categoria' => 'partes'],
+            ['name' => 'partes.exportar',    'ambito' => 'web',   'descripcion' => 'Exportar partes a Excel/PDF',                             'categoria' => 'partes'],
         ];
     }
 }

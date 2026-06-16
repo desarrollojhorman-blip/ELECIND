@@ -16,13 +16,18 @@ use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\TiposProyecto;
 use App\Models\User;
+use App\Models\Parte;
+use App\Models\ParteLineaPersonal;
 use App\Models\TarifaCliente;
 use App\Observers\AlbaranLineaMaterialObserver;
 use App\Observers\AlbaranLineaPersonalObserver;
 use App\Observers\AlbaranObserver;
 use App\Observers\ClienteObserver;
+use App\Observers\ParteLineaPersonalObserver;
+use App\Observers\ParteObserver;
 use App\Observers\TarifaClienteObserver;
 use App\Observers\UserTasasObserver;
+use App\Policies\PartePolicy;
 use App\Policies\AlbaranPolicy;
 use App\Policies\BorradorPolicy;
 use App\Policies\ClientePolicy;
@@ -76,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Albaran::class, AlbaranPolicy::class);
         Gate::policy(Borrador::class, BorradorPolicy::class);
+        Gate::policy(Parte::class, PartePolicy::class);
 
         // Observers de albaranes:
         //   - AlbaranLineaMaterial: ajuste de stock + snapshot del material.
@@ -99,6 +105,15 @@ class AppServiceProvider extends ServiceProvider
         //     se deriva del mapeo_tasa del catálogo atributos_hora.
         TarifaCliente::observe(TarifaClienteObserver::class);
         User::observe(UserTasasObserver::class);
+
+        // Partes (v2):
+        //   - Parte: snapshots de cabecera (operario, proyecto, cliente, tipo
+        //     de proyecto) + autocódigo PT-YYYY-NNNN + autoflag es_albaran
+        //     desde tipo_proyecto.genera_albaran_por_defecto.
+        //   - ParteLineaPersonal: snapshots de trabajador, atributo y
+        //     económicos (tarifa+tasa+facturación+coste).
+        Parte::observe(ParteObserver::class);
+        ParteLineaPersonal::observe(ParteLineaPersonalObserver::class);
 
         // Adjuntar IP y navegador a TODA actividad registrada (CRUD, login, etc.)
         // siempre que haya una petición HTTP real. En consola (seeders, comandos)
