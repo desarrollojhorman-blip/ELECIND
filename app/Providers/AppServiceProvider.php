@@ -17,12 +17,14 @@ use App\Models\Role;
 use App\Models\TiposProyecto;
 use App\Models\User;
 use App\Models\Parte;
+use App\Models\ParteLineaMaterial;
 use App\Models\ParteLineaPersonal;
 use App\Models\TarifaCliente;
 use App\Observers\AlbaranLineaMaterialObserver;
 use App\Observers\AlbaranLineaPersonalObserver;
 use App\Observers\AlbaranObserver;
 use App\Observers\ClienteObserver;
+use App\Observers\ParteLineaMaterialObserver;
 use App\Observers\ParteLineaPersonalObserver;
 use App\Observers\ParteObserver;
 use App\Observers\TarifaClienteObserver;
@@ -114,6 +116,7 @@ class AppServiceProvider extends ServiceProvider
         //     económicos (tarifa+tasa+facturación+coste).
         Parte::observe(ParteObserver::class);
         ParteLineaPersonal::observe(ParteLineaPersonalObserver::class);
+        ParteLineaMaterial::observe(ParteLineaMaterialObserver::class);
 
         // Adjuntar IP y navegador a TODA actividad registrada (CRUD, login, etc.)
         // siempre que haya una petición HTTP real. En consola (seeders, comandos)

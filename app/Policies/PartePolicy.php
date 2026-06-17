@@ -61,6 +61,12 @@ class PartePolicy
 
     public function delete(User $user, Parte $parte): bool
     {
+        // Bloqueo absoluto: si el parte ya generó un albarán, no se puede
+        // borrar desde aquí. Primero hay que borrar el albarán.
+        if ($parte->tieneAlbaran()) {
+            return false;
+        }
+
         if (! $parte->esEditable()) {
             return false;
         }

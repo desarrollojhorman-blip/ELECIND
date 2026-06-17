@@ -15,32 +15,30 @@ use Spatie\Activitylog\Traits\LogsActivity;
 /**
  * Parte de trabajo.
  *
- * Entidad central de v2: TODA captura de trabajo crea un parte. Si
- * `es_albaran=true` además se generará/vinculará un albarán facturable
- * (la vinculación llega en Fase 5).
+ * Mismo esquema que Albaran (incluida la cabecera con cliente/proyecto/
+ * concepto/responsable/tipo_hora/observaciones, los snapshots y el modo
+ * "parte personalizado" con textos libres). Diferencias:
  *
- * Los snapshots los mantiene ParteObserver al cambiar las FK
- * correspondientes — mismo patrón que Albaran.
+ *  - No tiene firmas ni archivos.
+ *  - Estado: 'abierto' | 'cerrado' (un parte se "cierra" al generar albarán).
+ *  - `albaran_id` enlaza al albarán generado (Fase 5: vinculación bidireccional).
  *
  * @property int $id
- * @property string $codigo
- * @property int $user_id
- * @property int $proyecto_id
+ * @property string $numero
  * @property Carbon $fecha
- * @property string|null $hora_inicio
- * @property string|null $hora_fin
- * @property bool $es_albaran
- * @property int|null $albaran_id
- * @property string|null $observaciones
+ * @property int|null $cliente_id
+ * @property int|null $proyecto_id
+ * @property int|null $concepto_id
+ * @property int|null $creado_por
+ * @property int|null $responsable_id
  * @property string $estado
- * @property string|null $operario_nombre_snapshot
- * @property string|null $proyecto_nombre_snapshot
- * @property string|null $proyecto_codigo_snapshot
- * @property int|null $cliente_id_snapshot
- * @property string|null $cliente_nombre_snapshot
- * @property int|null $tipo_proyecto_id_snapshot
- * @property string|null $tipo_proyecto_nombre_snapshot
+ * @property string $tipo_hora
+ * @property string|null $observaciones
+ * @property int|null $albaran_id
+ * @property bool $es_personalizado
+ * @property array<string, mixed>|null $snapshot_data
  * @property-read EloquentCollection<int, ParteLineaPersonal> $lineasPersonal
+ * @property-read EloquentCollection<int, ParteLineaMaterial> $lineasMaterial
  */
 class Parte extends Model
 {
@@ -53,31 +51,47 @@ class Parte extends Model
     protected $table = 'partes';
 
     protected $fillable = [
-        'codigo',
-        'user_id',
-        'proyecto_id',
+        'numero',
         'fecha',
-        'hora_inicio',
-        'hora_fin',
-        'es_albaran',
-        'albaran_id',
-        'observaciones',
+        'cliente_id',
+        'proyecto_id',
+        'concepto_id',
+        'creado_por',
+        'responsable_id',
         'estado',
-        // Snapshots
-        'operario_nombre_snapshot',
-        'proyecto_nombre_snapshot',
-        'proyecto_codigo_snapshot',
-        'cliente_id_snapshot',
+        'tipo_hora',
+        'observaciones',
+        'albaran_id',
+        'snapshot_data',
+        // Snapshots cabecera
+        'cliente_codigo_snapshot',
         'cliente_nombre_snapshot',
-        'tipo_proyecto_id_snapshot',
-        'tipo_proyecto_nombre_snapshot',
+        'cliente_cif_snapshot',
+        'proyecto_codigo_snapshot',
+        'proyecto_nombre_snapshot',
+        'concepto_nombre_snapshot',
+        'creador_username_snapshot',
+        'creador_nombre_snapshot',
+        'creador_apellidos_snapshot',
+        'creador_numero_empleado_snapshot',
+        'responsable_username_snapshot',
+        'responsable_nombre_snapshot',
+        'responsable_apellidos_snapshot',
+        'responsable_numero_empleado_snapshot',
+        // Parte personalizado
+        'es_personalizado',
+        'cliente_texto',
+        'proyecto_texto',
+        'concepto_texto',
+        'responsable_texto',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha' => 'date',
-            'es_albaran' => 'boolean',
+            'snapshot_data' => 'array',
+            'es_personalizado' => 'boolean',
         ];
     }
 
@@ -85,25 +99,37 @@ class Parte extends Model
     {
         return LogOptions::defaults()
             ->useLogName('parte')
-            ->logOnly([
-                'codigo', 'user_id', 'proyecto_id', 'fecha',
-                'es_albaran', 'albaran_id', 'estado', 'observaciones',
-            ])
+            ->logOnly(['numero', 'fecha', 'cliente_id', 'proyecto_id', 'concepto_id', 'creado_por', 'responsable_id', 'estado', 'tipo_hora', 'observaciones', 'albaran_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn (string $_e) => "Parte #{$this->codigo}");
+            ->setDescriptionForEvent(fn (string $_e) => "Parte #{$this->numero}");
     }
 
     /* ── Relaciones ─────────────────────────────────────────── */
 
-    public function user(): BelongsTo
+    public function cliente(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cliente::class);
     }
 
     public function proyecto(): BelongsTo
     {
         return $this->belongsTo(Proyecto::class);
+    }
+
+    public function concepto(): BelongsTo
+    {
+        return $this->belongsTo(Concepto::class);
+    }
+
+    public function creador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    public function responsable(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     public function albaran(): BelongsTo
@@ -114,6 +140,11 @@ class Parte extends Model
     public function lineasPersonal(): HasMany
     {
         return $this->hasMany(ParteLineaPersonal::class);
+    }
+
+    public function lineasMaterial(): HasMany
+    {
+        return $this->hasMany(ParteLineaMaterial::class);
     }
 
     /* ── Scopes ─────────────────────────────────────────────── */
@@ -128,38 +159,30 @@ class Parte extends Model
         return $q->where('estado', self::ESTADO_CERRADO);
     }
 
-    public function scopeDeOperario(Builder $q, int $userId): Builder
+    public function scopeConAlbaran(Builder $q): Builder
     {
-        return $q->where('user_id', $userId);
+        return $q->whereNotNull('albaran_id');
     }
 
-    /* ── Accesors ──────────────────────────────────────────── */
-
-    /** Horas totales imputadas (suma de líneas de tipos de hora — excluye pluses). */
-    public function horasTotales(): float
+    public function scopeSinAlbaran(Builder $q): Builder
     {
-        return (float) $this->lineasPersonal
-            ->filter(fn (ParteLineaPersonal $l) => $l->atributo?->esHora() ?? false)
-            ->sum('cantidad');
+        return $q->whereNull('albaran_id');
     }
 
-    public function facturacionTotal(): float
-    {
-        return (float) $this->lineasPersonal->sum('facturacion_snapshot');
-    }
-
-    public function costeTotal(): float
-    {
-        return (float) $this->lineasPersonal->sum('coste_snapshot');
-    }
-
-    public function margenTotal(): float
-    {
-        return $this->facturacionTotal() - $this->costeTotal();
-    }
+    /* ── Helpers ───────────────────────────────────────────── */
 
     public function esEditable(): bool
     {
-        return $this->estado === self::ESTADO_ABIERTO;
+        return $this->estado === self::ESTADO_ABIERTO && ! $this->tieneAlbaran();
+    }
+
+    public function tieneAlbaran(): bool
+    {
+        return $this->albaran_id !== null;
+    }
+
+    public function horasTotales(): float
+    {
+        return (float) $this->lineasPersonal->sum(fn (ParteLineaPersonal $l) => (float) $l->horas + (float) $l->horas_extra);
     }
 }

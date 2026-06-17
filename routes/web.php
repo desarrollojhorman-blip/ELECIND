@@ -48,6 +48,7 @@ use App\Livewire\Proyectos\Index as ProyectosIndex;
 use App\Livewire\Proyectos\Ver as ProyectosVer;
 use App\Livewire\Partes\Editar as PartesEditar;
 use App\Livewire\Partes\Index as PartesIndex;
+use App\Livewire\Partes\Informe as PartesInforme;
 use App\Livewire\Partes\Ver as PartesVer;
 use App\Livewire\Roles\Index as RolesIndex;
 use App\Livewire\Tarifas\Clientes\Index as TarifasClientesIndex;
@@ -280,6 +281,10 @@ Route::middleware(['auth', 'ensure.web.access'])->group(function (): void {
     Route::get('/partes/crear', PartesEditar::class)
         ->middleware('can:partes.crear_web')
         ->name('partes.crear');
+
+    Route::get('/partes/informe', PartesInforme::class)
+        ->middleware('can:partes.ver_todos')
+        ->name('partes.informe');
 
     Route::get('/partes/{parte}/editar', PartesEditar::class)
         ->middleware('can:partes.modificar')

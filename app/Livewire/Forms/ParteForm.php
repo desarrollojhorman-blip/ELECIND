@@ -2,103 +2,161 @@
 
 namespace App\Livewire\Forms;
 
+use App\Enums\TipoHora;
 use App\Models\Parte;
-use App\Models\ParteLineaPersonal;
+use App\Models\Proyecto;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Form;
 
 /**
- * Form Object para crear/editar partes.
+ * Formulario de creación y edición de un parte.
  *
- * Más simple que BorradorForm: sin texto libre, sin firma, sin materiales,
- * solo personal con atributos del catálogo v2.
+ * Misma cabecera que AlbaranForm (cliente, proyecto, concepto, responsable,
+ * fecha, tipo_hora, observaciones), sin firmas. El estado de un parte es
+ * 'abierto'/'cerrado' (un parte se cierra al generar el albarán).
+ *
+ * Las líneas (Trabajadores y Materiales) NO se gestionan aquí — el componente
+ * Partes\Editar las edita con modales independientes (mismo patrón que el
+ * Albaranes\Editar web).
  */
 class ParteForm extends Form
 {
     public ?int $id = null;
 
-    /* ── Cabecera ─────────────────────────────────────────────── */
+    public ?string $numero = null;
 
-    public ?int $user_id = null;        // operario que captura
+    public ?int $cliente_id = null;
 
     public ?int $proyecto_id = null;
 
+    public ?int $concepto_id = null;
+
+    public ?int $responsable_id = null;
+
     public string $fecha = '';
 
-    public ?string $hora_inicio = null;
+    public string $tipo_hora = 'laboral';
 
-    public ?string $hora_fin = null;
-
-    public bool $es_albaran = false;
+    public string $estado = 'abierto';
 
     public ?string $observaciones = null;
 
-    /* ── Líneas ───────────────────────────────────────────────── */
+    /* ── Parte personalizado (mismo patrón que albaran) ──────── */
+
+    public bool $esPersonalizado = false;
+
+    public bool $clienteOtro = false;
+
+    public string $clienteTexto = '';
+
+    public bool $proyectoOtro = false;
+
+    public string $proyectoTexto = '';
+
+    public bool $conceptoOtro = false;
+
+    public string $conceptoTexto = '';
+
+    public bool $responsableOtro = false;
+
+    public string $responsableTexto = '';
 
     /**
-     * @var array<int, array{user_id: ?int, atributo_id: ?int, cantidad: string, motivo_ajuste: ?string}>
+     * @return array<string, array<int, mixed>>
      */
-    public array $lineasPersonal = [];
-
-    /* ── Reglas ───────────────────────────────────────────────── */
-
     public function rules(): array
     {
         return [
-            'user_id'      => ['required', 'integer', 'exists:users,id'],
-            'proyecto_id'  => ['required', 'integer', 'exists:proyectos,id'],
-            'fecha'        => ['required', 'date'],
-            'hora_inicio'  => ['nullable', 'date_format:H:i'],
-            'hora_fin'     => ['nullable', 'date_format:H:i', 'after_or_equal:hora_inicio'],
-            'es_albaran'   => ['boolean'],
+            'cliente_id' => $this->esPersonalizado && ! $this->clienteOtro
+                ? ['required', 'integer', 'exists:clientes,id']
+                : ['nullable', 'integer', 'exists:clientes,id'],
+            'clienteTexto' => $this->esPersonalizado && $this->clienteOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
+            'proyecto_id' => $this->esPersonalizado && $this->proyectoOtro
+                ? ['nullable', 'integer', 'exists:proyectos,id']
+                : ['required', 'integer', 'exists:proyectos,id'],
+            'proyectoTexto' => $this->esPersonalizado && $this->proyectoOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
+            'concepto_id' => ['nullable', 'integer', 'exists:conceptos,id'],
+            'conceptoTexto' => $this->esPersonalizado && $this->conceptoOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
+            'responsable_id' => ['nullable', 'integer', 'exists:users,id'],
+            'responsableTexto' => $this->esPersonalizado && $this->responsableOtro
+                ? ['required', 'string', 'max:200']
+                : ['nullable'],
+            'fecha' => ['required', 'date'],
+            'tipo_hora' => ['required', Rule::in(array_column(TipoHora::cases(), 'value'))],
+            'estado' => ['required', Rule::in([Parte::ESTADO_ABIERTO, Parte::ESTADO_CERRADO])],
             'observaciones' => ['nullable', 'string', 'max:2000'],
-
-            'lineasPersonal'                 => ['array'],
-            'lineasPersonal.*.user_id'       => ['nullable', 'integer', 'exists:users,id'],
-            'lineasPersonal.*.atributo_id'   => ['nullable', 'integer', 'exists:atributos_hora,id'],
-            'lineasPersonal.*.cantidad'      => ['nullable', 'numeric', 'min:0', 'max:99.99'],
-            'lineasPersonal.*.motivo_ajuste' => ['nullable', 'string', 'max:120'],
         ];
     }
 
-    public function validationAttributes(): array
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
     {
         return [
-            'user_id'     => 'operario',
-            'proyecto_id' => 'proyecto',
-            'fecha'       => 'fecha',
-            'hora_inicio' => 'hora inicio',
-            'hora_fin'    => 'hora fin',
+            'cliente_id.required'        => 'Selecciona un cliente.',
+            'clienteTexto.required'      => 'Escribe el nombre del cliente.',
+            'proyecto_id.required'       => 'Selecciona un proyecto.',
+            'proyectoTexto.required'     => 'Escribe el nombre del proyecto.',
+            'conceptoTexto.required'     => 'Escribe el tipo de trabajo.',
+            'responsableTexto.required'  => 'Escribe el nombre del responsable.',
+            'fecha.required'             => 'La fecha es obligatoria.',
+            'tipo_hora.required'         => 'Indica el tipo de jornada.',
         ];
     }
-
-    /* ── Fill/Save ───────────────────────────────────────────── */
 
     public function fromModel(Parte $parte): void
     {
-        $this->id            = $parte->id;
-        $this->user_id       = $parte->user_id;
-        $this->proyecto_id   = $parte->proyecto_id;
-        $this->fecha         = $parte->fecha?->toDateString() ?? '';
-        $this->hora_inicio   = $parte->hora_inicio
-            ? substr((string) $parte->hora_inicio, 0, 5)
-            : null;
-        $this->hora_fin      = $parte->hora_fin
-            ? substr((string) $parte->hora_fin, 0, 5)
-            : null;
-        $this->es_albaran    = (bool) $parte->es_albaran;
-        $this->observaciones = $parte->observaciones;
+        $this->id             = (int) $parte->getKey();
+        $this->numero         = $parte->numero;
+        $this->cliente_id     = $parte->cliente_id;
+        $this->proyecto_id    = $parte->proyecto_id;
+        $this->concepto_id    = $parte->concepto_id;
+        $this->responsable_id = $parte->responsable_id;
+        $this->fecha          = Carbon::parse($parte->fecha)->format('Y-m-d');
+        $this->tipo_hora      = $parte->tipo_hora;
+        $this->estado         = $parte->estado;
+        $this->observaciones  = $parte->observaciones;
 
-        $this->lineasPersonal = $parte->lineasPersonal
-            ->map(fn (ParteLineaPersonal $l) => [
-                'id'            => $l->id,
-                'user_id'       => $l->user_id,
-                'atributo_id'   => $l->atributo_id,
-                'cantidad'      => (string) $l->cantidad,
-                'motivo_ajuste' => $l->motivo_ajuste,
-            ])
-            ->values()
-            ->toArray();
+        $this->esPersonalizado    = (bool) $parte->es_personalizado;
+        $this->clienteTexto       = (string) ($parte->cliente_texto ?? '');
+        $this->clienteOtro        = $this->clienteTexto !== '';
+        $this->proyectoTexto      = (string) ($parte->proyecto_texto ?? '');
+        $this->proyectoOtro       = $this->proyectoTexto !== '';
+        $this->conceptoTexto      = (string) ($parte->concepto_texto ?? '');
+        $this->conceptoOtro       = $this->conceptoTexto !== '';
+        $this->responsableTexto   = (string) ($parte->responsable_texto ?? '');
+        $this->responsableOtro    = $this->responsableTexto !== '';
+    }
+
+    /** Sincroniza cliente_id desde el proyecto seleccionado. */
+    public function sincronizarClienteDesdeProyecto(): void
+    {
+        if ($this->proyecto_id === null) {
+            $this->cliente_id = null;
+            $this->responsable_id = null;
+            $this->concepto_id = null;
+
+            return;
+        }
+
+        $proyecto = Proyecto::query()->find($this->proyecto_id);
+        if ($proyecto === null) {
+            return;
+        }
+
+        $this->cliente_id = $proyecto->cliente_id;
+        $this->responsable_id = $proyecto->responsable_principal_id;
+        $this->concepto_id = null;
     }
 
     public function save(): Parte
@@ -106,87 +164,38 @@ class ParteForm extends Form
         $this->validate();
 
         return DB::transaction(function (): Parte {
-            $datos = [
-                'user_id'      => $this->user_id,
-                'proyecto_id'  => $this->proyecto_id,
-                'fecha'        => $this->fecha,
-                'hora_inicio'  => $this->hora_inicio,
-                'hora_fin'     => $this->hora_fin,
-                'es_albaran'   => $this->es_albaran,
-                'observaciones' => $this->observaciones,
-            ];
+            $esNuevo = $this->id === null;
 
-            if ($this->id === null) {
+            if ($esNuevo) {
                 $parte = new Parte;
+                // numero lo rellena el ParteObserver::creating().
+                $parte->creado_por = (int) Auth::id();
+                $parte->estado = Parte::ESTADO_ABIERTO;
             } else {
+                /** @var Parte $parte */
                 $parte = Parte::findOrFail($this->id);
             }
 
-            $parte->fill($datos);
+            $parte->fecha = Carbon::parse($this->fecha);
+            $parte->cliente_id = $this->cliente_id ? (int) $this->cliente_id : null;
+            $parte->proyecto_id = $this->proyecto_id;
+            $parte->concepto_id = $this->concepto_id;
+            $parte->responsable_id = $this->responsable_id;
+            $parte->tipo_hora = $this->tipo_hora;
+            $parte->observaciones = $this->observaciones;
+            // El estado solo se modifica en edición (al crear se queda abierto).
+            if (! $esNuevo) {
+                $parte->estado = $this->estado;
+            }
+            $parte->es_personalizado = $this->esPersonalizado;
+            $parte->cliente_texto = $this->esPersonalizado && $this->clienteOtro ? trim($this->clienteTexto) : null;
+            $parte->proyecto_texto = $this->esPersonalizado && $this->proyectoOtro ? trim($this->proyectoTexto) : null;
+            $parte->concepto_texto = $this->esPersonalizado && $this->conceptoOtro ? trim($this->conceptoTexto) : null;
+            $parte->responsable_texto = $this->esPersonalizado && $this->responsableOtro ? trim($this->responsableTexto) : null;
+
             $parte->save();
 
-            // Sincronizar líneas: borrar las que ya no estén en el form.
-            // El componente Editar/Crear es quien decide el valor de
-            // `es_albaran` antes de llamar a save() (al cambiar el proyecto
-            // se autorellena desde tipo_proyecto.genera_albaran_por_defecto).
-            $idsExistentes = collect($this->lineasPersonal)->pluck('id')->filter()->all();
-            if (empty($idsExistentes)) {
-                ParteLineaPersonal::where('parte_id', $parte->id)->delete();
-            } else {
-                ParteLineaPersonal::where('parte_id', $parte->id)
-                    ->whereNotIn('id', $idsExistentes)
-                    ->delete();
-            }
-
-            foreach ($this->lineasPersonal as $row) {
-                // Skip filas vacías (sin trabajador o atributo).
-                if (empty($row['user_id']) || empty($row['atributo_id'])) {
-                    continue;
-                }
-
-                $datosLinea = [
-                    'parte_id'      => $parte->id,
-                    'user_id'       => (int) $row['user_id'],
-                    'atributo_id'   => (int) $row['atributo_id'],
-                    'cantidad'      => $row['cantidad'] === null || $row['cantidad'] === ''
-                        ? 0
-                        : (float) str_replace(',', '.', (string) $row['cantidad']),
-                    'motivo_ajuste' => $row['motivo_ajuste'] ?? null,
-                ];
-
-                if (! empty($row['id'])) {
-                    $linea = ParteLineaPersonal::find($row['id']);
-                    if ($linea !== null) {
-                        $linea->fill($datosLinea);
-                        $linea->save();
-
-                        continue;
-                    }
-                }
-
-                ParteLineaPersonal::create($datosLinea);
-            }
-
-            return $parte->fresh(['lineasPersonal']);
+            return $parte->fresh();
         });
-    }
-
-    /* ── Helpers para el blade ───────────────────────────────── */
-
-    public function addLineaPersonal(): void
-    {
-        $this->lineasPersonal[] = [
-            'id'            => null,
-            'user_id'       => null,
-            'atributo_id'   => null,
-            'cantidad'      => '',
-            'motivo_ajuste' => null,
-        ];
-    }
-
-    public function removeLineaPersonal(int $index): void
-    {
-        unset($this->lineasPersonal[$index]);
-        $this->lineasPersonal = array_values($this->lineasPersonal);
     }
 }

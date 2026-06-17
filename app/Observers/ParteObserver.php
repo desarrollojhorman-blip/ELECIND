@@ -2,9 +2,10 @@
 
 namespace App\Observers;
 
+use App\Models\Cliente;
+use App\Models\Concepto;
 use App\Models\Parte;
 use App\Models\Proyecto;
-use App\Models\TiposProyecto;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -12,111 +13,150 @@ use Illuminate\Support\Carbon;
  * Snapshot de las relaciones en la cabecera del parte.
  *
  * Mismo patrón que AlbaranObserver: cada bloque de snapshots se (re)escribe
- * SOLO cuando su FK está `dirty` (al crear o al cambiarla).
+ * SOLO cuando su FK correspondiente está `dirty`.
  *
  * Además:
- *  - `creating`: genera el código PT-YYYY-NNNN secuencial por año.
- *  - `creating`: rellena `es_albaran` desde
- *    `tipo_proyecto.genera_albaran_por_defecto` si no se especificó.
+ *   - `creating`: genera el número PT-YYYY-NNNN secuencial por año.
  */
 class ParteObserver
 {
     public function creating(Parte $parte): void
     {
-        // Autocódigo PT-YYYY-NNNN.
-        if (empty($parte->codigo)) {
-            $parte->codigo = $this->siguienteCodigo();
-        }
-
-        // Si `es_albaran` no se ha especificado activamente, deducirlo del
-        // tipo_proyecto del proyecto seleccionado. El operario puede haberlo
-        // marcado explícitamente; en ese caso (atributo "dirty"), respetamos.
-        if (! $parte->isDirty('es_albaran') && $parte->proyecto_id) {
-            $proyecto = Proyecto::find($parte->proyecto_id);
-            $tipo = $proyecto?->tipo_proyecto_id
-                ? TiposProyecto::find($proyecto->tipo_proyecto_id)
-                : null;
-            if ($tipo !== null) {
-                $parte->es_albaran = (bool) $tipo->genera_albaran_por_defecto;
-            }
+        if (empty($parte->numero)) {
+            $parte->numero = $this->siguienteNumero();
         }
     }
 
     public function saving(Parte $parte): void
     {
-        if ($parte->isDirty('user_id')) {
-            $this->snapshotOperario($parte);
+        if ($parte->isDirty('cliente_id')) {
+            $this->snapshotCliente($parte);
         }
 
         if ($parte->isDirty('proyecto_id')) {
-            $this->snapshotProyectoYCliente($parte);
+            $this->snapshotProyecto($parte);
+        }
+
+        if ($parte->isDirty('concepto_id')) {
+            $this->snapshotConcepto($parte);
+        }
+
+        if ($parte->isDirty('creado_por')) {
+            $this->snapshotCreador($parte);
+        }
+
+        if ($parte->isDirty('responsable_id')) {
+            $this->snapshotResponsable($parte);
         }
     }
 
     /**
-     * Próximo código PT-YYYY-NNNN, padded a 4 dígitos, por año del campo
-     * `fecha` (si está) o del año actual.
+     * Próximo número PT-YYYY-NNNN, padded a 4 dígitos, por año actual.
      */
-    private function siguienteCodigo(): string
+    private function siguienteNumero(): string
     {
-        // Año tomado del campo fecha si está; si no, del año actual del servidor.
         $anio = Carbon::now()->year;
 
         $ultimo = Parte::query()
-            ->where('codigo', 'like', 'PT-'.$anio.'-%')
-            ->orderByDesc('codigo')
-            ->value('codigo');
+            ->withTrashed()
+            ->where('numero', 'like', 'PT-'.$anio.'-%')
+            ->orderByDesc('numero')
+            ->value('numero');
 
         $siguiente = 1;
         if ($ultimo !== null) {
-            // PT-YYYY-NNNN → NNNN
-            $partes = explode('-', $ultimo);
-            $siguiente = ((int) end($partes)) + 1;
+            $piezas = explode('-', $ultimo);
+            $siguiente = ((int) end($piezas)) + 1;
         }
 
         return sprintf('PT-%d-%04d', $anio, $siguiente);
     }
 
-    private function snapshotOperario(Parte $parte): void
+    private function snapshotCliente(Parte $parte): void
     {
-        if ($parte->user_id === null) {
-            $parte->operario_nombre_snapshot = null;
+        if ($parte->cliente_id === null) {
+            $parte->cliente_codigo_snapshot = null;
+            $parte->cliente_nombre_snapshot = null;
+            $parte->cliente_cif_snapshot = null;
 
             return;
         }
-        $user = User::withTrashed()->find($parte->user_id);
-        if ($user === null) {
+        $cliente = Cliente::withTrashed()->find($parte->cliente_id);
+        if ($cliente === null) {
             return;
         }
-        $parte->operario_nombre_snapshot = trim($user->apellidos.' '.$user->nombre) ?: $user->username;
+        $parte->cliente_codigo_snapshot = $cliente->codigo_cliente;
+        $parte->cliente_nombre_snapshot = $cliente->nombre;
+        $parte->cliente_cif_snapshot = $cliente->cif;
     }
 
-    private function snapshotProyectoYCliente(Parte $parte): void
+    private function snapshotProyecto(Parte $parte): void
     {
         if ($parte->proyecto_id === null) {
             $parte->proyecto_codigo_snapshot = null;
             $parte->proyecto_nombre_snapshot = null;
-            $parte->cliente_id_snapshot = null;
-            $parte->cliente_nombre_snapshot = null;
-            $parte->tipo_proyecto_id_snapshot = null;
-            $parte->tipo_proyecto_nombre_snapshot = null;
 
             return;
         }
-
-        $proyecto = Proyecto::withTrashed()
-            ->with(['cliente:id,nombre', 'tipoProyecto:id,nombre'])
-            ->find($parte->proyecto_id);
-
+        $proyecto = Proyecto::withTrashed()->find($parte->proyecto_id);
         if ($proyecto === null) {
             return;
         }
-
         $parte->proyecto_codigo_snapshot = $proyecto->codigo;
         $parte->proyecto_nombre_snapshot = $proyecto->nombre;
-        $parte->cliente_id_snapshot = $proyecto->cliente_id;
-        $parte->cliente_nombre_snapshot = $proyecto->cliente?->nombre;
-        $parte->tipo_proyecto_id_snapshot = $proyecto->tipo_proyecto_id;
-        $parte->tipo_proyecto_nombre_snapshot = $proyecto->tipoProyecto?->nombre;
+    }
+
+    private function snapshotConcepto(Parte $parte): void
+    {
+        if ($parte->concepto_id === null) {
+            $parte->concepto_nombre_snapshot = null;
+
+            return;
+        }
+        $concepto = Concepto::withTrashed()->find($parte->concepto_id);
+        if ($concepto === null) {
+            return;
+        }
+        $parte->concepto_nombre_snapshot = $concepto->nombre;
+    }
+
+    private function snapshotCreador(Parte $parte): void
+    {
+        if ($parte->creado_por === null) {
+            $parte->creador_username_snapshot = null;
+            $parte->creador_nombre_snapshot = null;
+            $parte->creador_apellidos_snapshot = null;
+            $parte->creador_numero_empleado_snapshot = null;
+
+            return;
+        }
+        $user = User::withTrashed()->find($parte->creado_por);
+        if ($user === null) {
+            return;
+        }
+        $parte->creador_username_snapshot = $user->username;
+        $parte->creador_nombre_snapshot = $user->nombre;
+        $parte->creador_apellidos_snapshot = $user->apellidos;
+        $parte->creador_numero_empleado_snapshot = $user->numero_empleado;
+    }
+
+    private function snapshotResponsable(Parte $parte): void
+    {
+        if ($parte->responsable_id === null) {
+            $parte->responsable_username_snapshot = null;
+            $parte->responsable_nombre_snapshot = null;
+            $parte->responsable_apellidos_snapshot = null;
+            $parte->responsable_numero_empleado_snapshot = null;
+
+            return;
+        }
+        $user = User::withTrashed()->find($parte->responsable_id);
+        if ($user === null) {
+            return;
+        }
+        $parte->responsable_username_snapshot = $user->username;
+        $parte->responsable_nombre_snapshot = $user->nombre;
+        $parte->responsable_apellidos_snapshot = $user->apellidos;
+        $parte->responsable_numero_empleado_snapshot = $user->numero_empleado;
     }
 }

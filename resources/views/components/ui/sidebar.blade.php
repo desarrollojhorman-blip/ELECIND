@@ -55,6 +55,12 @@
                     'key' => 'borradores',
                     'permission' => 'borradores.ver_todos',
                 ],
+                [
+                    'label' => 'Informe de horas',
+                    'route' => 'partes.informe',
+                    'key' => 'partes_informe',
+                    'permission' => 'partes.ver_todos',
+                ],
             ],
         ],
         [

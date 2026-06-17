@@ -8,26 +8,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Línea de personal de un parte.
  *
- * Una fila por (trabajador × atributo). Un mismo trabajador puede tener
- * varias líneas en el mismo parte si imputa más de un atributo en el día.
+ * Esquema idéntico a AlbaranLineaPersonal: una fila por (parte, trabajador)
+ * con `horas` (normales) y `horas_extra`. El tipo de jornada se hereda de
+ * la cabecera del parte (campo `tipo_hora`).
  *
- * Snapshots económicos (tarifa, tasa, facturación, coste) los mantiene
- * ParteLineaPersonalObserver al asignar/cambiar las FK.
+ * Los snapshots del trabajador (nombre, apellidos, nº empleado y 3 tasas)
+ * los mantiene ParteLineaPersonalObserver al asignar/cambiar `trabajador_id`.
  *
  * @property int $id
  * @property int $parte_id
- * @property int $user_id
- * @property int $atributo_id
- * @property float $cantidad
- * @property string|null $motivo_ajuste
+ * @property int $trabajador_id
+ * @property string $horas
+ * @property string $horas_extra
  * @property string|null $trabajador_nombre_snapshot
  * @property string|null $trabajador_apellidos_snapshot
- * @property string|null $atributo_codigo_snapshot
- * @property string|null $atributo_nombre_snapshot
- * @property float $tarifa_snapshot
- * @property float $tasa_snapshot
- * @property float $facturacion_snapshot
- * @property float $coste_snapshot
+ * @property string|null $trabajador_numero_empleado_snapshot
+ * @property string|null $trabajador_tasa_hora_snapshot
+ * @property string|null $trabajador_tasa_extra_snapshot
+ * @property string|null $trabajador_tasa_festivo_snapshot
  */
 class ParteLineaPersonal extends Model
 {
@@ -35,33 +33,27 @@ class ParteLineaPersonal extends Model
 
     protected $fillable = [
         'parte_id',
-        'user_id',
-        'atributo_id',
-        'cantidad',
-        'motivo_ajuste',
-        // Snapshots
+        'trabajador_id',
+        'horas',
+        'horas_extra',
         'trabajador_nombre_snapshot',
         'trabajador_apellidos_snapshot',
-        'atributo_codigo_snapshot',
-        'atributo_nombre_snapshot',
-        'tarifa_snapshot',
-        'tasa_snapshot',
-        'facturacion_snapshot',
-        'coste_snapshot',
+        'trabajador_numero_empleado_snapshot',
+        'trabajador_tasa_hora_snapshot',
+        'trabajador_tasa_extra_snapshot',
+        'trabajador_tasa_festivo_snapshot',
     ];
 
     protected function casts(): array
     {
         return [
-            'cantidad' => 'decimal:2',
-            'tarifa_snapshot' => 'decimal:4',
-            'tasa_snapshot' => 'decimal:3',
-            'facturacion_snapshot' => 'decimal:2',
-            'coste_snapshot' => 'decimal:2',
+            'horas' => 'decimal:2',
+            'horas_extra' => 'decimal:2',
+            'trabajador_tasa_hora_snapshot' => 'decimal:3',
+            'trabajador_tasa_extra_snapshot' => 'decimal:3',
+            'trabajador_tasa_festivo_snapshot' => 'decimal:3',
         ];
     }
-
-    /* ── Relaciones ─────────────────────────────────────────── */
 
     public function parte(): BelongsTo
     {
@@ -70,19 +62,6 @@ class ParteLineaPersonal extends Model
 
     public function trabajador(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function atributo(): BelongsTo
-    {
-        return $this->belongsTo(AtributoHora::class, 'atributo_id');
-    }
-
-    /* ── Accesors ──────────────────────────────────────────── */
-
-    /** Margen de la línea (facturación – coste). */
-    public function margen(): float
-    {
-        return (float) $this->facturacion_snapshot - (float) $this->coste_snapshot;
+        return $this->belongsTo(User::class, 'trabajador_id');
     }
 }

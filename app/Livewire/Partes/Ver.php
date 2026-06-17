@@ -21,16 +21,15 @@ class Ver extends Component
     {
         Gate::authorize('view', $parte);
         $parte->load([
-            'lineasPersonal.atributo:id,codigo,nombre_corto',
-            'lineasPersonal.trabajador:id,nombre,apellidos',
-            'user:id,nombre,apellidos',
-            'proyecto:id,codigo,nombre',
+            'lineasPersonal.trabajador:id,nombre,apellidos,numero_empleado',
+            'lineasMaterial.material:id,descripcion,unidad_medida',
         ]);
         $this->parte = $parte;
     }
 
     public function confirmarEliminar(): void
     {
+        Gate::authorize('delete', $this->parte);
         $this->confirmarEliminarId = $this->parte->id;
     }
 
@@ -42,9 +41,9 @@ class Ver extends Component
     public function eliminar(): mixed
     {
         Gate::authorize('delete', $this->parte);
-        $codigo = $this->parte->codigo;
+        $numero = $this->parte->numero;
         $this->parte->delete();
-        session()->flash('status', "Parte «{$codigo}» eliminado.");
+        session()->flash('status', "Parte «{$numero}» eliminado.");
 
         return $this->redirect(route('partes.index'), navigate: true);
     }
