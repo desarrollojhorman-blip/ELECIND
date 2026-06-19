@@ -132,7 +132,7 @@ class Index extends Component
             ->pluck('importe', 'atributo_id');
 
         $this->ediciones[$key] = [];
-        foreach (AtributoHora::pluck('id') as $atributoId) {
+        foreach ($this->atributos->pluck('id') as $atributoId) {
             $this->ediciones[$key][$atributoId] = (float) ($tarifas[$atributoId] ?? 0);
         }
     }
@@ -224,7 +224,7 @@ class Index extends Component
     #[Computed]
     public function atributos(): Collection
     {
-        return AtributoHora::query()->orderBy('orden')->get();
+        return AtributoHora::query()->usados()->orderBy('orden')->get();
     }
 
     /** @return Collection<int, Cliente> */

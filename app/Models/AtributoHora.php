@@ -85,6 +85,19 @@ class AtributoHora extends Model
         return $q->whereIn('grupo', [self::GRUPO_NORMAL, self::GRUPO_EXTRA]);
     }
 
+    /**
+     * Atributos en uso real en tarifas (cliente y trabajador): las 8 horas +
+     * Plus Retén. Los otros 2 pluses (Plus Festivo, Plus Noche) quedan
+     * descatalogados de la UI — siguen en BD pero no se muestran ni editan.
+     */
+    public function scopeUsados(Builder $q): Builder
+    {
+        return $q->where(function (Builder $sub): void {
+            $sub->whereIn('grupo', [self::GRUPO_NORMAL, self::GRUPO_EXTRA])
+                ->orWhere('codigo', self::COD_PLUS_RETEN);
+        });
+    }
+
     public function esPlus(): bool
     {
         return $this->grupo === self::GRUPO_PLUS;

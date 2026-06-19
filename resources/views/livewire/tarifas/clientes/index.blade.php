@@ -88,7 +88,7 @@
                     Tipo proyecto
                 </x-ui.sortable-header>
                 @foreach ($this->atributos as $attr)
-                    <x-ui.sortable-header align="center" class="whitespace-nowrap" title="{{ $attr->nombre_largo }}">
+                    <x-ui.sortable-header align="center" class="whitespace-nowrap" style="text-transform: none;" title="{{ $attr->nombre_largo }}">
                         {{ $attr->nombre_corto }}
                     </x-ui.sortable-header>
                 @endforeach

@@ -51,6 +51,7 @@ class User extends Authenticatable
         'tasa_ex_lab_noc',
         'tasa_ex_fes',
         'tasa_ex_fes_noct',
+        'tasa_plus_reten',
         'tipo_usuario',
         'cliente_id',
         'gestiona_todos_clientes',
@@ -93,6 +94,7 @@ class User extends Authenticatable
             'tasa_ex_lab_noc' => 'decimal:3',
             'tasa_ex_fes' => 'decimal:3',
             'tasa_ex_fes_noct' => 'decimal:3',
+            'tasa_plus_reten' => 'decimal:3',
         ];
     }
 

@@ -67,7 +67,7 @@ class Bloque extends Component
             ->pluck('importe', 'atributo_id');
 
         $this->ediciones[$tipoProyectoId] = [];
-        foreach (AtributoHora::pluck('id') as $atributoId) {
+        foreach ($this->atributos->pluck('id') as $atributoId) {
             $this->ediciones[$tipoProyectoId][$atributoId] = (float) ($tarifas[$atributoId] ?? 0);
         }
     }
@@ -139,7 +139,7 @@ class Bloque extends Component
     #[Computed]
     public function atributos(): Collection
     {
-        return AtributoHora::query()->orderBy('orden')->get();
+        return AtributoHora::query()->usados()->orderBy('orden')->get();
     }
 
     /** @return Collection<int, TarifaHistorial> */

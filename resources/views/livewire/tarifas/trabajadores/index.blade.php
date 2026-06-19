@@ -67,7 +67,7 @@
         };
     @endphp
 
-    <x-ui.data-table :colspan="2 + $this->atributosHora->count() + 1" empty="No hay trabajadores que coincidan con la búsqueda.">
+    <x-ui.data-table :colspan="2 + count($columnas) + 1" empty="No hay trabajadores que coincidan con la búsqueda.">
         <x-slot:head>
             <tr>
                 <x-ui.sortable-header column="numero_empleado" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
@@ -76,16 +76,16 @@
                 <x-ui.sortable-header column="apellidos" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
                     Nombre
                 </x-ui.sortable-header>
-                @foreach ($this->atributosHora as $attr)
+                @foreach ($columnas as $col)
                     <x-ui.sortable-header
-                        column="{{ $attr->mapeo_tasa }}"
+                        column="{{ $col['orden'] }}"
                         :current-column="$ordenColumna"
                         :current-direction="$ordenDireccion"
                         align="center"
                         class="whitespace-nowrap"
-                        title="{{ $attr->nombre_largo }}"
+                        title="{{ $col['titulo'] }}"
                     >
-                        {{ $attr->nombre_corto }}
+                        {{ $col['label'] }}
                     </x-ui.sortable-header>
                 @endforeach
                 <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
@@ -106,8 +106,7 @@
                         <div class="font-medium text-slate-900">{{ trim($u->apellidos.' '.$u->nombre) ?: $u->username }}</div>
                         <div class="text-xs text-slate-400">{{ $u->username }}</div>
                     </td>
-                    @foreach ($this->atributosHora as $attr)
-                        @php $campo = $attr->mapeo_tasa; @endphp
+                    @foreach ($columnas as $col)
                         <td class="px-2 py-2 text-center">
                             @if ($enEdicion)
                                 <input
@@ -115,12 +114,12 @@
                                     step="0.001"
                                     min="0"
                                     max="9999.999"
-                                    wire:model="ediciones.{{ $u->id }}.{{ $campo }}"
+                                    wire:model="ediciones.{{ $u->id }}.{{ $col['key'] }}"
                                     class="w-20 rounded border border-primary-300 bg-white px-1.5 py-1 text-right text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                                 />
                             @else
                                 <span class="block w-20 mx-auto tabular-nums text-right text-sm text-slate-700">
-                                    {{ $fmt($u->{$campo}) }}
+                                    {{ $fmt($u->{$col['campos'][0]}) }}
                                 </span>
                             @endif
                         </td>

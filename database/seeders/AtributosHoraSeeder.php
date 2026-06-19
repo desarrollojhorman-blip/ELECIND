@@ -99,7 +99,7 @@ class AtributosHoraSeeder extends Seeder
                 'nombre_corto' => 'Plus Retén',
                 'nombre_largo' => 'Plus de retén (guardia/disponibilidad)',
                 'grupo' => AtributoHora::GRUPO_PLUS,
-                'mapeo_tasa' => null,
+                'mapeo_tasa' => 'tasa_plus_reten',
                 'orden' => 9,
             ],
             [

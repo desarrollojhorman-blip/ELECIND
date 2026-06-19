@@ -31,6 +31,7 @@ class UserTasasObserver
         'tasa_ex_lab_noc',
         'tasa_ex_fes',
         'tasa_ex_fes_noct',
+        'tasa_plus_reten',
     ];
 
     public function updated(User $user): void

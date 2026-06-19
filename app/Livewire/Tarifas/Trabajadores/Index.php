@@ -37,7 +37,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    /** Las 8 tasas del trabajador en orden de presentación. */
+    /** Las 8 tasas hora + el Plus Retén (campos reales en `users`). */
     public const CAMPOS_TASA = [
         'tasa_hora',
         'tasa_lab_noche',
@@ -47,6 +47,34 @@ class Index extends Component
         'tasa_ex_lab_noc',
         'tasa_ex_fes',
         'tasa_ex_fes_noct',
+        'tasa_plus_reten',
+    ];
+
+    /**
+     * Columnas que ve el usuario. Una columna puede agrupar varios campos que
+     * comparten precio y se editan juntos: las 4 horas normales (Labor, Lab
+     * Noche, Fest, Fest Noct) van en una sola columna; al editarla se escribe
+     * el mismo valor en las 4 tasas reales. El resto son 1 campo = 1 columna.
+     *
+     * `key`    → clave para `ediciones[userId][key]`.
+     * `campos` → campos `users.tasa_*` que recibe el valor al guardar.
+     * `orden`  → campo representativo para ordenar la tabla por esa columna.
+     *
+     * @var array<int, array{key:string,label:string,titulo:string,campos:array<int,string>,orden:string}>
+     */
+    public const COLUMNAS = [
+        [
+            'key' => 'normales',
+            'label' => 'Laboral',
+            'titulo' => 'Labor · Lab Noche · Fest · Fest Noct (comparten precio)',
+            'campos' => ['tasa_hora', 'tasa_lab_noche', 'tasa_festivo', 'tasa_fest_noche'],
+            'orden' => 'tasa_hora',
+        ],
+        ['key' => 'tasa_extra', 'label' => 'Ex Lab', 'titulo' => 'Hora extra laboral diurna', 'campos' => ['tasa_extra'], 'orden' => 'tasa_extra'],
+        ['key' => 'tasa_ex_lab_noc', 'label' => 'Ex Lab Noc', 'titulo' => 'Hora extra laboral nocturna', 'campos' => ['tasa_ex_lab_noc'], 'orden' => 'tasa_ex_lab_noc'],
+        ['key' => 'tasa_ex_fes', 'label' => 'Ex Fes', 'titulo' => 'Hora extra festiva diurna', 'campos' => ['tasa_ex_fes'], 'orden' => 'tasa_ex_fes'],
+        ['key' => 'tasa_ex_fes_noct', 'label' => 'Ex Fes Noct', 'titulo' => 'Hora extra festiva nocturna', 'campos' => ['tasa_ex_fes_noct'], 'orden' => 'tasa_ex_fes_noct'],
+        ['key' => 'tasa_plus_reten', 'label' => 'Plus Retén', 'titulo' => 'Plus de retén (guardia/disponibilidad)', 'campos' => ['tasa_plus_reten'], 'orden' => 'tasa_plus_reten'],
     ];
 
     #[Url(as: 'q')]
@@ -139,7 +167,7 @@ class Index extends Component
 
     /* ── Edición por fila ────────────────────────────────────── */
 
-    /** Entra una fila en modo edición. Precarga las 8 tasas actuales. */
+    /** Entra una fila en modo edición. Precarga un valor por columna. */
     public function editar(int $userId): void
     {
         Gate::authorize('tarifas.editar_trabajadores');
@@ -149,8 +177,9 @@ class Index extends Component
         $user = User::select(['id', ...self::CAMPOS_TASA])->findOrFail($userId);
 
         $this->ediciones[$userId] = [];
-        foreach (self::CAMPOS_TASA as $campo) {
-            $this->ediciones[$userId][$campo] = (float) $user->{$campo};
+        foreach (self::COLUMNAS as $col) {
+            // En grupos, todos los campos comparten valor: basta el primero.
+            $this->ediciones[$userId][$col['key']] = (float) $user->{$col['campos'][0]};
         }
     }
 
@@ -166,11 +195,11 @@ class Index extends Component
 
         if (isset($this->ediciones[$userId])) {
             $reglas = [];
-            foreach (self::CAMPOS_TASA as $campo) {
-                if (! array_key_exists($campo, $this->ediciones[$userId])) {
+            foreach (self::COLUMNAS as $col) {
+                if (! array_key_exists($col['key'], $this->ediciones[$userId])) {
                     continue;
                 }
-                $reglas["ediciones.$userId.$campo"] = 'required|numeric|min:0|max:9999.999';
+                $reglas["ediciones.$userId.{$col['key']}"] = 'required|numeric|min:0|max:9999.999';
             }
 
             try {
@@ -180,12 +209,17 @@ class Index extends Component
             }
 
             $user = User::findOrFail($userId);
-            foreach (self::CAMPOS_TASA as $campo) {
-                if (! array_key_exists($campo, $this->ediciones[$userId])) {
+            foreach (self::COLUMNAS as $col) {
+                if (! array_key_exists($col['key'], $this->ediciones[$userId])) {
                     continue;
                 }
-                $valor = $this->ediciones[$userId][$campo];
-                $user->{$campo} = $valor === '' || $valor === null ? 0 : (float) $valor;
+                $valor = $this->ediciones[$userId][$col['key']];
+                $valor = $valor === '' || $valor === null ? 0 : (float) $valor;
+                // El mismo valor se escribe en todos los campos de la columna
+                // (en los grupos: las 4 horas normales comparten precio).
+                foreach ($col['campos'] as $campo) {
+                    $user->{$campo} = $valor;
+                }
             }
             $user->save();
 
@@ -215,7 +249,7 @@ class Index extends Component
     public function atributosHora(): \Illuminate\Support\Collection
     {
         return AtributoHora::query()
-            ->horas()
+            ->usados()
             ->orderBy('orden')
             ->get();
     }
@@ -325,6 +359,7 @@ class Index extends Component
 
         return view('livewire.tarifas.trabajadores.index', [
             'usuarios' => $query->paginate($this->porPagina)->onEachSide(2),
+            'columnas' => self::COLUMNAS,
         ]);
     }
 }
