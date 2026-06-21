@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
                 Fase1DemoSeeder::class,
                 Fase2DemoSeeder::class,
                 Fase3DemoSeeder::class,
+                Fase4DemoSeeder::class,
             ]);
         }
 

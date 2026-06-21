@@ -77,16 +77,17 @@
                     Nombre
                 </x-ui.sortable-header>
                 @foreach ($columnas as $col)
-                    <x-ui.sortable-header
-                        column="{{ $col['orden'] }}"
-                        :current-column="$ordenColumna"
-                        :current-direction="$ordenDireccion"
-                        align="center"
-                        class="whitespace-nowrap"
-                        title="{{ $col['titulo'] }}"
-                    >
-                        {{ $col['label'] }}
-                    </x-ui.sortable-header>
+                    <th class="px-4 py-3 whitespace-nowrap text-center">
+                        @can('tarifas.editar_trabajadores')
+                            <button type="button" wire:click="abrirBulk('{{ $col['key'] }}')"
+                                    class="text-table-header-text/90 transition-colors hover:text-primary-600"
+                                    title="{{ $col['titulo'] }} — Pulsa para aplicar a todos los filtrados">
+                                {{ $col['label'] }}
+                            </button>
+                        @else
+                            <span title="{{ $col['titulo'] }}">{{ $col['label'] }}</span>
+                        @endcan
+                    </th>
                 @endforeach
                 <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
             </tr>
@@ -173,6 +174,30 @@
             @endforeach
         </x-slot:rows>
     </x-ui.data-table>
+
+    {{-- ── Modal Bulk por columna ────────────────────────────── --}}
+    @php $columnaBulk = collect($columnas)->firstWhere('key', $bulkColumnaKey); @endphp
+    <x-ui.modal :show="$bulkColumnaKey !== null" title="Aplicar a todos los filtrados" close-action="cerrarBulk" size="sm">
+        <p class="mb-4 text-sm text-slate-600">
+            Se cambiará <strong>{{ $columnaBulk['label'] ?? '' }}</strong> en todos los trabajadores activos filtrados.
+        </p>
+        <x-ui.field label="Importe (€)" :error="$errors->first('bulkValor')">
+            <x-ui.input
+                type="number"
+                step="0.001"
+                min="0"
+                max="9999.999"
+                wire:model="bulkValor"
+                wire:keydown.enter="aplicarBulk"
+                placeholder="0"
+                autofocus
+            />
+        </x-ui.field>
+        <x-slot name="footer">
+            <x-ui.button wire:click="aplicarBulk" variant="primary">Aplicar</x-ui.button>
+            <x-ui.button wire:click="cerrarBulk" variant="secondary">Cancelar</x-ui.button>
+        </x-slot>
+    </x-ui.modal>
 
     {{-- ── Modal Historial contextual ──────────────────────────── --}}
     @php

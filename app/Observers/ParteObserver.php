@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * SOLO cuando su FK correspondiente está `dirty`.
  *
  * Además:
- *   - `creating`: genera el número PT-YYYY-NNNN secuencial por año.
+ *   - `creating`: genera el número PT{YY}-{N} secuencial por año (ej. PT26-1).
  */
 class ParteObserver
 {
@@ -51,25 +51,27 @@ class ParteObserver
     }
 
     /**
-     * Próximo número PT-YYYY-NNNN, padded a 4 dígitos, por año actual.
+     * Próximo número PT{YY}-{N} sin ceros de relleno, secuencial por año.
+     * Ejemplo: PT26-1, PT26-2, …, PT26-10, PT27-1.
      */
     private function siguienteNumero(): string
     {
         $anio = Carbon::now()->year;
+        $anio2 = substr((string) $anio, 2); // "2026" → "26"
+        $prefijo = 'PT'.$anio2.'-';
 
         $ultimo = Parte::query()
             ->withTrashed()
-            ->where('numero', 'like', 'PT-'.$anio.'-%')
-            ->orderByDesc('numero')
+            ->where('numero', 'like', $prefijo.'%')
+            ->orderByDesc('id')
             ->value('numero');
 
         $siguiente = 1;
         if ($ultimo !== null) {
-            $piezas = explode('-', $ultimo);
-            $siguiente = ((int) end($piezas)) + 1;
+            $siguiente = ((int) substr($ultimo, strlen($prefijo))) + 1;
         }
 
-        return sprintf('PT-%d-%04d', $anio, $siguiente);
+        return $prefijo.$siguiente;
     }
 
     private function snapshotCliente(Parte $parte): void

@@ -67,7 +67,7 @@ class Fase3DemoSeeder extends Seeder
                         ? ($estado === EstadoAusencia::RECHAZADA ? 'No cumple los requisitos del convenio. '.$faker->sentence(6) : $faker->sentence(8))
                         : null,
                     'aprobado_por'   => $estado !== EstadoAusencia::PENDIENTE ? $aprobador->id : null,
-                    'aprobado_at'    => $estado !== EstadoAusencia::PENDIENTE ? $inicio->copy()->subDays($faker->numberBetween(1, 5)) : null,
+                    'aprobado_at'    => $estado !== EstadoAusencia::PENDIENTE ? $inicio->copy()->subDays($faker->numberBetween(1, 5))->setTime(12, 0, 0) : null,
                 ]);
             }
         }

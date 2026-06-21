@@ -8,7 +8,6 @@ use App\Models\TarifaCliente;
 use App\Models\TarifaHistorial;
 use App\Models\TiposProyecto;
 use Illuminate\Contracts\View\View;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -46,9 +45,6 @@ class Index extends Component
     #[Url(as: 'pp')]
     public int $porPagina = 25;
 
-    #[Url(as: 'pagina')]
-    public int $paginaActual = 1;
-
     #[Url(as: 'orden')]
     public string $ordenColumna = 'cliente';
 
@@ -64,6 +60,11 @@ class Index extends Component
     /** ['cliente_id' => ..., 'tipo_proyecto_id' => ...] o null si cerrado. */
     public ?array $historialCombinacion = null;
 
+    /** Atributo_id del modal bulk abierto, null si cerrado. */
+    public ?int $bulkAtributoId = null;
+
+    public string $bulkValor = '';
+
     public function mount(): void
     {
         Gate::authorize('tarifas.ver');
@@ -71,22 +72,22 @@ class Index extends Component
 
     public function updatedBuscar(): void
     {
-        $this->paginaActual = 1;
+        $this->resetPage();
     }
 
     public function updatedFiltroCliente(): void
     {
-        $this->paginaActual = 1;
+        $this->resetPage();
     }
 
     public function updatedFiltroTipoProyecto(): void
     {
-        $this->paginaActual = 1;
+        $this->resetPage();
     }
 
     public function updatedPorPagina(): void
     {
-        $this->paginaActual = 1;
+        $this->resetPage();
     }
 
     public function limpiarFiltros(): void
@@ -94,13 +95,12 @@ class Index extends Component
         $this->buscar = '';
         $this->filtroCliente = null;
         $this->filtroTipoProyecto = null;
-        $this->paginaActual = 1;
+        $this->resetPage();
     }
 
     public function ordenarPor(string $columna): void
     {
-        $permitidas = ['codigo_cliente', 'cliente', 'tipo_proyecto'];
-        if (! \in_array($columna, $permitidas, true)) {
+        if (! \in_array($columna, ['codigo_cliente', 'cliente', 'tipo_proyecto'], true)) {
             return;
         }
 
@@ -206,6 +206,59 @@ class Index extends Component
         $this->historialCombinacion = null;
     }
 
+    /* ── Bulk por atributo ───────────────────────────────────── */
+
+    public function abrirBulk(int $atributoId): void
+    {
+        Gate::authorize('tarifas.editar_clientes');
+        $this->bulkAtributoId = $atributoId;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function cerrarBulk(): void
+    {
+        $this->bulkAtributoId = null;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function aplicarBulk(): void
+    {
+        Gate::authorize('tarifas.editar_clientes');
+
+        if ($this->bulkAtributoId === null) {
+            return;
+        }
+
+        $this->validate([
+            'bulkValor' => 'required|numeric|min:0|max:9999.999',
+        ]);
+
+        $valor = (float) $this->bulkValor;
+        $atributoId = $this->bulkAtributoId;
+
+        $combinaciones = $this->buildCombinacionesQuery()
+            ->get(['c.id as cliente_id', 'tp.id as tipo_proyecto_id']);
+
+        DB::transaction(function () use ($combinaciones, $atributoId, $valor): void {
+            foreach ($combinaciones as $combo) {
+                TarifaCliente::updateOrCreate(
+                    [
+                        'cliente_id'       => $combo->cliente_id,
+                        'tipo_proyecto_id' => $combo->tipo_proyecto_id,
+                        'atributo_id'      => $atributoId,
+                    ],
+                    ['importe' => $valor],
+                );
+            }
+        });
+
+        $this->bulkAtributoId = null;
+        $this->bulkValor = '';
+        session()->flash('status', 'Tarifas actualizadas.');
+    }
+
     /* ── Helpers ──────────────────────────────────────────────── */
 
     public function keyCombinacion(int $clienteId, int $tipoProyectoId): string
@@ -272,9 +325,8 @@ class Index extends Component
             ->get();
     }
 
-    public function render(): View
+    private function buildCombinacionesQuery(): \Illuminate\Database\Query\Builder
     {
-        // CROSS JOIN clientes activos × tipos_proyecto activos.
         $query = DB::table('clientes as c')
             ->crossJoin('tipos_proyectos as tp')
             ->whereNull('c.deleted_at')
@@ -305,8 +357,17 @@ class Index extends Component
             });
         }
 
-        // Orden: primario por columna pedida, secundario por la otra (estabilidad).
-        if ($this->ordenColumna === 'tipo_proyecto') {
+        if (str_starts_with($this->ordenColumna, 'atributo_')) {
+            $atributoId = (int) substr($this->ordenColumna, 9);
+            $query->leftJoin('tarifas_cliente as tc_sort', function ($join) use ($atributoId): void {
+                $join->on('tc_sort.cliente_id', '=', 'c.id')
+                    ->on('tc_sort.tipo_proyecto_id', '=', 'tp.id')
+                    ->where('tc_sort.atributo_id', $atributoId);
+            })
+                ->orderBy('tc_sort.importe', $this->ordenDireccion)
+                ->orderBy('c.nombre')
+                ->orderBy('tp.nombre');
+        } elseif ($this->ordenColumna === 'tipo_proyecto') {
             $query->orderBy('tp.nombre', $this->ordenDireccion)->orderBy('c.nombre');
         } elseif ($this->ordenColumna === 'codigo_cliente') {
             $query->orderBy('c.codigo_cliente', $this->ordenDireccion)->orderBy('tp.nombre');
@@ -314,26 +375,14 @@ class Index extends Component
             $query->orderBy('c.nombre', $this->ordenDireccion)->orderBy('tp.nombre');
         }
 
-        $totalCombinaciones = (clone $query)->count();
-        $paginaActual = max(1, (int) $this->paginaActual);
-        $offset = ($paginaActual - 1) * $this->porPagina;
+        return $query;
+    }
 
-        $combinaciones = $query
-            ->limit($this->porPagina)
-            ->offset($offset)
-            ->get();
+    public function render(): View
+    {
+        $paginador = $this->buildCombinacionesQuery()->paginate($this->porPagina);
 
-        $paginador = new LengthAwarePaginator(
-            items: $combinaciones,
-            total: $totalCombinaciones,
-            perPage: $this->porPagina,
-            currentPage: $paginaActual,
-            options: [
-                'path' => request()->url(),
-                'query' => request()->query(),
-                'pageName' => 'pagina',
-            ],
-        );
+        $combinaciones = $paginador->getCollection();
 
         // Cargar tarifas reales solo para combinaciones visibles.
         $clienteIds = $combinaciones->pluck('cliente_id')->unique();

@@ -109,6 +109,11 @@ class Index extends Component
     /** Modal de historial: id de usuario abierto, null si cerrado. */
     public ?int $historialUserId = null;
 
+    /** Clave de columna del modal bulk abierto, null si cerrado. */
+    public ?string $bulkColumnaKey = null;
+
+    public string $bulkValor = '';
+
     public function mount(): void
     {
         Gate::authorize('tarifas.ver');
@@ -145,8 +150,7 @@ class Index extends Component
 
     public function ordenarPor(string $columna): void
     {
-        $permitidas = ['apellidos', 'numero_empleado', ...self::CAMPOS_TASA];
-        if (! \in_array($columna, $permitidas, true)) {
+        if (! \in_array($columna, ['apellidos', 'numero_empleado'], true)) {
             return;
         }
 
@@ -227,6 +231,56 @@ class Index extends Component
         }
 
         unset($this->editando[$userId], $this->ediciones[$userId]);
+    }
+
+    /* ── Bulk por columna ───────────────────────────────────── */
+
+    public function abrirBulk(string $columnaKey): void
+    {
+        Gate::authorize('tarifas.editar_trabajadores');
+        $this->bulkColumnaKey = $columnaKey;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function cerrarBulk(): void
+    {
+        $this->bulkColumnaKey = null;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function aplicarBulk(): void
+    {
+        Gate::authorize('tarifas.editar_trabajadores');
+
+        if ($this->bulkColumnaKey === null) {
+            return;
+        }
+
+        $this->validate(['bulkValor' => 'required|numeric|min:0|max:9999.999']);
+
+        $colDef = collect(self::COLUMNAS)->firstWhere('key', $this->bulkColumnaKey);
+        if ($colDef === null) {
+            return;
+        }
+
+        $valor = (float) $this->bulkValor;
+        $campos = $colDef['campos'];
+
+        // Actualizamos modelo por modelo para que el UserTasasObserver registre historial.
+        $this->buildFilteredQuery()
+            ->get(['id', ...self::CAMPOS_TASA])
+            ->each(function (User $user) use ($campos, $valor): void {
+                foreach ($campos as $campo) {
+                    $user->{$campo} = $valor;
+                }
+                $user->save();
+            });
+
+        $this->bulkColumnaKey = null;
+        $this->bulkValor = '';
+        session()->flash('status', 'Tasas actualizadas.');
     }
 
     /* ── Modal de historial ───────────────────────────────────── */
@@ -326,12 +380,10 @@ class Index extends Component
             });
     }
 
-    public function render(): View
+    private function buildFilteredQuery(): Builder
     {
         $query = $this->queryUsuariosVisibles();
 
-        // Si la URL trae ?usuario={id}, restringe SOLO a ese usuario (la
-        // fila se abrió en mount() en modo edición).
         if ($this->filtroUsuarioId !== null) {
             $query->where('users.id', $this->filtroUsuarioId);
         }
@@ -351,6 +403,13 @@ class Index extends Component
                 $q->where('name', $this->filtroRol);
             });
         }
+
+        return $query;
+    }
+
+    public function render(): View
+    {
+        $query = $this->buildFilteredQuery();
 
         $query->orderBy($this->ordenColumna, $this->ordenDireccion);
         if ($this->ordenColumna !== 'apellidos') {

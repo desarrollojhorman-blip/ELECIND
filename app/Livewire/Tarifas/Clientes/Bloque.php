@@ -43,6 +43,11 @@ class Bloque extends Component
     /** Modal historial: tipo_proyecto_id abierto, null si cerrado. */
     public ?int $historialTipoProyectoId = null;
 
+    /** Modal bulk: atributo_id seleccionado, null si cerrado. */
+    public ?int $bulkAtributoId = null;
+
+    public string $bulkValor = '';
+
     public function mount(int $clienteId, bool $soloLectura = false): void
     {
         Gate::authorize('tarifas.ver');
@@ -118,6 +123,58 @@ class Bloque extends Component
         }
 
         unset($this->editando[$tipoProyectoId], $this->ediciones[$tipoProyectoId]);
+    }
+
+    /* ── Bulk por atributo ───────────────────────────────────── */
+
+    public function abrirBulk(int $atributoId): void
+    {
+        if ($this->soloLectura) {
+            return;
+        }
+        Gate::authorize('tarifas.editar_clientes');
+        $this->bulkAtributoId = $atributoId;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function cerrarBulk(): void
+    {
+        $this->bulkAtributoId = null;
+        $this->bulkValor = '';
+        $this->resetErrorBag('bulkValor');
+    }
+
+    public function aplicarBulk(): void
+    {
+        if ($this->soloLectura || $this->bulkAtributoId === null) {
+            return;
+        }
+        Gate::authorize('tarifas.editar_clientes');
+
+        $this->validate(['bulkValor' => 'required|numeric|min:0|max:9999.999']);
+
+        $valor = (float) $this->bulkValor;
+        $atributoId = $this->bulkAtributoId;
+
+        $tipoIds = TiposProyecto::query()->where('activo', true)->pluck('id');
+
+        DB::transaction(function () use ($tipoIds, $atributoId, $valor): void {
+            foreach ($tipoIds as $tipoId) {
+                TarifaCliente::updateOrCreate(
+                    [
+                        'cliente_id'       => $this->clienteId,
+                        'tipo_proyecto_id' => $tipoId,
+                        'atributo_id'      => $atributoId,
+                    ],
+                    ['importe' => $valor],
+                );
+            }
+        });
+
+        $this->bulkAtributoId = null;
+        $this->bulkValor = '';
+        session()->flash('status', 'Tarifas actualizadas.');
     }
 
     /* ── Modal historial ──────────────────────────────────────── */

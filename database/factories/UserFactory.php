@@ -65,10 +65,10 @@ class UserFactory extends Factory
         return $this->state(fn (array $attrs) => [
             'tipo_usuario' => 'externo',
             'cliente_id' => $clienteId,
-            // Los externos (responsables de cliente) NO suelen tener tasas.
-            'tasa_hora' => null,
-            'tasa_extra' => null,
-            'tasa_festivo' => null,
+            // Los externos (responsables de cliente) no tienen tasas — se guardan como 0.
+            'tasa_hora' => 0,
+            'tasa_extra' => 0,
+            'tasa_festivo' => 0,
             'numero_empleado' => null,
         ]);
     }

@@ -88,9 +88,17 @@
                     Tipo proyecto
                 </x-ui.sortable-header>
                 @foreach ($this->atributos as $attr)
-                    <x-ui.sortable-header align="center" class="whitespace-nowrap" style="text-transform: none;" title="{{ $attr->nombre_largo }}">
-                        {{ $attr->nombre_corto }}
-                    </x-ui.sortable-header>
+                    <th class="px-4 py-3 whitespace-nowrap text-center">
+                        @can('tarifas.editar_clientes')
+                            <button type="button" wire:click="abrirBulk({{ $attr->id }})"
+                                    class="text-table-header-text/90 transition-colors hover:text-primary-600"
+                                    style="text-transform: none;" title="{{ $attr->nombre_largo }} — Pulsa para aplicar a todas las filas filtradas">
+                                {{ $attr->nombre_corto }}
+                            </button>
+                        @else
+                            <span class="text-table-header-text" style="text-transform: none;" title="{{ $attr->nombre_largo }}">{{ $attr->nombre_corto }}</span>
+                        @endcan
+                    </th>
                 @endforeach
                 <x-ui.sortable-header align="right">Acciones</x-ui.sortable-header>
             </tr>
@@ -187,6 +195,31 @@
             @endforeach
         </x-slot:rows>
     </x-ui.data-table>
+
+    {{-- ── Modal Bulk por atributo ───────────────────────────── --}}
+    @php $atributoBulk = $this->atributos->firstWhere('id', $bulkAtributoId); @endphp
+    <x-ui.modal :show="$bulkAtributoId !== null" title="Aplicar a filas filtradas" close-action="cerrarBulk" size="sm">
+        <p class="mb-4 text-sm text-slate-600">
+            Se cambiará <strong>{{ $atributoBulk?->nombre_corto }}</strong> en todas las combinaciones activas filtradas.
+        </p>
+        <x-ui.field label="Importe (€)" :error="$errors->first('bulkValor')">
+            <x-ui.input
+                type="number"
+                step="0.001"
+                min="0"
+                max="9999.999"
+                wire:model="bulkValor"
+                wire:keydown.enter="aplicarBulk"
+                placeholder="0"
+                autofocus
+            />
+        </x-ui.field>
+
+        <x-slot name="footer">
+            <x-ui.button wire:click="aplicarBulk" variant="primary">Aplicar</x-ui.button>
+            <x-ui.button wire:click="cerrarBulk" variant="secondary">Cancelar</x-ui.button>
+        </x-slot>
+    </x-ui.modal>
 
     {{-- ── Modal Historial contextual ──────────────────────────── --}}
     @php

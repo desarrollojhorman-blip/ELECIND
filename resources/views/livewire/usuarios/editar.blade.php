@@ -448,28 +448,14 @@
                         <p class="mt-0.5 text-xs text-slate-400">Tarifas que paga la empresa a este trabajador por cada tipo de hora. También se pueden editar desde el módulo <a href="{{ route('tarifas.trabajadores') }}" class="text-primary-600 underline" wire:navigate>Tarifas → Trabajadores</a>.</p>
                     </div>
 
-                    {{-- Normales --}}
+                    {{-- Normales: un único campo "Laboral" que escribe en las 4 tasas normales --}}
                     <div class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">Normales</div>
                     <div class="grid gap-4 md:grid-cols-4">
-                        <x-ui.field label="Labor" :error="$errors->first('form.tasa_hora')">
+                        <x-ui.field label="Laboral" :error="$errors->first('form.tasa_hora')">
                             <x-ui.input type="number" step="0.001" min="0"
                                         wire:model="form.tasa_hora" form="form-usuario"
                                         placeholder="0" />
-                        </x-ui.field>
-                        <x-ui.field label="Lab Noche" :error="$errors->first('form.tasa_lab_noche')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_lab_noche" form="form-usuario"
-                                        placeholder="0" />
-                        </x-ui.field>
-                        <x-ui.field label="Fest" :error="$errors->first('form.tasa_festivo')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_festivo" form="form-usuario"
-                                        placeholder="0" />
-                        </x-ui.field>
-                        <x-ui.field label="Fest Noct" :error="$errors->first('form.tasa_fest_noche')">
-                            <x-ui.input type="number" step="0.001" min="0"
-                                        wire:model="form.tasa_fest_noche" form="form-usuario"
-                                        placeholder="0" />
+                            <p class="mt-1 text-[10px] text-slate-400">Labor · Lab Noche · Fest · Fest Noct</p>
                         </x-ui.field>
                     </div>
 
@@ -494,6 +480,16 @@
                         <x-ui.field label="Ex Fes Noct" :error="$errors->first('form.tasa_ex_fes_noct')">
                             <x-ui.input type="number" step="0.001" min="0"
                                         wire:model="form.tasa_ex_fes_noct" form="form-usuario"
+                                        placeholder="0" />
+                        </x-ui.field>
+                    </div>
+
+                    {{-- Plus --}}
+                    <div class="mb-1 mt-5 text-[10px] font-medium uppercase tracking-wider text-slate-400">Plus</div>
+                    <div class="grid gap-4 md:grid-cols-4">
+                        <x-ui.field label="Plus Retén" :error="$errors->first('form.tasa_plus_reten')">
+                            <x-ui.input type="number" step="0.001" min="0"
+                                        wire:model="form.tasa_plus_reten" form="form-usuario"
                                         placeholder="0" />
                         </x-ui.field>
                     </div>

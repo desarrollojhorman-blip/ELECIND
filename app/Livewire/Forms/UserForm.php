@@ -74,6 +74,9 @@ class UserForm extends Form
     #[Validate]
     public ?string $tasa_ex_fes_noct = null;
 
+    #[Validate]
+    public ?string $tasa_plus_reten = null;
+
     /**
      * interno | externo — DERIVADO del rol (no se edita en el form).
      * Se rellena automáticamente en fromModel() y save() a partir de
@@ -187,6 +190,7 @@ class UserForm extends Form
             'tasa_ex_lab_noc' => 'tasa extra laboral noche',
             'tasa_ex_fes' => 'tasa extra festivo',
             'tasa_ex_fes_noct' => 'tasa extra festivo noche',
+            'tasa_plus_reten' => 'plus retén',
             'tipo_usuario' => 'tipo de usuario',
             'cliente_id' => 'cliente',
             'rol' => 'rol',
@@ -246,6 +250,7 @@ class UserForm extends Form
         $this->tasa_ex_lab_noc = (string) $user->tasa_ex_lab_noc;
         $this->tasa_ex_fes = (string) $user->tasa_ex_fes;
         $this->tasa_ex_fes_noct = (string) $user->tasa_ex_fes_noct;
+        $this->tasa_plus_reten = (string) $user->tasa_plus_reten;
         $this->tipo_usuario = $user->tipo_usuario;
         $this->cliente_id = $user->cliente_id;
         $this->activo = (bool) $user->activo;
@@ -302,17 +307,21 @@ class UserForm extends Form
                 'tasa_ex_lab_noc' => 0.0,
                 'tasa_ex_fes' => 0.0,
                 'tasa_ex_fes_noct' => 0.0,
+                'tasa_plus_reten' => 0.0,
             ];
         } else {
+            // "Laboral" agrupa las 4 horas normales: el mismo valor va a las 4 columnas.
+            $tasaLaboral = $this->parseTasa($this->tasa_hora);
             $datos += [
-                'tasa_hora' => $this->parseTasa($this->tasa_hora),
-                'tasa_lab_noche' => $this->parseTasa($this->tasa_lab_noche),
-                'tasa_festivo' => $this->parseTasa($this->tasa_festivo),
-                'tasa_fest_noche' => $this->parseTasa($this->tasa_fest_noche),
+                'tasa_hora' => $tasaLaboral,
+                'tasa_lab_noche' => $tasaLaboral,
+                'tasa_festivo' => $tasaLaboral,
+                'tasa_fest_noche' => $tasaLaboral,
                 'tasa_extra' => $this->parseTasa($this->tasa_extra),
                 'tasa_ex_lab_noc' => $this->parseTasa($this->tasa_ex_lab_noc),
                 'tasa_ex_fes' => $this->parseTasa($this->tasa_ex_fes),
                 'tasa_ex_fes_noct' => $this->parseTasa($this->tasa_ex_fes_noct),
+                'tasa_plus_reten' => $this->parseTasa($this->tasa_plus_reten),
             ];
         }
 
