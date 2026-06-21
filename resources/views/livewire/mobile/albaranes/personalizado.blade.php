@@ -1,6 +1,20 @@
 <div>
     <form wire:submit="guardar" id="form-personalizado" class="px-4 pb-4 pt-3">
 
+        {{-- ─── Opciones rápidas ─────────────────────────────────── --}}
+        <div class="mb-4 grid grid-cols-2 gap-3">
+            <label class="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <input type="checkbox" wire:model="form.tienesPlusRetencion"
+                       class="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+                <span class="text-sm font-medium text-amber-900">Plus retención</span>
+            </label>
+            <label class="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
+                <input type="checkbox" wire:model="crearAlbaran"
+                       class="h-4 w-4 rounded border-sky-400 text-sky-600 focus:ring-sky-500">
+                <span class="text-sm font-medium text-sky-900">Crear albarán</span>
+            </label>
+        </div>
+
         {{-- Badge informativo --}}
         <div class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
             <x-heroicon-o-information-circle class="size-4 shrink-0 text-amber-600" />

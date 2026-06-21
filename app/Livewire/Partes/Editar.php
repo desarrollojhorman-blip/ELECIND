@@ -61,6 +61,22 @@ class Editar extends Component
 
     public ?int $confirmarEliminarLineaPersonalId = null;
 
+    /* ── Estado de modal "Costes/Gastos" ─────────────────────── */
+
+    public ?int $editandoCostesLineaId = null;
+
+    public string $modalCosteTarifaHora = '0';
+
+    public string $modalCosteTarifaExtra = '0';
+
+    public string $modalCosteTarifaPlusReten = '0';
+
+    public string $modalCosteTasaHora = '0';
+
+    public string $modalCosteTasaExtra = '0';
+
+    public string $modalCosteTasaPlusReten = '0';
+
     /* ── Estado de modal "Material" ───────────────────────────── */
 
     public ?int $editandoLineaMaterialId = null;
@@ -69,7 +85,17 @@ class Editar extends Component
 
     public string $modalMaterialCantidad = '1.00';
 
+    public string $modalMaterialPrecioVenta = '0';
+
     public ?int $confirmarEliminarLineaMaterialId = null;
+
+    /* ── Precio material en Costes/Gastos ─────────────────────── */
+
+    public ?int $editandoPrecioMaterialId = null;
+
+    public string $modalPrecioMaterial = '0';
+
+    public string $modalPrecioCoste = '0';
 
     /* ── Confirmar eliminación del parte ──────────────────────── */
 
@@ -92,6 +118,7 @@ class Editar extends Component
             $parte->load([
                 'lineasPersonal.trabajador',
                 'lineasMaterial.material',
+                'albaran:id,numero',
             ]);
             $this->form->fromModel($parte);
         } else {
@@ -268,14 +295,16 @@ class Editar extends Component
         $this->resetErrorBag();
         $this->modalMaterialId         = null;
         $this->modalMaterialCantidad   = '1.00';
+        $this->modalMaterialPrecioVenta = '0';
         $this->editandoLineaMaterialId = 0;
 
         if ($lineaId !== null) {
             $linea = $this->parte->lineasMaterial->find($lineaId);
             if ($linea !== null) {
-                $this->editandoLineaMaterialId = $linea->id;
-                $this->modalMaterialId         = $linea->material_id;
-                $this->modalMaterialCantidad   = (string) $linea->cantidad;
+                $this->editandoLineaMaterialId  = $linea->id;
+                $this->modalMaterialId          = $linea->material_id;
+                $this->modalMaterialCantidad    = (string) $linea->cantidad;
+                $this->modalMaterialPrecioVenta = (string) ((float) $linea->material_precio_venta_snapshot);
             }
         }
     }
@@ -294,8 +323,9 @@ class Editar extends Component
         Gate::authorize('update', $this->parte);
 
         $this->validate([
-            'modalMaterialId'       => ['required', 'integer', 'exists:materiales,id'],
-            'modalMaterialCantidad' => ['required', 'numeric', 'min:0.01'],
+            'modalMaterialId'         => ['required', 'integer', 'exists:materiales,id'],
+            'modalMaterialCantidad'   => ['required', 'numeric', 'min:0.01'],
+            'modalMaterialPrecioVenta'=> ['required', 'numeric', 'min:0'],
         ], [
             'modalMaterialId.required'       => 'Selecciona un material.',
             'modalMaterialCantidad.required' => 'La cantidad es obligatoria.',
@@ -305,13 +335,15 @@ class Editar extends Component
         if ($this->editandoLineaMaterialId > 0) {
             $linea = $this->parte->lineasMaterial()->find($this->editandoLineaMaterialId);
             $linea?->update([
-                'material_id' => $this->modalMaterialId,
-                'cantidad'    => $this->modalMaterialCantidad,
+                'material_id'                    => $this->modalMaterialId,
+                'cantidad'                       => $this->modalMaterialCantidad,
+                'material_precio_venta_snapshot' => $this->modalMaterialPrecioVenta,
             ]);
         } else {
             $this->parte->lineasMaterial()->create([
                 'material_id' => $this->modalMaterialId,
                 'cantidad'    => $this->modalMaterialCantidad,
+                // precio_venta_snapshot lo rellena el observer desde el catálogo
             ]);
         }
 
@@ -360,12 +392,6 @@ class Editar extends Component
             return null;
         }
 
-        if ($this->parte->lineasPersonal->isEmpty() && $this->parte->lineasMaterial->isEmpty()) {
-            session()->flash('status', 'Añade al menos una línea (trabajador o material) antes de generar el albarán.');
-
-            return null;
-        }
-
         $albaran = DB::transaction(function (): Albaran {
             $numero = app(NumeracionService::class)->siguienteNumeroAlbaran(Carbon::parse($this->parte->fecha));
 
@@ -378,7 +404,8 @@ class Editar extends Component
                 'creado_por' => $this->parte->creado_por ?? (int) Auth::id(),
                 'responsable_id' => $this->parte->responsable_id,
                 'estado' => EstadoAlbaran::PENDIENTE_FIRMA,
-                'tipo_hora' => TipoHora::from($this->parte->tipo_hora ?? 'laboral'),
+                'tipo_hora' => $this->parte->tipo_hora ?? TipoHora::LABORAL,
+                'tiene_plus_retencion' => (bool) $this->parte->tiene_plus_retencion,
                 'observaciones' => $this->parte->observaciones,
                 'es_personalizado' => $this->parte->es_personalizado,
                 'cliente_texto' => $this->parte->cliente_texto,
@@ -414,6 +441,114 @@ class Editar extends Component
         session()->flash('status', "Albarán «{$albaran->numero}» generado correctamente.");
 
         return $this->redirect(route('partes.editar', $this->parte), navigate: true);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+     * Costes / Gastos — edición inline de tarifas y tasas
+     * ──────────────────────────────────────────────────────────── */
+
+    public function abrirModalCostes(int $lineaId): void
+    {
+        if ($this->parte === null) {
+            return;
+        }
+        Gate::authorize('update', $this->parte);
+
+        $linea = $this->parte->lineasPersonal->find($lineaId);
+        if ($linea === null) {
+            return;
+        }
+
+        $this->editandoCostesLineaId      = $lineaId;
+        $this->modalCosteTarifaHora       = (string) ((float) $linea->tarifa_hora_snapshot);
+        $this->modalCosteTarifaExtra      = (string) ((float) $linea->tarifa_extra_snapshot);
+        $this->modalCosteTarifaPlusReten  = (string) ((float) $linea->tarifa_plus_retencion_snapshot);
+        $this->modalCosteTasaHora         = (string) ((float) $linea->trabajador_tasa_hora_snapshot);
+        $this->modalCosteTasaExtra        = (string) ((float) $linea->trabajador_tasa_extra_snapshot);
+        $this->modalCosteTasaPlusReten    = (string) ((float) $linea->trabajador_tasa_plus_retencion_snapshot);
+        $this->resetErrorBag();
+    }
+
+    public function cerrarModalCostes(): void
+    {
+        $this->editandoCostesLineaId = null;
+        $this->resetErrorBag();
+    }
+
+    public function guardarCostesLinea(): void
+    {
+        if ($this->parte === null || $this->editandoCostesLineaId === null) {
+            return;
+        }
+        Gate::authorize('update', $this->parte);
+
+        $this->validate([
+            'modalCosteTarifaHora'      => ['required', 'numeric', 'min:0', 'max:9999.9999'],
+            'modalCosteTarifaExtra'     => ['required', 'numeric', 'min:0', 'max:9999.9999'],
+            'modalCosteTarifaPlusReten' => ['required', 'numeric', 'min:0', 'max:9999.9999'],
+            'modalCosteTasaHora'        => ['required', 'numeric', 'min:0', 'max:9999.999'],
+            'modalCosteTasaExtra'       => ['required', 'numeric', 'min:0', 'max:9999.999'],
+            'modalCosteTasaPlusReten'   => ['required', 'numeric', 'min:0', 'max:9999.999'],
+        ]);
+
+        $linea = $this->parte->lineasPersonal()->find($this->editandoCostesLineaId);
+        $linea?->update([
+            'tarifa_hora_snapshot'                  => $this->modalCosteTarifaHora,
+            'tarifa_extra_snapshot'                 => $this->modalCosteTarifaExtra,
+            'tarifa_plus_retencion_snapshot'        => $this->modalCosteTarifaPlusReten,
+            'trabajador_tasa_hora_snapshot'         => $this->modalCosteTasaHora,
+            'trabajador_tasa_extra_snapshot'        => $this->modalCosteTasaExtra,
+            'trabajador_tasa_plus_retencion_snapshot' => $this->modalCosteTasaPlusReten,
+        ]);
+
+        $this->parte->load('lineasPersonal.trabajador');
+        $this->editandoCostesLineaId = null;
+    }
+
+    public function abrirEditarPrecioMaterial(int $lineaId): void
+    {
+        if ($this->parte === null) {
+            return;
+        }
+        Gate::authorize('update', $this->parte);
+
+        $linea = $this->parte->lineasMaterial->find($lineaId);
+        if ($linea === null) {
+            return;
+        }
+
+        $this->editandoPrecioMaterialId = $lineaId;
+        $this->modalPrecioMaterial = (string) ((float) $linea->material_precio_venta_snapshot);
+        $this->modalPrecioCoste    = (string) ((float) $linea->material_precio_coste_snapshot);
+        $this->resetErrorBag();
+    }
+
+    public function cerrarEditarPrecioMaterial(): void
+    {
+        $this->editandoPrecioMaterialId = null;
+        $this->resetErrorBag();
+    }
+
+    public function guardarPrecioMaterial(): void
+    {
+        if ($this->parte === null || $this->editandoPrecioMaterialId === null) {
+            return;
+        }
+        Gate::authorize('update', $this->parte);
+
+        $this->validate([
+            'modalPrecioMaterial' => ['required', 'numeric', 'min:0'],
+            'modalPrecioCoste'    => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $linea = $this->parte->lineasMaterial()->find($this->editandoPrecioMaterialId);
+        $linea?->update([
+            'material_precio_venta_snapshot' => $this->modalPrecioMaterial,
+            'material_precio_coste_snapshot' => $this->modalPrecioCoste,
+        ]);
+
+        $this->parte->load('lineasMaterial.material');
+        $this->editandoPrecioMaterialId = null;
     }
 
     /* ── Computeds ────────────────────────────────────────────── */
@@ -506,6 +641,10 @@ class Editar extends Component
     {
         return Material::query()
             ->where('activo', true)
+            ->when(
+                $this->form->proyecto_id !== null,
+                fn ($q) => $q->whereHas('proyectos', fn ($q2) => $q2->where('proyectos.id', $this->form->proyecto_id))
+            )
             ->with(['numeroPedido:id,numero', 'familia:id,nombre'])
             ->orderBy('descripcion')
             ->get(['id', 'descripcion', 'unidad_medida', 'stock', 'numero_pedido_id', 'familia_id']);

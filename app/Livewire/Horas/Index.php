@@ -126,7 +126,8 @@ class Index extends Component
     {
         $idsTrabajadores = User::role('trabajador')->withTrashed()->pluck('id');
 
-        return DB::table('albaran_lineas_personal as alp')
+        // Líneas de albaranes (siempre)
+        $fromAlbaranes = DB::table('albaran_lineas_personal as alp')
             ->join('albaranes as a', 'a.id', '=', 'alp.albaran_id')
             ->leftJoin('users as u', 'u.id', '=', 'alp.trabajador_id')
             ->leftJoin('clientes as c', 'c.id', '=', 'a.cliente_id')
@@ -139,19 +140,13 @@ class Index extends Component
             ->when($this->filtroProyecto, fn ($q) => $q->where('a.proyecto_id', $this->filtroProyecto))
             ->when($this->filtroEstado, fn ($q) => $q->where('a.estado', $this->filtroEstado))
             ->when($this->fechaDesde, fn ($q) => $q->whereDate('a.fecha', '>=', $this->fechaDesde))
-            ->when($this->fechaHasta, fn ($q) => $q->whereDate('a.fecha', '<=', $this->fechaHasta));
-    }
-
-    public function render(): View
-    {
-        // Página visible
-        $lineas = $this->baseQuery()
+            ->when($this->fechaHasta, fn ($q) => $q->whereDate('a.fecha', '<=', $this->fechaHasta))
             ->select([
-                'a.id as albaran_id',
-                'a.numero as albaran_numero',
+                'a.id as doc_id',
+                'a.numero as doc_numero',
+                DB::raw("'albaran' as tipo_doc"),
                 'a.fecha',
                 'a.tipo_hora',
-                'a.estado',
                 'alp.horas',
                 'alp.horas_extra',
                 DB::raw("COALESCE(u.nombre, alp.trabajador_nombre_snapshot, '') as trabajador_nombre"),
@@ -160,22 +155,65 @@ class Index extends Component
                 DB::raw("COALESCE(p.nombre, a.proyecto_nombre_snapshot, a.proyecto_texto, '') as proyecto_nombre"),
                 DB::raw("p.codigo as proyecto_codigo"),
                 DB::raw("COALESCE(con.nombre, a.concepto_nombre_snapshot, a.concepto_texto, '') as concepto_nombre"),
-            ])
-            ->orderBy('a.fecha')
+            ]);
+
+        // Líneas de partes SIN albarán vinculado (solo si no se filtra por estado de albarán)
+        if (! $this->filtroEstado) {
+            $fromPartes = DB::table('partes_lineas_personal as plp')
+                ->join('partes as pt', 'pt.id', '=', 'plp.parte_id')
+                ->leftJoin('users as u', 'u.id', '=', 'plp.trabajador_id')
+                ->leftJoin('clientes as c', 'c.id', '=', 'pt.cliente_id')
+                ->leftJoin('proyectos as p', 'p.id', '=', 'pt.proyecto_id')
+                ->leftJoin('conceptos as con', 'con.id', '=', 'pt.concepto_id')
+                ->whereNull('pt.deleted_at')
+                ->whereNull('pt.albaran_id')
+                ->whereIn('plp.trabajador_id', $idsTrabajadores)
+                ->when($this->filtroTrabajador, fn ($q) => $q->where('plp.trabajador_id', $this->filtroTrabajador))
+                ->when($this->filtroCliente, fn ($q) => $q->where('pt.cliente_id', $this->filtroCliente))
+                ->when($this->filtroProyecto, fn ($q) => $q->where('pt.proyecto_id', $this->filtroProyecto))
+                ->when($this->fechaDesde, fn ($q) => $q->whereDate('pt.fecha', '>=', $this->fechaDesde))
+                ->when($this->fechaHasta, fn ($q) => $q->whereDate('pt.fecha', '<=', $this->fechaHasta))
+                ->select([
+                    'pt.id as doc_id',
+                    'pt.numero as doc_numero',
+                    DB::raw("'parte' as tipo_doc"),
+                    'pt.fecha',
+                    'pt.tipo_hora',
+                    'plp.horas',
+                    'plp.horas_extra',
+                    DB::raw("COALESCE(u.nombre, plp.trabajador_nombre_snapshot, '') as trabajador_nombre"),
+                    DB::raw("COALESCE(u.apellidos, plp.trabajador_apellidos_snapshot, '') as trabajador_apellidos"),
+                    DB::raw("COALESCE(c.nombre, pt.cliente_nombre_snapshot, '') as cliente_nombre"),
+                    DB::raw("COALESCE(p.nombre, pt.proyecto_nombre_snapshot, '') as proyecto_nombre"),
+                    DB::raw("p.codigo as proyecto_codigo"),
+                    DB::raw("COALESCE(con.nombre, pt.concepto_nombre_snapshot, '') as concepto_nombre"),
+                ]);
+
+            $fromAlbaranes->unionAll($fromPartes);
+        }
+
+        $union = $fromAlbaranes;
+
+        return DB::table(DB::raw("({$union->toSql()}) as unified"))
+            ->mergeBindings($union);
+    }
+
+    public function render(): View
+    {
+        // Página visible
+        $lineas = $this->baseQuery()
+            ->select('*')
+            ->orderBy('fecha')
             ->orderBy('trabajador_apellidos')
             ->orderBy('trabajador_nombre')
-            ->orderBy('a.id')
+            ->orderBy('doc_id')
             ->paginate($this->porPagina)
             ->onEachSide(2);
 
         // Totales: una sola query agregada sobre TODO lo filtrado
         $sumas = $this->baseQuery()
-            ->groupBy('a.tipo_hora')
-            ->select([
-                'a.tipo_hora',
-                DB::raw('SUM(alp.horas) as total_horas'),
-                DB::raw('SUM(alp.horas_extra) as total_extras'),
-            ])
+            ->groupBy('tipo_hora')
+            ->selectRaw('tipo_hora, SUM(horas) as total_horas, SUM(horas_extra) as total_extras')
             ->get()
             ->keyBy('tipo_hora');
 

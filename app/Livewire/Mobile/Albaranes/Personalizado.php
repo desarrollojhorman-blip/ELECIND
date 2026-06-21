@@ -28,6 +28,8 @@ class Personalizado extends Component
 
     public ?int $borradorCreadoId = null;
 
+    public bool $crearAlbaran = false;
+
     public function mount(): void
     {
         Gate::authorize('create', Borrador::class);
@@ -154,6 +156,8 @@ class Personalizado extends Component
             $borrador->fecha = Carbon::parse($this->form->fecha);
             $borrador->tipo_hora = $this->form->tipo_hora;
             $borrador->observaciones = $this->form->observaciones;
+            $borrador->tiene_plus_retencion = $this->form->tienesPlusRetencion;
+            $borrador->crear_albaran = $this->crearAlbaran;
             $borrador->save();
 
             // Línea del creador

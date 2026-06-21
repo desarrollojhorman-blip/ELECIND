@@ -3,7 +3,8 @@
     <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
             <h2 class="text-xl font-semibold text-slate-900">
-                Convertir borrador {{ $borrador->numero_borrador }} a albarán
+                Convertir borrador {{ $borrador->numero_borrador }}
+                {{ $borrador->crear_albaran ? 'a albarán' : 'a parte' }}
             </h2>
             <p class="text-sm text-slate-500">
                 Revisa cada dato. Nada se guarda hasta que confirmes en el último paso.
@@ -468,7 +469,7 @@
                 Cancelar
             </a>
             @if ($paso < $this->pasoFinal)
-                <x-ui.button variant="primary" type="button" wire:click="siguiente">
+                <x-ui.button variant="info" type="button" wire:click="siguiente">
                     Continuar
                     <x-heroicon-o-arrow-right class="size-4" />
                 </x-ui.button>

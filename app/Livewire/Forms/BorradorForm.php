@@ -33,6 +33,8 @@ class BorradorForm extends Form
     public string  $fecha     = '';
     public string  $tipo_hora = 'laboral';
     public ?string $observaciones = null;
+    public bool    $tienesPlusRetencion = false;
+    public bool    $crearAlbaran        = false;
 
     /* ───── Firma ────────────────────────────────────────────────── */
 
@@ -120,7 +122,9 @@ class BorradorForm extends Form
         $this->tipo_hora      = $borrador->tipo_hora instanceof \App\Enums\TipoHora
             ? $borrador->tipo_hora->value
             : (string) $borrador->tipo_hora;
-        $this->observaciones  = $borrador->observaciones;
+        $this->observaciones          = $borrador->observaciones;
+        $this->tienesPlusRetencion    = (bool) $borrador->tiene_plus_retencion;
+        $this->crearAlbaran           = (bool) $borrador->crear_albaran;
 
         $this->firma_trabajador_user_id      = $borrador->firma_trabajador_user_id;
         $this->firma_trabajador_otro_nombre  = $borrador->firma_trabajador_otro_nombre;
@@ -208,9 +212,11 @@ class BorradorForm extends Form
             $borrador->concepto_texto = $this->concepto_id ? null : $this->concepto_texto;
             $borrador->responsable_id    = $this->responsable_id;
             $borrador->responsable_texto = $this->responsable_id ? null : $this->responsable_texto;
-            $borrador->fecha          = Carbon::parse($this->fecha);
-            $borrador->tipo_hora      = $this->tipo_hora;
-            $borrador->observaciones  = $this->observaciones;
+            $borrador->fecha                 = Carbon::parse($this->fecha);
+            $borrador->tipo_hora             = $this->tipo_hora;
+            $borrador->observaciones         = $this->observaciones;
+            $borrador->tiene_plus_retencion  = $this->tienesPlusRetencion;
+            $borrador->crear_albaran         = $this->crearAlbaran;
 
             $borrador->firma_trabajador_user_id      = $this->firma_trabajador_user_id ?: null;
             $borrador->firma_trabajador_otro_nombre  = $this->firma_trabajador_otro_nombre ?: null;

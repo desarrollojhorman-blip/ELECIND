@@ -138,7 +138,7 @@
                         @if (! $filtroTrabajador)
                             <th class="px-4 py-3">Trabajador</th>
                         @endif
-                        <th class="px-4 py-3">Nº Albarán</th>
+                        <th class="px-4 py-3">Nº Documento</th>
                         <th class="px-4 py-3">Cliente / Proyecto</th>
                         <th class="px-4 py-3">Concepto</th>
                         <th class="px-4 py-3">Tipo jornada</th>
@@ -197,13 +197,21 @@
                                 </td>
                             @endif
 
-                            {{-- Nº Albarán --}}
+                            {{-- Nº documento --}}
                             <td class="px-4 py-3">
-                                <a href="{{ route('albaranes.ver', $linea->albaran_id) }}"
-                                   wire:navigate
-                                   class="font-mono text-xs font-medium text-primary-600 hover:underline">
-                                    {{ $linea->albaran_numero }}
-                                </a>
+                                @if ($linea->tipo_doc === 'albaran')
+                                    <a href="{{ route('albaranes.ver', $linea->doc_id) }}"
+                                       wire:navigate
+                                       class="font-mono text-xs font-medium text-primary-600 hover:underline">
+                                        {{ $linea->doc_numero }}
+                                    </a>
+                                @else
+                                    <a href="{{ route('partes.ver', $linea->doc_id) }}"
+                                       wire:navigate
+                                       class="font-mono text-xs font-medium text-amber-600 hover:underline">
+                                        {{ $linea->doc_numero }}
+                                    </a>
+                                @endif
                             </td>
 
                             {{-- Cliente / Proyecto --}}

@@ -30,6 +30,7 @@ class Ver extends Component
             'lineasMaterial.material:id,descripcion,unidad_medida',
             'firmas',
             'archivos',
+            'parte:id,numero',
         ]);
     }
 

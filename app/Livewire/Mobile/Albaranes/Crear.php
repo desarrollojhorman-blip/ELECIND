@@ -2,16 +2,23 @@
 
 namespace App\Livewire\Mobile\Albaranes;
 
+use App\Enums\EstadoAlbaran;
 use App\Enums\TipoHora;
 use App\Livewire\Forms\AlbaranForm;
 use App\Models\Albaran;
+use App\Models\AlbaranLineaMaterial;
+use App\Models\AlbaranLineaPersonal;
 use App\Models\Concepto;
 use App\Models\Material;
+use App\Models\Parte;
 use App\Models\Proyecto;
 use App\Models\User;
+use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -24,6 +31,9 @@ class Crear extends Component
 
     /** ID del albarán recién creado, mientras el modal de firma está visible */
     public ?int $albaranCreadoId = null;
+
+    /** Cuando es true, al guardar se genera también un albarán vinculado al parte */
+    public bool $crearAlbaran = false;
 
     public int $selectKey = 0;
 
@@ -70,21 +80,75 @@ class Crear extends Component
         $esNuevo = $this->albaran === null;
 
         if (! $esNuevo) {
+            // Edición de albarán existente: flujo original.
             Gate::authorize('update', $this->albaran);
-        } else {
-            Gate::authorize('create', Albaran::class);
-        }
-
-        $albaran = $this->form->save();
-
-        if ($esNuevo) {
-            $this->albaranCreadoId = $albaran->getKey();
+            $albaran = $this->form->save();
+            session()->flash('status', "Parte «{$albaran->numero}» actualizado correctamente.");
+            $this->redirectRoute('mobile.albaranes.ver', ['albaran' => $albaran->getKey()], navigate: false);
 
             return;
         }
 
-        session()->flash('status', "Parte «{$albaran->numero}» actualizado correctamente.");
-        $this->redirectRoute('mobile.albaranes.ver', ['albaran' => $albaran->getKey()], navigate: false);
+        // Creación nueva.
+        if ($this->crearAlbaran) {
+            Gate::authorize('create', Albaran::class);
+
+            $albaran = DB::transaction(function (): Albaran {
+                $parte = $this->form->saveComoParte();
+
+                $numero  = app(NumeracionService::class)->siguienteNumeroAlbaran(Carbon::parse($parte->fecha));
+                $albaran = Albaran::create([
+                    'numero'              => $numero,
+                    'fecha'               => $parte->fecha,
+                    'cliente_id'          => $parte->cliente_id,
+                    'proyecto_id'         => $parte->proyecto_id,
+                    'concepto_id'         => $parte->concepto_id,
+                    'creado_por'          => $parte->creado_por ?? (int) Auth::id(),
+                    'responsable_id'      => $parte->responsable_id,
+                    'estado'              => EstadoAlbaran::PENDIENTE_FIRMA,
+                    'tipo_hora'           => TipoHora::from($parte->tipo_hora),
+                    'tiene_plus_retencion' => (bool) $parte->tiene_plus_retencion,
+                    'observaciones'       => $parte->observaciones,
+                    'es_personalizado'    => $parte->es_personalizado,
+                    'cliente_texto'       => $parte->cliente_texto,
+                    'proyecto_texto'      => $parte->proyecto_texto,
+                    'concepto_texto'      => $parte->concepto_texto,
+                    'responsable_texto'   => $parte->responsable_texto,
+                    'firma_trabajador_user_id' => (int) Auth::id(),
+                ]);
+
+                foreach ($parte->lineasPersonal as $linea) {
+                    AlbaranLineaPersonal::create([
+                        'albaran_id'    => $albaran->id,
+                        'trabajador_id' => $linea->trabajador_id,
+                        'horas'         => $linea->horas,
+                        'horas_extra'   => $linea->horas_extra,
+                    ]);
+                }
+
+                foreach ($parte->lineasMaterial as $linea) {
+                    AlbaranLineaMaterial::create([
+                        'albaran_id'  => $albaran->id,
+                        'material_id' => $linea->material_id,
+                        'cantidad'    => $linea->cantidad,
+                    ]);
+                }
+
+                $parte->albaran_id = $albaran->id;
+                $parte->estado     = Parte::ESTADO_CERRADO;
+                $parte->save();
+
+                return $albaran;
+            });
+
+            $this->albaranCreadoId = $albaran->getKey();
+        } else {
+            Gate::authorize('create', Parte::class);
+
+            $parte = $this->form->saveComoParte();
+            session()->flash('status', "Parte «{$parte->numero}» creado correctamente.");
+            $this->redirectRoute('mobile.dashboard', navigate: false);
+        }
     }
 
     public function irAFirmar(): void

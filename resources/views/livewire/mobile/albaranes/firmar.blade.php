@@ -50,23 +50,54 @@
                     <dd class="text-right font-medium text-slate-800">{{ $albaran->concepto->nombre }}</dd>
                 </div>
             @endif
-            <div class="flex justify-between gap-3">
-                <dt class="text-slate-500">Trabajador</dt>
-                <dd class="text-right font-medium text-slate-800">
-                    @php $firmante = $albaran->firmaTrabajador ?? $albaran->creador; @endphp
-                    {{ trim($firmante->nombre.' '.$firmante->apellidos) }}
-                </dd>
-            </div>
-            @if ($albaran->responsable)
-                <div class="flex justify-between gap-3">
-                    <dt class="text-slate-500">Responsable</dt>
-                    <dd class="text-right font-medium text-slate-800">
-                        {{ trim($albaran->responsable->nombre.' '.$albaran->responsable->apellidos) }}
-                    </dd>
-                </div>
-            @endif
         </dl>
     </div>
+
+    {{-- Personal --}}
+    @if ($albaran->lineasPersonal->isNotEmpty())
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Personal</p>
+            <div class="divide-y divide-slate-100">
+                @foreach ($albaran->lineasPersonal as $linea)
+                    @php
+                        $horas      = (float) $linea->horas;
+                        $horasExtra = (float) $linea->horas_extra;
+                        $hFmt  = rtrim(rtrim(number_format($horas, 2, ',', ''), '0'), ',');
+                        $heFmt = rtrim(rtrim(number_format($horasExtra, 2, ',', ''), '0'), ',');
+                    @endphp
+                    <div class="flex items-center justify-between gap-2 py-1.5 text-sm">
+                        <span class="min-w-0 truncate text-slate-700">
+                            {{ trim($linea->trabajador->nombre.' '.$linea->trabajador->apellidos) }}
+                        </span>
+                        <span class="shrink-0 text-slate-900 font-medium">
+                            {{ $hFmt }} h
+                            @if ($horasExtra > 0)
+                                <span class="text-amber-700">+ {{ $heFmt }} extra</span>
+                            @endif
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- Materiales --}}
+    @if (\App\Support\Modulos::materialesAvanzado() && $albaran->lineasMaterial->isNotEmpty())
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Materiales</p>
+            <div class="divide-y divide-slate-100">
+                @foreach ($albaran->lineasMaterial as $linea)
+                    <div class="flex items-center justify-between gap-2 py-1.5 text-sm">
+                        <span class="min-w-0 truncate text-slate-700">{{ $linea->material->descripcion ?? '—' }}</span>
+                        <span class="shrink-0 font-medium text-slate-900">
+                            {{ rtrim(rtrim(number_format((float) $linea->cantidad, 2, ',', ''), '0'), ',') }}
+                            <span class="text-xs text-slate-500">{{ $linea->material->unidad_medida ?? '' }}</span>
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- ══════════════ FORMULARIO DE FIRMAS ══════════════ --}}
     @if (! $firmado)
@@ -79,6 +110,7 @@
                 ctxR: null, vacioR: true, dibR: false, posR: {x:0,y:0},
 
                 esTrabajador: {{ $esTrabajador ? 'true' : 'false' }},
+                esResponsable: {{ $esResponsable ? 'true' : 'false' }},
                 guardando: false,
 
                 init() {
@@ -216,7 +248,7 @@
                         @endif
                     </p>
 
-                    @if (! $responsableYaFirmo)
+                    @if (! $responsableYaFirmo && ($esTrabajador || $esResponsable))
                         <div class="relative overflow-hidden rounded-lg border-2 border-dashed border-amber-300 bg-amber-50"
                              style="touch-action:none">
                             <canvas x-ref="canvasR" width="600" height="180" class="block w-full"
@@ -238,7 +270,13 @@
                     @else
                         <div class="flex items-center gap-3 rounded-lg border-2 border-slate-200 bg-slate-50 px-4 py-5">
                             <x-heroicon-o-lock-closed class="size-5 shrink-0 text-slate-400" />
-                            <p class="text-sm text-slate-500">Ya firmado · no se puede modificar</p>
+                            <p class="text-sm text-slate-500">
+                                @if ($responsableYaFirmo)
+                                    Ya firmado · no se puede modificar
+                                @else
+                                    Solo el responsable puede firmar este campo
+                                @endif
+                            </p>
                         </div>
                     @endif
                 </div>

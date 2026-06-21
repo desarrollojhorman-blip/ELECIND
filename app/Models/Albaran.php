@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -62,6 +63,7 @@ class Albaran extends Model
         'responsable_id',
         'estado',
         'tipo_hora',
+        'tiene_plus_retencion',
         'observaciones',
         'snapshot_data',
         'firma_trabajador_user_id',
@@ -100,6 +102,7 @@ class Albaran extends Model
             'tipo_hora' => TipoHora::class,
             'snapshot_data' => 'array',
             'es_personalizado' => 'boolean',
+            'tiene_plus_retencion' => 'boolean',
         ];
     }
 
@@ -156,6 +159,11 @@ class Albaran extends Model
     public function archivos(): HasMany
     {
         return $this->hasMany(AlbaranArchivo::class);
+    }
+
+    public function parte(): HasOne
+    {
+        return $this->hasOne(Parte::class, 'albaran_id');
     }
 
     /**

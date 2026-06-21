@@ -14,29 +14,38 @@
                     Nuevo
                 </x-ui.button>
             @endcan
-            @can('convertir', $borrador)
-                <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
-                             variant="primary" icon="heroicon-o-arrow-right-circle">
-                    Convertir a albarán
-                </x-ui.button>
-            @endcan
             @can('delete', $borrador)
                 <x-ui.button variant="danger" wire:click="confirmarEliminar" icon="heroicon-o-trash">
                     Eliminar
+                </x-ui.button>
+            @endcan
+            @can('convertir', $borrador)
+                <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
+                             variant="warning" icon="heroicon-o-arrow-right-circle">
+                    Procesar borrador
                 </x-ui.button>
             @endcan
         </x-slot:actionsLeft>
     </x-ui.page-header>
 
     {{-- Aviso si ya está convertido --}}
-    @if ($borrador->estaConvertido() && $borrador->albaranConvertido)
+    @if ($borrador->estaConvertido())
         <div class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             <x-heroicon-o-check-circle class="size-5 shrink-0" />
             <span>
-                Este borrador fue convertido al albarán
-                <a href="{{ route('albaranes.editar', $borrador->albaranConvertido) }}" wire:navigate class="font-semibold underline">
-                    {{ $borrador->albaranConvertido->numero }}
-                </a>.
+                @if ($borrador->albaranConvertido)
+                    Este borrador fue convertido al albarán
+                    <a href="{{ route('albaranes.editar', $borrador->albaranConvertido) }}" wire:navigate class="font-semibold underline">
+                        {{ $borrador->albaranConvertido->numero }}
+                    </a>.
+                @elseif ($borrador->parteConvertido)
+                    Este borrador fue convertido al parte
+                    <a href="{{ route('partes.ver', $borrador->parteConvertido) }}" wire:navigate class="font-semibold underline">
+                        {{ $borrador->parteConvertido->numero }}
+                    </a>.
+                @else
+                    Este borrador ya fue convertido.
+                @endif
             </span>
         </div>
     @endif
@@ -122,6 +131,23 @@
                 <x-ui.field label="Creado por">
                     <x-ui.input :value="$borrador->creador ? trim($borrador->creador->nombre.' '.$borrador->creador->apellidos) : '—'" readonly />
                 </x-ui.field>
+
+                <div class="md:col-span-2 flex flex-wrap gap-2 pt-1">
+                    @if($borrador->tiene_plus_retencion)
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                            <x-heroicon-o-star class="size-3.5" /> Plus retención
+                        </span>
+                    @endif
+                    @if($borrador->crear_albaran)
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
+                            <x-heroicon-o-document-text class="size-3.5" /> Crear albarán
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                            <x-heroicon-o-document class="size-3.5" /> Solo parte
+                        </span>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -228,7 +254,7 @@
     {{-- Modal confirmar conversión --}}
     <x-ui.modal
         :show="$confirmarConvertir"
-        title="Convertir a albarán"
+        :title="$borrador->crear_albaran ? 'Convertir a albarán' : 'Convertir a parte'"
         close-action="cancelarConvertir"
         size="sm">
 
@@ -238,10 +264,19 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Se creará un albarán oficial a partir de este borrador.
+                    @if($borrador->crear_albaran)
+                        Se creará un albarán oficial a partir de este borrador.
+                    @else
+                        Se creará un parte de trabajo a partir de este borrador.
+                    @endif
+                    @if($borrador->tiene_plus_retencion)
+                        <span class="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                            <x-heroicon-o-star class="size-3" /> Plus retención
+                        </span>
+                    @endif
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Las líneas con texto libre sin resolver (sin FK) no se copiarán al albarán.
+                    Las líneas con texto libre sin resolver (sin FK) no se copiarán.
                     El borrador quedará marcado como <strong>convertido</strong>.
                 </p>
             </div>
@@ -249,7 +284,7 @@
 
         <x-slot:footer>
             <x-ui.button variant="neutral" wire:click="cancelarConvertir">Cancelar</x-ui.button>
-            <x-ui.button variant="primary" wire:click="convertirAAlbaran" icon="heroicon-o-arrow-right-circle">
+            <x-ui.button variant="info" wire:click="convertirAAlbaran" icon="heroicon-o-arrow-right-circle">
                 Convertir
             </x-ui.button>
         </x-slot:footer>

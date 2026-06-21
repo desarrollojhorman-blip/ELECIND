@@ -5,6 +5,7 @@ namespace App\Livewire\Proyectos;
 use App\Livewire\Forms\ProyectoForm;
 use App\Models\Albaran;
 use App\Models\Concepto;
+use App\Models\Empresa;
 use App\Models\Material;
 use App\Models\Proyecto;
 use App\Models\TiposProyecto;
@@ -13,15 +14,21 @@ use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.web', ['active' => 'proyectos_lista'])]
 class Editar extends Component
 {
+    use WithFileUploads;
+
     public ProyectoForm $form;
 
     public ?Proyecto $proyecto = null;
@@ -46,6 +53,12 @@ class Editar extends Component
     public int $conceptoSelectKey = 0;
 
     public ?int $confirmarEliminarId = null;
+
+    // ── Inline archivo ───────────────────────────────────────────────────────
+    public bool $subiendoArchivo = false;
+    public string $modalArchivoNombre = '';
+    public ?TemporaryUploadedFile $modalArchivoFichero = null;
+    public ?int $confirmarEliminarArchivoId = null;
 
     public string $ordenTrabajadoresColumna = 'nombre';
 
@@ -84,6 +97,7 @@ class Editar extends Component
         if ($proyecto !== null && $proyecto->exists) {
             Gate::authorize('update', $proyecto);
             $this->proyecto = $proyecto;
+            $this->proyecto->load(['archivos']);
             $this->form->fromModel($proyecto);
             if ($this->form->codigo === null) {
                 $this->form->codigo = app(NumeracionService::class)->siguienteNumeroProyecto();
@@ -118,6 +132,102 @@ class Editar extends Component
             : "Proyecto «{$proyecto->nombre}» actualizado correctamente.");
 
         $this->redirectRoute('proyectos.editar', ['proyecto' => $proyecto->getKey()]);
+    }
+
+    // ── CRUD archivos ─────────────────────────────────────────────────────────
+
+    public function abrirModalArchivo(): void
+    {
+        $this->modalArchivoNombre  = '';
+        $this->modalArchivoFichero = null;
+        $this->resetErrorBag();
+        $this->subiendoArchivo = true;
+    }
+
+    public function cerrarModalArchivo(): void
+    {
+        $this->subiendoArchivo     = false;
+        $this->modalArchivoFichero = null;
+        $this->modalArchivoNombre  = '';
+    }
+
+    public function guardarArchivo(): void
+    {
+        $empresa     = Empresa::actual();
+        $maxMb       = $empresa->archivo_tamano_max_mb ?? 10;
+        $maxArchivos = $empresa->archivo_cantidad_max ?? 20;
+
+        if ($this->proyecto !== null && $this->proyecto->archivos->count() >= $maxArchivos) {
+            $this->addError('modalArchivoFichero', "Este proyecto ya tiene el máximo de {$maxArchivos} archivos permitidos.");
+            return;
+        }
+
+        $this->validate([
+            'modalArchivoFichero' => [
+                'required', 'file',
+                'max:' . ($maxMb * 1024),
+                'mimes:pdf,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,csv,txt',
+            ],
+            'modalArchivoNombre'  => ['nullable', 'string', 'max:200'],
+        ], [
+            'modalArchivoFichero.required' => 'Selecciona un archivo.',
+            'modalArchivoFichero.max'      => "El archivo no puede superar {$maxMb} MB.",
+            'modalArchivoFichero.mimes'    => 'Tipo de archivo no permitido. Se aceptan: PDF, JPG, PNG, GIF, WEBP, DOC, DOCX, XLS, XLSX, CSV, TXT.',
+        ]);
+
+        if ($this->proyecto === null || $this->modalArchivoFichero === null) {
+            return;
+        }
+
+        $ruta = $this->modalArchivoFichero->store(
+            "proyectos/{$this->proyecto->id}",
+            'public'
+        );
+
+        $nombre = trim($this->modalArchivoNombre) !== ''
+            ? $this->modalArchivoNombre
+            : $this->modalArchivoFichero->getClientOriginalName();
+
+        $this->proyecto->archivos()->create([
+            'nombre'          => $nombre,
+            'ruta'            => $ruta,
+            'nombre_original' => $this->modalArchivoFichero->getClientOriginalName(),
+            'mime_type'       => $this->modalArchivoFichero->getMimeType(),
+            'tamano'          => $this->modalArchivoFichero->getSize(),
+            'subido_por'      => Auth::id(),
+        ]);
+
+        $this->proyecto->load('archivos');
+        $this->subiendoArchivo     = false;
+        $this->modalArchivoFichero = null;
+        $this->modalArchivoNombre  = '';
+    }
+
+    public function confirmarEliminarArchivo(int $archivoId): void
+    {
+        $this->confirmarEliminarArchivoId = $archivoId;
+    }
+
+    public function cancelarEliminarArchivo(): void
+    {
+        $this->confirmarEliminarArchivoId = null;
+    }
+
+    public function eliminarArchivo(): void
+    {
+        if ($this->confirmarEliminarArchivoId === null || $this->proyecto === null) {
+            return;
+        }
+
+        $archivo = $this->proyecto->archivos()->find($this->confirmarEliminarArchivoId);
+
+        if ($archivo !== null) {
+            Storage::disk('public')->delete($archivo->ruta);
+            $archivo->delete();
+        }
+
+        $this->proyecto->load('archivos');
+        $this->confirmarEliminarArchivoId = null;
     }
 
     /* ───────────────────── Trabajadores ───────────────────── */

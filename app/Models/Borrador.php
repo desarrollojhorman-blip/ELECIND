@@ -47,17 +47,22 @@ class Borrador extends Model
         'estado',
         'observaciones',
         'convertido_a_albaran_id',
+        'convertido_a_parte_id',
         'creado_por',
         'firma_trabajador_user_id',
         'firma_trabajador_otro_nombre',
         'firma_trabajador_otro_correo',
         'firma_responsable_otro_nombre',
         'firma_responsable_otro_correo',
+        'tiene_plus_retencion',
+        'crear_albaran',
     ];
 
     protected $casts = [
-        'fecha'     => 'date',
-        'tipo_hora' => TipoHora::class,
+        'fecha'               => 'date',
+        'tipo_hora'           => TipoHora::class,
+        'tiene_plus_retencion' => 'boolean',
+        'crear_albaran'       => 'boolean',
     ];
 
     public function proyecto(): BelongsTo
@@ -93,6 +98,11 @@ class Borrador extends Model
     public function albaranConvertido(): BelongsTo
     {
         return $this->belongsTo(Albaran::class, 'convertido_a_albaran_id');
+    }
+
+    public function parteConvertido(): BelongsTo
+    {
+        return $this->belongsTo(Parte::class, 'convertido_a_parte_id');
     }
 
     public function lineasPersonal(): HasMany

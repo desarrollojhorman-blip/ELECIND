@@ -3,8 +3,10 @@
 namespace App\Livewire\Forms;
 
 use App\Enums\TipoHora;
+use App\Models\AtributoHora;
 use App\Models\Parte;
 use App\Models\Proyecto;
+use App\Models\TarifaCliente;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +41,8 @@ class ParteForm extends Form
     public string $fecha = '';
 
     public string $tipo_hora = 'laboral';
+
+    public bool $tienesPlusRetencion = false;
 
     public string $estado = 'abierto';
 
@@ -122,9 +126,10 @@ class ParteForm extends Form
         $this->proyecto_id    = $parte->proyecto_id;
         $this->concepto_id    = $parte->concepto_id;
         $this->responsable_id = $parte->responsable_id;
-        $this->fecha          = Carbon::parse($parte->fecha)->format('Y-m-d');
-        $this->tipo_hora      = $parte->tipo_hora;
-        $this->estado         = $parte->estado;
+        $this->fecha                  = Carbon::parse($parte->fecha)->format('Y-m-d');
+        $this->tipo_hora              = $parte->tipo_hora;
+        $this->tienesPlusRetencion    = (bool) $parte->tiene_plus_retencion;
+        $this->estado                 = $parte->estado;
         $this->observaciones  = $parte->observaciones;
 
         $this->esPersonalizado    = (bool) $parte->es_personalizado;
@@ -176,12 +181,15 @@ class ParteForm extends Form
                 $parte = Parte::findOrFail($this->id);
             }
 
+            $wasActivo = (bool) $parte->tiene_plus_retencion;
+
             $parte->fecha = Carbon::parse($this->fecha);
             $parte->cliente_id = $this->cliente_id ? (int) $this->cliente_id : null;
             $parte->proyecto_id = $this->proyecto_id;
             $parte->concepto_id = $this->concepto_id;
             $parte->responsable_id = $this->responsable_id;
             $parte->tipo_hora = $this->tipo_hora;
+            $parte->tiene_plus_retencion = $this->tienesPlusRetencion;
             $parte->observaciones = $this->observaciones;
             // El estado solo se modifica en edición (al crear se queda abierto).
             if (! $esNuevo) {
@@ -195,7 +203,37 @@ class ParteForm extends Form
 
             $parte->save();
 
+            if ($this->tienesPlusRetencion && ! $wasActivo) {
+                $this->refrescarPlusRetencion($parte);
+            }
+
             return $parte->fresh();
         });
+    }
+
+    private function refrescarPlusRetencion(Parte $parte): void
+    {
+        $parte->load('proyecto:id,tipo_proyecto_id');
+        $tipoProyectoId = $parte->proyecto?->tipo_proyecto_id;
+
+        if ($parte->cliente_id === null || $tipoProyectoId === null) {
+            return;
+        }
+
+        $idPlusReten = AtributoHora::where('codigo', AtributoHora::COD_PLUS_RETEN)->value('id');
+        if ($idPlusReten === null) {
+            return;
+        }
+
+        $tarifaImporte = TarifaCliente::where('cliente_id', $parte->cliente_id)
+            ->where('tipo_proyecto_id', $tipoProyectoId)
+            ->where('atributo_id', $idPlusReten)
+            ->value('importe') ?? 0;
+
+        foreach ($parte->lineasPersonal()->with('trabajador')->get() as $linea) {
+            $linea->tarifa_plus_retencion_snapshot          = $tarifaImporte;
+            $linea->trabajador_tasa_plus_retencion_snapshot = $linea->trabajador?->tasa_plus_reten ?? 0;
+            $linea->saveQuietly();
+        }
     }
 }

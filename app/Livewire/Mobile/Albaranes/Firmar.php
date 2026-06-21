@@ -29,6 +29,9 @@ class Firmar extends Component
     /** El usuario logueado actúa como firmante del slot trabajador */
     public bool $esTrabajador = false;
 
+    /** El usuario logueado es el responsable asignado */
+    public bool $esResponsable = false;
+
     /** Sin permiso para firmar este albarán */
     public bool $sinPermiso = false;
 
@@ -65,6 +68,8 @@ class Firmar extends Component
         $this->esTrabajador = $albaran->creado_por === $uid
             || ($albaran->firma_trabajador_user_id !== null && $albaran->firma_trabajador_user_id === $uid);
 
+        $this->esResponsable = $albaran->responsable_id === $uid;
+
         $this->trabajadorYaFirmo = $this->albaran->firmas
             ->contains(fn ($f) => $f->tipo->value === 'trabajador');
 
@@ -83,6 +88,10 @@ class Firmar extends Component
     {
         if (! Gate::check('firmar', $this->albaran)) {
             $this->sinPermiso = true;
+            return;
+        }
+
+        if (! $this->esTrabajador && ! $this->esResponsable) {
             return;
         }
 
@@ -202,7 +211,9 @@ class Firmar extends Component
 
     public function render(): View
     {
-        return view('livewire.mobile.albaranes.firmar')->layout('components.layouts.mobile', [
+        return view('livewire.mobile.albaranes.firmar', [
+            'esResponsable' => $this->esResponsable,
+        ])->layout('components.layouts.mobile', [
             'title'     => 'Firma del parte',
             'showBack'  => true,
             'backRoute' => route('mobile.albaranes.index'),

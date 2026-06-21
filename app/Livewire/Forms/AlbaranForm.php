@@ -7,7 +7,10 @@ use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\AlbaranLineaMaterial;
 use App\Models\AlbaranLineaPersonal;
+use App\Models\AtributoHora;
+use App\Models\Parte;
 use App\Models\Proyecto;
+use App\Models\TarifaCliente;
 use App\Services\NumeracionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +52,8 @@ class AlbaranForm extends Form
     public string $fecha = '';
 
     public string $tipo_hora = 'laboral';
+
+    public bool $tienesPlusRetencion = false;
 
     public string $estado = 'pendiente_firma';
 
@@ -201,9 +206,10 @@ class AlbaranForm extends Form
         $this->cliente_id = $albaran->cliente_id;
         $this->concepto_id = $albaran->concepto_id;
         $this->responsable_id = $albaran->responsable_id;
-        $this->fecha = Carbon::parse($albaran->fecha)->format('Y-m-d');
-        $this->tipo_hora = $albaran->tipo_hora->value;
-        $this->estado = $albaran->estado->value;
+        $this->fecha                  = Carbon::parse($albaran->fecha)->format('Y-m-d');
+        $this->tipo_hora              = $albaran->tipo_hora->value;
+        $this->tienesPlusRetencion    = (bool) $albaran->tiene_plus_retencion;
+        $this->estado                 = $albaran->estado->value;
         $this->observaciones = $albaran->observaciones;
         $this->firma_trabajador_user_id    = $albaran->firma_trabajador_user_id;
         $this->firma_trabajador_otro_nombre = $albaran->firma_trabajador_otro_nombre;
@@ -331,6 +337,8 @@ class AlbaranForm extends Form
                 $albaran = Albaran::findOrFail($this->id);
             }
 
+            $wasActivo = (bool) $albaran->tiene_plus_retencion;
+
             $albaran->fecha = Carbon::parse($this->fecha);
             $albaran->cliente_id = $this->cliente_id ? (int) $this->cliente_id : null;
             $albaran->proyecto_id = $this->proyecto_id;
@@ -347,6 +355,7 @@ class AlbaranForm extends Form
             $albaran->firma_responsable_otro_nombre = $this->firma_responsable_otro_nombre ?: null;
             $albaran->firma_responsable_otro_correo = $this->firma_responsable_otro_correo ?: null;
             $albaran->tipo_hora = TipoHora::from($this->tipo_hora);
+            $albaran->tiene_plus_retencion = $this->tienesPlusRetencion;
             $albaran->estado = EstadoAlbaran::from($this->estado);
             $albaran->observaciones = $this->observaciones;
             $albaran->save();
@@ -381,8 +390,120 @@ class AlbaranForm extends Form
                 }
             }
             // Web: líneas gestionadas directamente desde los modales de cada tab.
+            if ($this->omitirLineaCreador && $this->tienesPlusRetencion && ! $wasActivo) {
+                $this->refrescarPlusRetencion($albaran);
+            }
 
             return $albaran->fresh();
         });
+    }
+
+    /**
+     * Crea un Parte de trabajo con las líneas de personal y material del formulario.
+     * Sólo válido en modo móvil (omitirLineaCreador = false).
+     */
+    public function saveComoParte(): Parte
+    {
+        $this->validate();
+
+        return DB::transaction(function (): Parte {
+            $parte = new Parte;
+            $parte->creado_por = (int) Auth::id();
+            $parte->estado     = Parte::ESTADO_ABIERTO;
+
+            $parte->fecha             = Carbon::parse($this->fecha);
+            $parte->cliente_id        = $this->cliente_id ? (int) $this->cliente_id : null;
+            $parte->proyecto_id       = $this->proyecto_id;
+            $parte->concepto_id       = $this->concepto_id;
+            $parte->responsable_id    = $this->responsable_id;
+            $parte->tipo_hora         = $this->tipo_hora;
+            $parte->tiene_plus_retencion = $this->tienesPlusRetencion;
+            $parte->observaciones     = $this->observaciones;
+            $parte->es_personalizado  = $this->esPersonalizado;
+            $parte->cliente_texto     = $this->esPersonalizado && $this->clienteOtro ? trim($this->clienteTexto) : null;
+            $parte->proyecto_texto    = $this->esPersonalizado && $this->proyectoOtro ? trim($this->proyectoTexto) : null;
+            $parte->concepto_texto    = $this->esPersonalizado && $this->conceptoOtro ? trim($this->conceptoTexto) : null;
+            $parte->responsable_texto = $this->esPersonalizado && $this->responsableOtro ? trim($this->responsableTexto) : null;
+            $parte->save();
+
+            $parte->lineasPersonal()->create([
+                'trabajador_id' => Auth::id(),
+                'horas'         => $this->mi_horas,
+                'horas_extra'   => $this->mi_horas_extra,
+            ]);
+
+            foreach ($this->companeros as $companero) {
+                $parte->lineasPersonal()->create([
+                    'trabajador_id' => $companero['trabajador_id'],
+                    'horas'         => $companero['horas'],
+                    'horas_extra'   => $companero['horas_extra'] ?? '0.00',
+                ]);
+            }
+
+            foreach ($this->materiales as $material) {
+                $parte->lineasMaterial()->create([
+                    'material_id' => $material['material_id'],
+                    'cantidad'    => $material['cantidad'],
+                ]);
+            }
+
+            if ($this->tienesPlusRetencion) {
+                $this->refrescarPlusRetencionParte($parte);
+            }
+
+            return $parte->fresh();
+        });
+    }
+
+    private function refrescarPlusRetencionParte(Parte $parte): void
+    {
+        $parte->load('proyecto:id,tipo_proyecto_id');
+        $tipoProyectoId = $parte->proyecto?->tipo_proyecto_id;
+
+        if ($parte->cliente_id === null || $tipoProyectoId === null) {
+            return;
+        }
+
+        $idPlusReten = AtributoHora::where('codigo', AtributoHora::COD_PLUS_RETEN)->value('id');
+        if ($idPlusReten === null) {
+            return;
+        }
+
+        $tarifaImporte = TarifaCliente::where('cliente_id', $parte->cliente_id)
+            ->where('tipo_proyecto_id', $tipoProyectoId)
+            ->where('atributo_id', $idPlusReten)
+            ->value('importe') ?? 0;
+
+        foreach ($parte->lineasPersonal()->with('trabajador')->get() as $linea) {
+            $linea->tarifa_plus_retencion_snapshot          = $tarifaImporte;
+            $linea->trabajador_tasa_plus_retencion_snapshot = $linea->trabajador?->tasa_plus_reten ?? 0;
+            $linea->saveQuietly();
+        }
+    }
+
+    private function refrescarPlusRetencion(Albaran $albaran): void
+    {
+        $albaran->load('proyecto:id,tipo_proyecto_id');
+        $tipoProyectoId = $albaran->proyecto?->tipo_proyecto_id;
+
+        if ($albaran->cliente_id === null || $tipoProyectoId === null) {
+            return;
+        }
+
+        $idPlusReten = AtributoHora::where('codigo', AtributoHora::COD_PLUS_RETEN)->value('id');
+        if ($idPlusReten === null) {
+            return;
+        }
+
+        $tarifaImporte = TarifaCliente::where('cliente_id', $albaran->cliente_id)
+            ->where('tipo_proyecto_id', $tipoProyectoId)
+            ->where('atributo_id', $idPlusReten)
+            ->value('importe') ?? 0;
+
+        foreach ($albaran->lineasPersonal()->with('trabajador')->get() as $linea) {
+            $linea->tarifa_plus_retencion_snapshot          = $tarifaImporte;
+            $linea->trabajador_tasa_plus_retencion_snapshot = $linea->trabajador?->tasa_plus_reten ?? 0;
+            $linea->saveQuietly();
+        }
     }
 }

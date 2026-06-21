@@ -85,7 +85,7 @@
                     Cliente
                 </x-ui.sortable-header>
                 <x-ui.sortable-header column="tipo_proyecto" :current-column="$ordenColumna" :current-direction="$ordenDireccion">
-                    Tipo proyecto
+                    Grupo proyecto
                 </x-ui.sortable-header>
                 @foreach ($this->atributos as $attr)
                     <th class="px-4 py-3 whitespace-nowrap text-center">
@@ -216,8 +216,8 @@
         </x-ui.field>
 
         <x-slot name="footer">
-            <x-ui.button wire:click="aplicarBulk" variant="primary">Aplicar</x-ui.button>
-            <x-ui.button wire:click="cerrarBulk" variant="secondary">Cancelar</x-ui.button>
+            <x-ui.button wire:click="cerrarBulk" variant="neutral">Cancelar</x-ui.button>
+            <x-ui.button wire:click="aplicarBulk" variant="info">Guardar</x-ui.button>
         </x-slot>
     </x-ui.modal>
 
@@ -264,7 +264,7 @@
         </div>
 
         <x-slot name="footer">
-            <x-ui.button wire:click="cerrarHistorial" variant="secondary">Cerrar</x-ui.button>
+            <x-ui.button wire:click="cerrarHistorial" variant="neutral">Cerrar</x-ui.button>
         </x-slot>
     </x-ui.modal>
 </div>

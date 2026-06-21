@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TipoHora;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int|null $responsable_id
  * @property string $estado
  * @property string $tipo_hora
+ * @property bool $tiene_plus_retencion
  * @property string|null $observaciones
  * @property int|null $albaran_id
  * @property bool $es_personalizado
@@ -60,6 +62,7 @@ class Parte extends Model
         'responsable_id',
         'estado',
         'tipo_hora',
+        'tiene_plus_retencion',
         'observaciones',
         'albaran_id',
         'snapshot_data',
@@ -90,8 +93,10 @@ class Parte extends Model
     {
         return [
             'fecha' => 'date',
+            'tipo_hora' => TipoHora::class,
             'snapshot_data' => 'array',
             'es_personalizado' => 'boolean',
+            'tiene_plus_retencion' => 'boolean',
         ];
     }
 

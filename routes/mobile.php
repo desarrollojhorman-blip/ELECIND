@@ -5,6 +5,8 @@ use App\Livewire\Mobile\Albaranes\Firmar as AlbaranesFirmar;
 use App\Livewire\Mobile\Albaranes\Index as AlbaranesIndex;
 use App\Livewire\Mobile\Albaranes\Personalizado as AlbaranesPersonalizado;
 use App\Livewire\Mobile\Albaranes\Ver as AlbaranesVer;
+use App\Livewire\Mobile\Albaranes\VerBorrador as AlbaranesVerBorrador;
+use App\Livewire\Mobile\Albaranes\VerParte as AlbaranesVerParte;
 use App\Livewire\Mobile\Ausencias\Crear as AusenciasCrear;
 use App\Livewire\Mobile\Ausencias\Index as AusenciasIndex;
 use App\Livewire\Mobile\Horas\Index as HorasIndex;
@@ -44,6 +46,12 @@ Route::middleware(['auth', 'ensure.mobile.access'])
 
         Route::get('/albaranes/{albaran}', AlbaranesVer::class)
             ->name('albaranes.ver');
+
+        Route::get('/borradores/{borrador}', AlbaranesVerBorrador::class)
+            ->name('borradores.ver');
+
+        Route::get('/partes/{parte}', AlbaranesVerParte::class)
+            ->name('partes.ver');
 
         // ─── Ausencias ──────────────────────────────────────────────────────
         Route::get('/ausencias', AusenciasIndex::class)

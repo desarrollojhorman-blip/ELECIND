@@ -33,11 +33,11 @@ class PartePolicy
             return false;
         }
 
-        if ($parte->user_id === $user->getKey()) {
+        if ($parte->creado_por === $user->getKey()) {
             return true;
         }
 
-        return $parte->lineasPersonal()->where('user_id', $user->getKey())->exists();
+        return $parte->lineasPersonal()->where('trabajador_id', $user->getKey())->exists();
     }
 
     public function create(User $user): bool
@@ -52,7 +52,7 @@ class PartePolicy
         }
 
         // El creador siempre puede editar su propio parte mientras esté abierto.
-        if ($parte->user_id === $user->getKey()) {
+        if ($parte->creado_por === $user->getKey()) {
             return true;
         }
 
@@ -72,7 +72,7 @@ class PartePolicy
         }
 
         // El creador siempre puede eliminar su propio parte abierto.
-        if ($parte->user_id === $user->getKey()) {
+        if ($parte->creado_por === $user->getKey()) {
             return true;
         }
 

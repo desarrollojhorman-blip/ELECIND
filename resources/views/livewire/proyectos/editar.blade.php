@@ -72,6 +72,7 @@
             ['key' => 'conceptos',     'label' => 'Conceptos',     'count' => $proyecto ? $this->conceptosProyecto->count() : null],
             \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $proyecto ? $this->materialesProyecto->count() : null] : false,
             ['key' => 'albaranes',     'label' => 'Albaranes',     'count' => $proyecto ? $this->albaranesDelProyecto->count() : null],
+            ['key' => 'archivos',      'label' => 'Archivos',      'count' => $proyecto ? $proyecto->archivos->count() : null],
         ])) as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
@@ -511,7 +512,142 @@
         @endif
     </div>
 
+    {{-- ═══ Tab: Archivos ═══ --}}
+    <div x-show="tab === 'archivos'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between px-6 py-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">Archivos adjuntos</span>
+                    @if ($proyecto)
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                            {{ $proyecto->archivos->count() }}
+                        </span>
+                    @endif
+                </div>
+                <p class="mt-0.5 text-xs text-slate-400">Documentos relacionados con este proyecto (máx. 10 MB por archivo)</p>
+            </div>
+            @if ($proyecto && !$subiendoArchivo)
+                <x-ui.button type="button" variant="success" wire:click="abrirModalArchivo" icon="heroicon-o-plus">
+                    Añadir
+                </x-ui.button>
+            @endif
+        </div>
+
+        @if ($proyecto && ($proyecto->archivos->isNotEmpty() || $subiendoArchivo))
+            <div class="border-t border-slate-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                        <tr>
+                            <th class="px-6 py-2.5">Nombre</th>
+                            <th class="w-48 px-4 py-2.5">Archivo original</th>
+                            <th class="w-24 px-4 py-2.5 text-right">Tamaño</th>
+                            <th class="w-36 px-4 py-2.5">Fecha</th>
+                            <th class="w-24 px-4 py-2.5 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach ($proyecto->archivos as $archivo)
+                            <tr wire:key="archivo-{{ $archivo->id }}" class="hover:bg-slate-50">
+                                <td class="px-6 py-3 font-medium text-slate-800">
+                                    {{ $archivo->nombre }}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[180px]">
+                                    {{ $archivo->nombre_original }}
+                                </td>
+                                <td class="px-4 py-3 text-right text-xs text-slate-500">
+                                    {{ $archivo->tamanoFormateado() }}
+                                </td>
+                                <td class="px-4 py-3 text-xs text-slate-500">
+                                    {{ $archivo->created_at->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ $archivo->url() }}" target="_blank"
+                                           class="inline-flex items-center justify-center rounded-md p-1.5 text-blue-600 hover:bg-blue-50"
+                                           title="Descargar">
+                                            <x-heroicon-o-arrow-down-tray class="size-4" />
+                                        </a>
+                                        <x-ui.icon-button
+                                            wire:click="confirmarEliminarArchivo({{ $archivo->id }})"
+                                            icon="heroicon-o-trash"
+                                            variant="danger"
+                                            tooltip="Eliminar" />
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        {{-- Fila nueva --}}
+                        @if ($subiendoArchivo)
+                            <tr wire:key="archivo-new" class="bg-blue-50">
+                                <td class="px-6 py-3">
+                                    <x-ui.input wire:model="modalArchivoNombre" placeholder="Nombre descriptivo (opcional)" />
+                                    @error('modalArchivoNombre') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </td>
+                                <td class="px-4 py-3" colspan="3">
+                                    <input type="file"
+                                           wire:model="modalArchivoFichero"
+                                           accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                                           class="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-primary-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-800" />
+                                    <div wire:loading wire:target="modalArchivoFichero" class="mt-1 text-xs text-slate-500">Procesando…</div>
+                                    @error('modalArchivoFichero') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <x-ui.icon-button wire:click="guardarArchivo" wire:loading.attr="disabled" wire:target="guardarArchivo,modalArchivoFichero" icon="heroicon-o-check" variant="success" tooltip="Subir" />
+                                        <x-ui.icon-button wire:click="cerrarModalArchivo" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="border-t border-slate-100 px-6 py-10 text-center text-sm text-slate-400">
+                @if (!$proyecto)
+                    Guarda primero el proyecto para poder adjuntar archivos.
+                @else
+                    No hay archivos adjuntos. Pulsa «Añadir» para subir documentos.
+                @endif
+            </div>
+        @endif
+    </div>
+
     </div>{{-- /tabs + contenido --}}
+
+    {{-- Modal confirmar eliminar archivo --}}
+    <x-ui.modal
+        :show="$confirmarEliminarArchivoId !== null"
+        title="Eliminar archivo"
+        close-action="cancelarEliminarArchivo"
+        size="sm">
+
+        <div class="flex gap-3">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600">
+                <x-heroicon-o-exclamation-triangle class="size-5" />
+            </div>
+            <p class="text-sm text-slate-700">
+                ¿Seguro que quieres eliminar este archivo? Se borrará del servidor y no se puede recuperar.
+            </p>
+        </div>
+
+        <x-slot:footer>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminarArchivo">Cancelar</x-ui.button>
+            <x-ui.button variant="danger"
+                         wire:click="eliminarArchivo"
+                         wire:loading.attr="disabled"
+                         wire:target="eliminarArchivo">
+                <x-heroicon-o-trash wire:loading.remove wire:target="eliminarArchivo" class="size-4" />
+                <svg wire:loading wire:target="eliminarArchivo" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span wire:loading.remove wire:target="eliminarArchivo">Eliminar</span>
+                <span wire:loading wire:target="eliminarArchivo">Eliminando…</span>
+            </x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
 
     {{-- Modal confirmar eliminación --}}
     <x-ui.modal
@@ -535,7 +671,7 @@
         </div>
 
         <x-slot:footer>
-            <x-ui.button variant="ghost" wire:click="cancelarEliminar">Cancelar</x-ui.button>
+            <x-ui.button variant="neutral" wire:click="cancelarEliminar">Cancelar</x-ui.button>
             <x-ui.button variant="danger"
                          wire:click="eliminar"
                          wire:loading.attr="disabled"

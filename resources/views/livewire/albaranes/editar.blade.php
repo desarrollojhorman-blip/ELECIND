@@ -9,7 +9,14 @@
                         <div class="text-xl font-semibold text-slate-900 font-mono">{{ $albaran->numero }}</div>
                     @endif
                     @if ($albaran->estado)
-                        <div class="text-sm text-slate-500">{{ $albaran->estado->etiqueta() }}</div>
+                        <div class="text-sm text-slate-500">
+                            {{ $albaran->estado->etiqueta() }}
+                            @if ($albaran->parte)
+                                · <a href="{{ route('partes.ver', $albaran->parte->id) }}" wire:navigate class="text-blue-600 underline">
+                                    {{ $albaran->parte->numero }}
+                                </a>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </x-slot:actions>
@@ -94,10 +101,11 @@
         </button>
 
         @foreach (array_values(array_filter([
-            ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $albaran?->lineasPersonal->count()],
+            ['key' => 'trabajadores', 'label' => 'Trabajadores',  'count' => $albaran?->lineasPersonal->count()],
             \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $albaran?->lineasMaterial->count()] : false,
-            ['key' => 'firmas',       'label' => 'Firmas',       'count' => null],
-            ['key' => 'archivos',     'label' => 'Archivos',     'count' => $albaran?->archivos->count()],
+            ['key' => 'costes',       'label' => 'Costes/Gastos', 'count' => null],
+            ['key' => 'firmas',       'label' => 'Firmas',        'count' => null],
+            ['key' => 'archivos',     'label' => 'Archivos',      'count' => $albaran?->archivos->count()],
         ])) as $t)
             @if ($modoCrear)
                 <span class="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap px-5 py-3 text-sm text-slate-300"
@@ -181,6 +189,15 @@
                     </x-ui.select>
                 </x-ui.field>
 
+                {{-- Plus de retención --}}
+                <div class="md:col-span-2 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                    <input type="checkbox" id="plus-reten-alb" wire:model="form.tienesPlusRetencion" class="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+                    <label for="plus-reten-alb" class="text-sm font-medium text-amber-900 cursor-pointer select-none">
+                        Plus de retención (guardia)
+                        <span class="ml-2 text-xs font-normal text-amber-700">Si está activo, se añade el plus de retención a la facturación y coste de cada trabajador.</span>
+                    </label>
+                </div>
+
                 {{-- Fila 5: Observaciones (línea completa) --}}
                 <x-ui.field label="Observaciones" class="md:col-span-2" :error="$errors->first('form.observaciones')">
                     <x-ui.textarea wire:model="form.observaciones" rows="3" placeholder="Notas adicionales del parte…" />
@@ -246,15 +263,13 @@
                                                 @error('modalTrabajadorUserId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                             </div>
                                             <div class="w-28 shrink-0">
-                                                <p class="mb-1 text-xs text-slate-500">Horas</p>
                                                 <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHoras" />
                                                 @error('modalTrabajadorHoras') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                             </div>
                                             <div class="w-28 shrink-0">
-                                                <p class="mb-1 text-xs text-slate-500">H. extra</p>
                                                 <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHorasExtra" />
                                             </div>
-                                            <div class="flex shrink-0 items-center gap-1 pt-5">
+                                            <div class="flex shrink-0 items-center gap-1">
                                                 <x-ui.icon-button wire:click="guardarTrabajador" wire:loading.attr="disabled" wire:target="guardarTrabajador" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
                                                 <x-ui.icon-button wire:click="cerrarModalTrabajador" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
                                             </div>
@@ -295,15 +310,13 @@
                                             @error('modalTrabajadorUserId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <div class="w-28 shrink-0">
-                                            <p class="mb-1 text-xs text-slate-500">Horas</p>
                                             <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHoras" />
                                             @error('modalTrabajadorHoras') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                         </div>
                                         <div class="w-28 shrink-0">
-                                            <p class="mb-1 text-xs text-slate-500">H. extra</p>
                                             <x-ui.input type="number" min="0" max="24" step="0.25" wire:model="modalTrabajadorHorasExtra" />
                                         </div>
-                                        <div class="flex shrink-0 items-center gap-1 pt-5">
+                                        <div class="flex shrink-0 items-center gap-1">
                                             <x-ui.icon-button wire:click="guardarTrabajador" wire:loading.attr="disabled" wire:target="guardarTrabajador" icon="heroicon-o-check" variant="success" tooltip="Guardar" />
                                             <x-ui.icon-button wire:click="cerrarModalTrabajador" icon="heroicon-o-x-mark" variant="neutral" tooltip="Cancelar" />
                                         </div>
@@ -447,6 +460,278 @@
         @endif
     </div>
     @endif
+
+    {{-- ═══ Tab: Costes/Gastos ═══ --}}
+    @if (! $modoCrear && $albaran)
+        @php
+            $fmtE = function ($v): string {
+                return number_format((float) $v, 2, ',', '.');
+            };
+            $plusReten  = (bool) $albaran->tiene_plus_retencion;
+            $totalFact  = $albaran->lineasPersonal->sum(fn ($l) => (float) $l->facturacion_snapshot + ($plusReten ? (float) $l->tarifa_plus_retencion_snapshot : 0));
+            $totalCoste = $albaran->lineasPersonal->sum(fn ($l) => (float) $l->coste_snapshot      + ($plusReten ? (float) $l->trabajador_tasa_plus_retencion_snapshot : 0));
+            $totalMat      = \App\Support\Modulos::materialesAvanzado()
+                ? $albaran->lineasMaterial->sum(fn ($l) => (float) $l->cantidad * (float) $l->material_precio_venta_snapshot)
+                : 0;
+            $totalMatCoste = \App\Support\Modulos::materialesAvanzado()
+                ? $albaran->lineasMaterial->sum(fn ($l) => (float) $l->cantidad * (float) $l->material_precio_coste_snapshot)
+                : 0;
+            $granTotal  = $totalFact + $totalMat;
+            $granCoste  = $totalCoste + $totalMatCoste;
+        @endphp
+        <div x-show="tab === 'costes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <div class="px-6 py-4">
+                <div class="text-sm font-semibold text-slate-900">Costes y Gastos</div>
+                <p class="mt-0.5 text-xs text-slate-400">Resumen financiero: facturación al cliente y coste de personal y materiales.</p>
+            </div>
+
+            {{-- Sub-sección: Personal --}}
+            <div class="border-t border-slate-200">
+                <div class="bg-slate-50 px-6 py-2.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Personal</span>
+                </div>
+                @if ($albaran->lineasPersonal->isNotEmpty())
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                                <tr>
+                                    <th class="px-6 py-2.5">Trabajador</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap">Horas / Extra</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Tarifa hora / extra (€/h) que se cobra al cliente">Tarifa/h · Extra/h</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Plus de retención cobrado al cliente">Plus ret.</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Total facturado al cliente para esta línea">Facturación</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Tasa hora / extra (€/h) que se paga al trabajador">Tasa/h · Extra/h</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Plus de retención pagado al trabajador">Plus ret.</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap" title="Total pagado al trabajador para esta línea">Coste</th>
+                                    <th class="px-3 py-2.5 text-right whitespace-nowrap">Margen</th>
+                                    <th class="w-14 px-3 py-2.5"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach ($albaran->lineasPersonal as $linea)
+                                    @php
+                                        $fact   = (float) $linea->facturacion_snapshot + ($plusReten ? (float) $linea->tarifa_plus_retencion_snapshot : 0);
+                                        $gasto  = (float) $linea->coste_snapshot       + ($plusReten ? (float) $linea->trabajador_tasa_plus_retencion_snapshot : 0);
+                                        $margen = $fact - $gasto;
+                                    @endphp
+                                    <tr wire:key="costes-alb-{{ $linea->id }}" class="hover:bg-slate-50">
+                                        <td class="px-6 py-3 font-medium text-slate-800 whitespace-nowrap">
+                                            {{ trim(($linea->trabajador_numero_empleado_snapshot ? $linea->trabajador_numero_empleado_snapshot.' · ' : '').trim(($linea->trabajador_apellidos_snapshot ?? '').' '.($linea->trabajador_nombre_snapshot ?? ''))) ?: '—' }}
+                                        </td>
+                                        <td class="px-3 py-3 text-right text-slate-600 tabular-nums whitespace-nowrap">
+                                            {{ $fmtE($linea->horas) }} / {{ $fmtE($linea->horas_extra) }}
+                                        </td>
+                                        <td class="px-3 py-3 text-right tabular-nums whitespace-nowrap">
+                                            <span class="text-emerald-700">{{ $fmtE($linea->tarifa_hora_snapshot) }}</span>
+                                            <span class="text-slate-400 mx-0.5">·</span>
+                                            <span class="text-emerald-600">{{ $fmtE($linea->tarifa_extra_snapshot) }}</span>
+                                        </td>
+                                        <td class="px-3 py-3 text-right tabular-nums whitespace-nowrap @if($plusReten) text-emerald-700 font-semibold @else text-slate-300 @endif">
+                                            {{ $plusReten ? $fmtE($linea->tarifa_plus_retencion_snapshot).' €' : '—' }}
+                                        </td>
+                                        <td class="px-3 py-3 text-right font-semibold tabular-nums text-emerald-700 whitespace-nowrap">
+                                            {{ $fmtE($fact) }} €
+                                        </td>
+                                        <td class="px-3 py-3 text-right tabular-nums whitespace-nowrap">
+                                            <span class="text-rose-700">{{ $fmtE($linea->trabajador_tasa_hora_snapshot) }}</span>
+                                            <span class="text-slate-400 mx-0.5">·</span>
+                                            <span class="text-rose-600">{{ $fmtE($linea->trabajador_tasa_extra_snapshot) }}</span>
+                                        </td>
+                                        <td class="px-3 py-3 text-right tabular-nums whitespace-nowrap @if($plusReten) text-rose-700 font-semibold @else text-slate-300 @endif">
+                                            {{ $plusReten ? $fmtE($linea->trabajador_tasa_plus_retencion_snapshot).' €' : '—' }}
+                                        </td>
+                                        <td class="px-3 py-3 text-right font-semibold tabular-nums text-rose-700 whitespace-nowrap">
+                                            {{ $fmtE($gasto) }} €
+                                        </td>
+                                        <td class="px-3 py-3 text-right font-semibold tabular-nums whitespace-nowrap @if($margen >= 0) text-slate-800 @else text-red-600 @endif">
+                                            {{ $fmtE($margen) }} €
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            @can('update', $albaran)
+                                                <x-ui.icon-button wire:click="abrirModalCostes({{ $linea->id }})" icon="heroicon-o-pencil-square" variant="info" tooltip="Editar tarifas/tasas" />
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="border-t-2 border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">
+                                <tr>
+                                    <td colspan="3" class="px-6 py-3 text-right uppercase tracking-wider text-slate-500">Totales personal</td>
+                                    <td class="px-3 py-3"></td>
+                                    <td class="px-3 py-3 text-right tabular-nums text-emerald-700 text-sm">{{ $fmtE($totalFact) }} €</td>
+                                    <td class="px-3 py-3"></td>
+                                    <td class="px-3 py-3"></td>
+                                    <td class="px-3 py-3 text-right tabular-nums text-rose-700 text-sm">{{ $fmtE($totalCoste) }} €</td>
+                                    <td class="px-3 py-3 text-right tabular-nums text-sm @if($totalFact - $totalCoste >= 0) text-slate-800 @else text-red-600 @endif">
+                                        {{ $fmtE($totalFact - $totalCoste) }} €
+                                    </td>
+                                    <td class="px-3 py-3"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                @else
+                    <div class="px-6 py-8 text-center text-sm text-slate-400">
+                        Añade trabajadores en la pestaña «Trabajadores» para ver los costes de personal.
+                    </div>
+                @endif
+            </div>
+
+            {{-- Sub-sección: Materiales --}}
+            @if(\App\Support\Modulos::materialesAvanzado())
+            <div class="border-t border-slate-200">
+                <div class="bg-slate-50 px-6 py-2.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Materiales</span>
+                </div>
+                @if ($albaran->lineasMaterial->isNotEmpty())
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-primary-700 text-left text-xs font-semibold uppercase tracking-wide text-white">
+                                <tr>
+                                    <th class="px-6 py-2.5">Material</th>
+                                    <th class="w-24 px-4 py-2.5 text-right">Cantidad</th>
+                                    <th class="w-16 px-4 py-2.5">Unidad</th>
+                                    <th class="w-28 px-4 py-2.5 text-right whitespace-nowrap" title="Precio de venta al cliente">Venta/ud</th>
+                                    <th class="w-28 px-4 py-2.5 text-right whitespace-nowrap">Total venta</th>
+                                    <th class="w-28 px-4 py-2.5 text-right whitespace-nowrap" title="Precio de coste">Coste/ud</th>
+                                    <th class="w-28 px-4 py-2.5 text-right whitespace-nowrap">Total coste</th>
+                                    <th class="w-24 px-4 py-2.5 text-right whitespace-nowrap">Margen</th>
+                                    <th class="w-14 px-3 py-2.5"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach ($albaran->lineasMaterial as $linea)
+                                    @php
+                                        $totalVentaLinea = (float) $linea->cantidad * (float) $linea->material_precio_venta_snapshot;
+                                        $totalCosteLinea = (float) $linea->cantidad * (float) $linea->material_precio_coste_snapshot;
+                                        $margenLinea     = $totalVentaLinea - $totalCosteLinea;
+                                    @endphp
+                                    <tr wire:key="costes-mat-alb-{{ $linea->id }}" class="hover:bg-slate-50">
+                                        <td class="px-6 py-3 font-medium text-slate-800">{{ $linea->material?->descripcion ?? '—' }}</td>
+                                        <td class="px-4 py-3 text-right text-slate-700 tabular-nums">{{ number_format((float) $linea->cantidad, 2) }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ $linea->material?->unidad_medida ?? '—' }}</td>
+                                        <td class="px-4 py-3 text-right text-emerald-700 tabular-nums font-semibold">
+                                            {{ $linea->material_precio_venta_snapshot !== null ? $fmtE($linea->material_precio_venta_snapshot).' €' : '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-right text-emerald-700 tabular-nums font-semibold">{{ $fmtE($totalVentaLinea) }} €</td>
+                                        <td class="px-4 py-3 text-right text-rose-700 tabular-nums font-semibold">
+                                            {{ $linea->material_precio_coste_snapshot !== null ? $fmtE($linea->material_precio_coste_snapshot).' €' : '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-right text-rose-700 tabular-nums font-semibold">{{ $fmtE($totalCosteLinea) }} €</td>
+                                        <td class="px-4 py-3 text-right tabular-nums font-semibold whitespace-nowrap @if($margenLinea >= 0) text-slate-800 @else text-red-600 @endif">
+                                            {{ $fmtE($margenLinea) }} €
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            @can('update', $albaran)
+                                                <x-ui.icon-button wire:click="abrirEditarPrecioMaterial({{ $linea->id }})" icon="heroicon-o-pencil-square" variant="info" tooltip="Editar precios" />
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="border-t-2 border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-3 text-right uppercase tracking-wider text-slate-500">Totales materiales</td>
+                                    <td class="px-4 py-3 text-right tabular-nums text-emerald-700 text-sm">{{ $fmtE($totalMat) }} €</td>
+                                    <td class="px-4 py-3"></td>
+                                    <td class="px-4 py-3 text-right tabular-nums text-rose-700 text-sm">{{ $fmtE($totalMatCoste) }} €</td>
+                                    <td class="px-4 py-3 text-right tabular-nums text-sm @if($totalMat - $totalMatCoste >= 0) text-slate-800 @else text-red-600 @endif">
+                                        {{ $fmtE($totalMat - $totalMatCoste) }} €
+                                    </td>
+                                    <td class="px-3 py-3"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                @else
+                    <div class="px-6 py-8 text-center text-sm text-slate-400">
+                        Añade materiales en la pestaña «Materiales» para ver los costes de materiales.
+                    </div>
+                @endif
+            </div>
+            @endif
+
+            {{-- Resumen global --}}
+            <div class="border-t-2 border-slate-300 bg-slate-100 px-6 py-4">
+                <div class="flex justify-end gap-8">
+                    <div class="text-center">
+                        <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Facturación total</div>
+                        <div class="text-xl font-bold text-emerald-700 tabular-nums">{{ $fmtE($granTotal) }} €</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Coste total</div>
+                        <div class="text-xl font-bold text-rose-700 tabular-nums">{{ $fmtE($granCoste) }} €</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Margen</div>
+                        <div class="text-xl font-bold tabular-nums @if($granTotal - $granCoste >= 0) text-slate-800 @else text-red-600 @endif">
+                            {{ $fmtE($granTotal - $granCoste) }} €
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ═══ Modal: editar tarifas/tasas de una línea (Costes/Gastos) ═══ --}}
+    <x-ui.modal :show="$editandoCostesLineaId !== null" title="Editar tarifas y tasas" close-action="cerrarModalCostes" size="sm">
+        <div class="space-y-4">
+            <div class="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-2">Cobro al cliente (€)</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <x-ui.field label="Hora normal" :error="$errors->first('modalCosteTarifaHora')">
+                        <x-ui.input type="number" step="0.0001" min="0" wire:model="modalCosteTarifaHora" />
+                    </x-ui.field>
+                    <x-ui.field label="Hora extra" :error="$errors->first('modalCosteTarifaExtra')">
+                        <x-ui.input type="number" step="0.0001" min="0" wire:model="modalCosteTarifaExtra" />
+                    </x-ui.field>
+                    <x-ui.field label="Plus retención" :error="$errors->first('modalCosteTarifaPlusReten')">
+                        <x-ui.input type="number" step="0.0001" min="0" wire:model="modalCosteTarifaPlusReten" />
+                    </x-ui.field>
+                </div>
+            </div>
+            <div class="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+                <p class="text-xs font-semibold text-rose-800 uppercase tracking-wider mb-2">Pago al trabajador (€)</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <x-ui.field label="Hora normal" :error="$errors->first('modalCosteTasaHora')">
+                        <x-ui.input type="number" step="0.001" min="0" wire:model="modalCosteTasaHora" />
+                    </x-ui.field>
+                    <x-ui.field label="Hora extra" :error="$errors->first('modalCosteTasaExtra')">
+                        <x-ui.input type="number" step="0.001" min="0" wire:model="modalCosteTasaExtra" />
+                    </x-ui.field>
+                    <x-ui.field label="Plus retención" :error="$errors->first('modalCosteTasaPlusReten')">
+                        <x-ui.input type="number" step="0.001" min="0" wire:model="modalCosteTasaPlusReten" />
+                    </x-ui.field>
+                </div>
+            </div>
+        </div>
+        <x-slot:footer>
+            <x-ui.button wire:click="cerrarModalCostes" variant="neutral">Cancelar</x-ui.button>
+            <x-ui.button wire:click="guardarCostesLinea" variant="info">Guardar</x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
+
+    {{-- ═══ Modal: editar precios de material (Costes/Gastos) ═══ --}}
+    <x-ui.modal :show="$editandoPrecioMaterialId !== null" title="Editar precios de material" close-action="cerrarEditarPrecioMaterial" size="sm">
+        <div class="space-y-4">
+            <div class="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-2">Precio de venta al cliente (€/ud)</p>
+                <x-ui.field label="Venta/ud" :error="$errors->first('modalPrecioMaterial')">
+                    <x-ui.input type="number" step="0.0001" min="0" wire:model="modalPrecioMaterial" />
+                </x-ui.field>
+            </div>
+            <div class="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+                <p class="text-xs font-semibold text-rose-800 uppercase tracking-wider mb-2">Precio de coste (€/ud)</p>
+                <x-ui.field label="Coste/ud" :error="$errors->first('modalPrecioCoste')">
+                    <x-ui.input type="number" step="0.0001" min="0" wire:model="modalPrecioCoste" />
+                </x-ui.field>
+            </div>
+        </div>
+        <x-slot:footer>
+            <x-ui.button wire:click="cerrarEditarPrecioMaterial" variant="neutral">Cancelar</x-ui.button>
+            <x-ui.button wire:click="guardarPrecioMaterial" variant="info">Guardar</x-ui.button>
+        </x-slot:footer>
+    </x-ui.modal>
 
     {{-- ═══ Tab: Firmas ═══ --}}
     <div x-show="tab === 'firmas'"

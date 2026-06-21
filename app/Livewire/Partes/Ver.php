@@ -23,6 +23,7 @@ class Ver extends Component
         $parte->load([
             'lineasPersonal.trabajador:id,nombre,apellidos,numero_empleado',
             'lineasMaterial.material:id,descripcion,unidad_medida',
+            'albaran:id,numero',
         ]);
         $this->parte = $parte;
     }

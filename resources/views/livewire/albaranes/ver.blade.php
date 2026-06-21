@@ -6,7 +6,14 @@
                     <div class="text-xl font-semibold text-slate-900 font-mono">{{ $albaran->numero }}</div>
                 @endif
                 @if ($albaran->estado)
-                    <div class="text-sm text-slate-500">{{ $albaran->estado->etiqueta() }}</div>
+                    <div class="text-sm text-slate-500">
+                        {{ $albaran->estado->etiqueta() }}
+                        @if ($albaran->parte)
+                            · <a href="{{ route('partes.ver', $albaran->parte->id) }}" wire:navigate class="text-blue-600 underline">
+                                {{ $albaran->parte->numero }}
+                            </a>
+                        @endif
+                    </div>
                 @endif
             </div>
         </x-slot:actions>

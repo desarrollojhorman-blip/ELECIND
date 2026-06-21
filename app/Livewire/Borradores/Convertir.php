@@ -3,10 +3,14 @@
 namespace App\Livewire\Borradores;
 
 use App\Enums\EstadoAlbaran;
+use App\Enums\TipoHora;
 use App\Models\Albaran;
+use App\Models\AlbaranLineaMaterial;
+use App\Models\AlbaranLineaPersonal;
 use App\Models\Borrador;
 use App\Models\Cliente;
 use App\Models\Concepto;
+use App\Models\Parte;
 use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\User;
@@ -360,7 +364,7 @@ class Convertir extends Component
         $this->validarConcepto();
         $this->validarResponsable();
 
-        $albaran = DB::transaction(function (): Albaran {
+        DB::transaction(function (): void {
             // 1. Cliente
             $clienteId = $this->clienteModo === 'elegir'
                 ? (int) $this->clienteIdElegido
@@ -427,57 +431,97 @@ class Convertir extends Component
                 ]);
             }
 
-            // 5. Componer observaciones del albarán (texto del borrador + avisos
-            //    por líneas en texto libre, que el admin gestionará después).
+            // 5. Componer observaciones (texto del borrador + avisos de texto libre).
             $observaciones = $this->componerObservaciones();
 
-            // 6. Crear Albarán
-            $fecha = Carbon::parse($this->borrador->fecha);
-            $albaran = new Albaran;
-            $albaran->numero                   = app(NumeracionService::class)->siguienteNumeroAlbaran($fecha);
-            $albaran->creado_por               = (int) Auth::id();
-            $albaran->estado                   = EstadoAlbaran::PENDIENTE_FIRMA;
-            $albaran->fecha                    = $fecha;
-            $albaran->cliente_id               = $clienteId;
-            $albaran->proyecto_id              = $proyectoId;
-            $albaran->concepto_id              = $conceptoId;
-            $albaran->responsable_id           = $responsableId;
-            $albaran->firma_trabajador_user_id = $this->borrador->creado_por;
-            $albaran->tipo_hora                = $this->borrador->tipo_hora;
-            $albaran->observaciones            = $observaciones;
-            $albaran->save();
+            $fecha     = Carbon::parse($this->borrador->fecha);
+            $tipoHora  = $this->borrador->tipo_hora;
+            $plusReten = (bool) $this->borrador->tiene_plus_retencion;
 
-            // 7. Copiar líneas con FK resuelta (las "basura" en texto libre quedan
-            //    reflejadas como nota en las observaciones, ya compuestas arriba).
-            foreach ($this->borrador->lineasPersonal as $linea) {
-                if ($linea->trabajador_id !== null) {
-                    $albaran->lineasPersonal()->create([
-                        'trabajador_id' => $linea->trabajador_id,
-                        'horas'         => $linea->horas,
-                        'horas_extra'   => $linea->horas_extra,
-                    ]);
+            if ($this->borrador->crear_albaran) {
+                // ── Crear Albarán ──────────────────────────────────────────
+                $albaran = new Albaran;
+                $albaran->numero                   = app(NumeracionService::class)->siguienteNumeroAlbaran($fecha);
+                $albaran->creado_por               = (int) Auth::id();
+                $albaran->estado                   = EstadoAlbaran::PENDIENTE_FIRMA;
+                $albaran->fecha                    = $fecha;
+                $albaran->cliente_id               = $clienteId;
+                $albaran->proyecto_id              = $proyectoId;
+                $albaran->concepto_id              = $conceptoId;
+                $albaran->responsable_id           = $responsableId;
+                $albaran->firma_trabajador_user_id = $this->borrador->creado_por;
+                $albaran->tipo_hora                = $tipoHora;
+                $albaran->tiene_plus_retencion     = $plusReten;
+                $albaran->observaciones            = $observaciones;
+                $albaran->save();
+
+                foreach ($this->borrador->lineasPersonal as $linea) {
+                    if ($linea->trabajador_id !== null) {
+                        $albaran->lineasPersonal()->create([
+                            'trabajador_id' => $linea->trabajador_id,
+                            'horas'         => $linea->horas,
+                            'horas_extra'   => $linea->horas_extra,
+                        ]);
+                    }
                 }
-            }
-            foreach ($this->borrador->lineasMaterial as $linea) {
-                if ($linea->material_id !== null) {
-                    $albaran->lineasMaterial()->create([
-                        'material_id' => $linea->material_id,
-                        'cantidad'    => $linea->cantidad,
-                    ]);
+                foreach ($this->borrador->lineasMaterial as $linea) {
+                    if ($linea->material_id !== null) {
+                        $albaran->lineasMaterial()->create([
+                            'material_id' => $linea->material_id,
+                            'cantidad'    => $linea->cantidad,
+                        ]);
+                    }
                 }
+
+                $this->borrador->update([
+                    'estado'                  => 'convertido',
+                    'convertido_a_albaran_id' => $albaran->id,
+                ]);
+
+                session()->flash('status', "Borrador convertido. Albarán «{$albaran->numero}» creado correctamente.");
+                $this->redirectRoute('albaranes.editar', ['albaran' => $albaran->getKey()], navigate: true);
+            } else {
+                // ── Crear Parte ────────────────────────────────────────────
+                $parte = new Parte;
+                $parte->creado_por            = $this->borrador->creado_por ?? (int) Auth::id();
+                $parte->estado                = Parte::ESTADO_ABIERTO;
+                $parte->fecha                 = $fecha;
+                $parte->cliente_id            = $clienteId;
+                $parte->proyecto_id           = $proyectoId;
+                $parte->concepto_id           = $conceptoId;
+                $parte->responsable_id        = $responsableId;
+                $parte->tipo_hora             = $tipoHora instanceof TipoHora ? $tipoHora->value : (string) $tipoHora;
+                $parte->tiene_plus_retencion  = $plusReten;
+                $parte->observaciones         = $observaciones;
+                $parte->save();
+
+                foreach ($this->borrador->lineasPersonal as $linea) {
+                    if ($linea->trabajador_id !== null) {
+                        $parte->lineasPersonal()->create([
+                            'trabajador_id' => $linea->trabajador_id,
+                            'horas'         => $linea->horas,
+                            'horas_extra'   => $linea->horas_extra,
+                        ]);
+                    }
+                }
+                foreach ($this->borrador->lineasMaterial as $linea) {
+                    if ($linea->material_id !== null) {
+                        $parte->lineasMaterial()->create([
+                            'material_id' => $linea->material_id,
+                            'cantidad'    => $linea->cantidad,
+                        ]);
+                    }
+                }
+
+                $this->borrador->update([
+                    'estado'                 => 'convertido',
+                    'convertido_a_parte_id'  => $parte->id,
+                ]);
+
+                session()->flash('status', "Borrador convertido. Parte «{$parte->numero}» creado correctamente.");
+                $this->redirectRoute('partes.editar', ['parte' => $parte->getKey()], navigate: true);
             }
-
-            // 8. Marcar borrador como convertido
-            $this->borrador->update([
-                'estado'                  => 'convertido',
-                'convertido_a_albaran_id' => $albaran->id,
-            ]);
-
-            return $albaran;
         });
-
-        session()->flash('status', "Borrador convertido. Albarán «{$albaran->numero}» creado correctamente.");
-        $this->redirectRoute('albaranes.editar', ['albaran' => $albaran->getKey()], navigate: true);
     }
 
     /**

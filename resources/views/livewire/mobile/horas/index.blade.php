@@ -138,7 +138,7 @@
                         };
                     @endphp
 
-                    <a href="{{ route('mobile.albaranes.ver', $linea->albaran_id) }}"
+                    <a href="{{ $linea->tipo_doc === 'albaran' ? route('mobile.albaranes.ver', $linea->doc_id) : route('mobile.partes.ver', $linea->doc_id) }}"
                        wire:navigate
                        class="flex items-start gap-3 rounded-xl border border-slate-200 border-l-4 {{ $borderColor }} bg-white p-3 shadow-sm active:scale-[0.99] active:transition-transform">
 

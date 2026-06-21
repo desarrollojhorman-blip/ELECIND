@@ -8,14 +8,6 @@
                 <x-ui.button as="a" href="{{ route('borradores.ver', $borrador) }}" wire:navigate variant="neutral" icon="heroicon-o-eye">
                     Ver
                 </x-ui.button>
-                @if ($borrador->estado !== 'convertido')
-                    @can('convertir', $borrador)
-                        <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
-                                     variant="primary" icon="heroicon-o-arrow-right-circle">
-                            Convertir a albarán
-                        </x-ui.button>
-                    @endcan
-                @endif
             @endif
             @can('create', App\Models\Borrador::class)
                 <x-ui.button as="a" href="{{ route('borradores.crear') }}" wire:navigate variant="success" icon="heroicon-o-plus">
@@ -28,6 +20,14 @@
                         Eliminar
                     </x-ui.button>
                 @endcan
+                @if ($borrador->estado !== 'convertido')
+                    @can('convertir', $borrador)
+                        <x-ui.button as="a" href="{{ route('borradores.convertir', $borrador) }}" wire:navigate
+                                     variant="warning" icon="heroicon-o-arrow-right-circle">
+                            Procesar borrador
+                        </x-ui.button>
+                    @endcan
+                @endif
             @endif
         </x-slot:actionsLeft>
         <x-slot:actionsRight>
@@ -40,7 +40,7 @@
                 <span wire:loading.remove wire:target="deshacer">Deshacer</span>
                 <span wire:loading wire:target="deshacer">Deshaciendo…</span>
             </x-ui.button>
-            <x-ui.button type="submit" form="form-borrador" variant="primary" wire:loading.attr="disabled" wire:target="guardar">
+            <x-ui.button type="submit" form="form-borrador" variant="info" wire:loading.attr="disabled" wire:target="guardar">
                 <x-heroicon-o-check wire:loading.remove wire:target="guardar" class="size-4" />
                 <svg wire:loading wire:target="guardar" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -213,6 +213,20 @@
                     <x-ui.field label="Observaciones" class="md:col-span-2" :error="$errors->first('form.observaciones')">
                         <x-ui.textarea wire:model="form.observaciones" rows="3" placeholder="Notas adicionales…" />
                     </x-ui.field>
+
+                    {{-- Opciones parte/albarán --}}
+                    <div class="md:col-span-2 grid grid-cols-2 gap-3">
+                        <label class="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                            <input type="checkbox" wire:model="form.tienesPlusRetencion"
+                                   class="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+                            <span class="text-sm font-medium text-amber-900">Plus retención</span>
+                        </label>
+                        <label class="flex cursor-pointer select-none items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
+                            <input type="checkbox" wire:model="form.crearAlbaran"
+                                   class="h-4 w-4 rounded border-sky-400 text-sky-600 focus:ring-sky-500">
+                            <span class="text-sm font-medium text-sky-900">Crear albarán</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </form>
@@ -224,7 +238,7 @@
                     <span class="text-sm font-semibold text-slate-900">Trabajadores</span>
                     <p class="mt-0.5 text-xs text-slate-400">Trabajadores que participan en este parte</p>
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="$call('form.addLineaPersonal')" icon="heroicon-o-plus">
+                <x-ui.button type="button" variant="success" wire:click="addLineaPersonal" icon="heroicon-o-plus">
                     Añadir
                 </x-ui.button>
             </div>
@@ -273,7 +287,7 @@
                                         <x-ui.input type="number" step="0.5" min="0" max="24" wire:model="form.lineasPersonal.{{ $i }}.horas_extra" class="text-right" />
                                     </td>
                                     <td class="px-4 py-2 text-center">
-                                        <x-ui.icon-button type="button" wire:click="$call('form.removeLineaPersonal', {{ $i }})" icon="heroicon-o-trash" variant="ghost-danger" tooltip="Eliminar" />
+                                        <x-ui.icon-button type="button" wire:click="removeLineaPersonal({{ $i }})" icon="heroicon-o-trash" variant="ghost-danger" tooltip="Eliminar" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -291,7 +305,7 @@
                     <span class="text-sm font-semibold text-slate-900">Materiales</span>
                     <p class="mt-0.5 text-xs text-slate-400">Materiales utilizados en este parte</p>
                 </div>
-                <x-ui.button type="button" variant="success" wire:click="$call('form.addLineaMaterial')" icon="heroicon-o-plus">
+                <x-ui.button type="button" variant="success" wire:click="addLineaMaterial" icon="heroicon-o-plus">
                     Añadir
                 </x-ui.button>
             </div>
@@ -336,7 +350,7 @@
                                         <x-ui.input type="number" step="0.01" min="0" wire:model="form.lineasMaterial.{{ $i }}.cantidad" class="text-right" />
                                     </td>
                                     <td class="px-4 py-2 text-center">
-                                        <x-ui.icon-button type="button" wire:click="$call('form.removeLineaMaterial', {{ $i }})" icon="heroicon-o-trash" variant="ghost-danger" tooltip="Eliminar" />
+                                        <x-ui.icon-button type="button" wire:click="removeLineaMaterial({{ $i }})" icon="heroicon-o-trash" variant="ghost-danger" tooltip="Eliminar" />
                                     </td>
                                 </tr>
                             @endforeach

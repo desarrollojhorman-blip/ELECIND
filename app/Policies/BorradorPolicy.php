@@ -22,7 +22,11 @@ class BorradorPolicy
             return false;
         }
 
-        return $borrador->creado_por === $user->getKey();
+        if ($borrador->creado_por === $user->getKey()) {
+            return true;
+        }
+
+        return $borrador->lineasPersonal()->where('trabajador_id', $user->getKey())->exists();
     }
 
     public function create(User $user): bool

@@ -24,7 +24,7 @@
     <x-ui.data-table :colspan="1 + $this->atributos->count() + 1" empty="No hay tipos de proyecto activos.">
         <x-slot:head>
             <tr>
-                <x-ui.sortable-header>Tipo proyecto</x-ui.sortable-header>
+                <x-ui.sortable-header>Grupo proyecto</x-ui.sortable-header>
                 @foreach ($this->atributos as $attr)
                     <th class="px-4 py-3 whitespace-nowrap text-center">
                         @if (! $soloLectura)
@@ -141,8 +141,8 @@
             />
         </x-ui.field>
         <x-slot name="footer">
-            <x-ui.button wire:click="aplicarBulk" variant="primary">Aplicar</x-ui.button>
-            <x-ui.button wire:click="cerrarBulk" variant="secondary">Cancelar</x-ui.button>
+            <x-ui.button wire:click="cerrarBulk" variant="neutral">Cancelar</x-ui.button>
+            <x-ui.button wire:click="aplicarBulk" variant="info">Guardar</x-ui.button>
         </x-slot>
     </x-ui.modal>
 
@@ -187,7 +187,7 @@
         </div>
 
         <x-slot name="footer">
-            <x-ui.button wire:click="cerrarHistorial" variant="secondary">Cerrar</x-ui.button>
+            <x-ui.button wire:click="cerrarHistorial" variant="neutral">Cerrar</x-ui.button>
         </x-slot>
     </x-ui.modal>
 </div>

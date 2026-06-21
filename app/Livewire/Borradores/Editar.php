@@ -70,6 +70,11 @@ class Editar extends Component
         $this->redirectRoute('borradores.editar', ['borrador' => $borrador->getKey()]);
     }
 
+    public function addLineaPersonal(): void   { $this->form->addLineaPersonal(); }
+    public function removeLineaPersonal(int $i): void { $this->form->removeLineaPersonal($i); }
+    public function addLineaMaterial(): void   { $this->form->addLineaMaterial(); }
+    public function removeLineaMaterial(int $i): void { $this->form->removeLineaMaterial($i); }
+
     public function confirmarEliminar(): void
     {
         if ($this->borrador === null) {

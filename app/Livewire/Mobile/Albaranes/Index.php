@@ -4,6 +4,7 @@ namespace App\Livewire\Mobile\Albaranes;
 
 use App\Models\Albaran;
 use App\Models\Borrador;
+use App\Models\Parte;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -18,7 +19,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    /** Filtros: todos | borrador | pendiente_firma | firmado | facturado */
+    /** Filtros: todos | borrador | parte | pendiente_firma | firmado | facturado */
     #[Url(as: 'estado')]
     public string $filtroEstado = 'todos';
 
@@ -60,6 +61,7 @@ class Index extends Component
 
         $incluirAlbaranes  = in_array($this->filtroEstado, ['todos', 'albaran', 'pendiente_firma', 'firmado', 'facturado'], true);
         $incluirBorradores = in_array($this->filtroEstado, ['todos', 'borrador'], true);
+        $incluirPartes     = in_array($this->filtroEstado, ['todos', 'parte'], true);
 
         $items = collect();
 
@@ -92,7 +94,11 @@ class Index extends Component
         if ($incluirBorradores) {
             $borradores = Borrador::query()
                 ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
-                ->when(! $puedeVerTodosBor, fn (Builder $q) => $q->where('creado_por', $userId))
+                ->where('estado', '!=', 'convertido')
+                ->when(! $puedeVerTodosBor, fn (Builder $q) => $q->where(function (Builder $qq) use ($userId): void {
+                    $qq->where('creado_por', $userId)
+                        ->orWhereHas('lineasPersonal', fn (Builder $qp) => $qp->where('trabajador_id', $userId));
+                }))
                 ->get()
                 ->map(function (Borrador $b): array {
                     $convertido = $b->estado === 'convertido';
@@ -105,11 +111,34 @@ class Index extends Component
                         'estadoLabel' => $convertido ? 'Convertido' : 'Borrador',
                         'estadoTone'  => $convertido ? 'success' : 'neutral',
                         'fecha'       => $b->fecha,
-                        'url'         => null,
+                        'url'         => route('mobile.borradores.ver', ['borrador' => $b->id]),
                     ];
                 });
 
             $items = $items->concat($borradores);
+        }
+
+        if ($incluirPartes) {
+            $partes = Parte::query()
+                ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
+                ->whereNull('albaran_id')
+                ->where(function (Builder $q) use ($userId): void {
+                    $q->where('creado_por', $userId)
+                        ->orWhereHas('lineasPersonal', fn (Builder $qp) => $qp->where('trabajador_id', $userId));
+                })
+                ->get()
+                ->map(fn (Parte $p): array => [
+                    'tipo'        => 'parte',
+                    'numero'      => $p->numero,
+                    'cliente'     => $p->cliente?->nombre,
+                    'proyecto'    => $p->proyecto?->nombre,
+                    'estadoLabel' => $p->estado === Parte::ESTADO_CERRADO ? 'Cerrado' : 'Abierto',
+                    'estadoTone'  => $p->estado === Parte::ESTADO_CERRADO ? 'neutral' : 'info',
+                    'fecha'       => $p->fecha,
+                    'url'         => route('mobile.partes.ver', ['parte' => $p->id]),
+                ]);
+
+            $items = $items->concat($partes);
         }
 
         if ($this->buscar !== '') {
@@ -117,7 +146,8 @@ class Index extends Component
             $items = $items->filter(fn (array $i): bool =>
                 str_contains(mb_strtolower((string) $i['numero']), $termino)
                 || str_contains(mb_strtolower((string) ($i['cliente'] ?? '')), $termino)
-                || str_contains(mb_strtolower((string) ($i['proyecto'] ?? '')), $termino));
+                || str_contains(mb_strtolower((string) ($i['proyecto'] ?? '')), $termino)
+                || str_contains(mb_strtolower((string) ($i['estadoLabel'] ?? '')), $termino));
         }
 
         $ordenados = $items
@@ -140,7 +170,7 @@ class Index extends Component
     {
         return view('livewire.mobile.albaranes.index')
             ->layout('components.layouts.mobile', [
-                'title'     => 'Mis albaranes',
+                'title'     => 'Mis partes',
                 'showBack'  => true,
                 'backRoute' => route('mobile.dashboard'),
             ]);

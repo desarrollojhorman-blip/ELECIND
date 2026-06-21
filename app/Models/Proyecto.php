@@ -95,6 +95,11 @@ class Proyecto extends Model
         return $this->hasMany(Albaran::class);
     }
 
+    public function archivos(): HasMany
+    {
+        return $this->hasMany(ProyectoArchivo::class);
+    }
+
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);

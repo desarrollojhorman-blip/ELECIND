@@ -81,7 +81,12 @@ class AlbaranPolicy
         }
 
         // Responsable asignado
-        return $albaran->responsable_id === $user->getKey();
+        if ($albaran->responsable_id === $user->getKey()) {
+            return true;
+        }
+
+        // Cualquier trabajador que participe en las líneas de personal
+        return $albaran->lineasPersonal()->where('trabajador_id', $user->getKey())->exists();
     }
 
     public function restore(User $user, Albaran $albaran): bool

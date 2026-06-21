@@ -18,11 +18,9 @@
         <select wire:model.live="filtroEstado"
                 class="w-full rounded-md border border-slate-300 py-1.5 pl-3 pr-8 text-sm focus:border-primary-500 focus:ring-primary-500">
             <option value="todos">Todos</option>
+            <option value="parte">Partes</option>
             <option value="albaran">Albaranes</option>
             <option value="borrador">Borradores</option>
-            <option value="pendiente_firma">Pendientes de firma</option>
-            <option value="firmado">Firmados</option>
-            <option value="facturado">Facturados</option>
         </select>
     </div>
 
@@ -30,24 +28,21 @@
     <div class="px-4 py-3">
         @forelse ($this->items as $item)
             @php
-                $esBorrador = $item['tipo'] === 'borrador';
-                $tag = $esBorrador ? 'div' : 'a';
+                $esNavegable = ! is_null($item['url']);
+                $tag = $esNavegable ? 'a' : 'div';
             @endphp
 
             <{{ $tag }}
-               @if (! $esBorrador) href="{{ $item['url'] }}" @endif
+               @if ($esNavegable) href="{{ $item['url'] }}" @endif
                wire:key="item-{{ $item['tipo'] }}-{{ $item['numero'] }}"
                @class([
                    'mb-2 block rounded-lg border bg-white p-3 shadow-sm transition-colors',
-                   'border-slate-200 hover:border-primary-300 hover:bg-primary-50/30 active:scale-[0.99] active:transition-transform' => ! $esBorrador,
-                   'border-dashed border-slate-300' => $esBorrador,
+                   'border-slate-200 hover:border-primary-300 hover:bg-primary-50/30 active:scale-[0.99] active:transition-transform' => $esNavegable,
+                   'border-dashed border-slate-300' => ! $esNavegable,
                ])>
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-1.5">
-                            @if ($esBorrador)
-                                <span class="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Borrador</span>
-                            @endif
                             <p class="truncate font-mono text-sm font-semibold text-slate-900">
                                 {{ $item['numero'] }}
                             </p>

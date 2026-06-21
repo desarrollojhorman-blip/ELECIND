@@ -22,6 +22,7 @@
         'danger' => 'bg-red-600 text-white hover:bg-red-700',
         'success' => 'bg-emerald-600 text-white hover:bg-emerald-700',
         'info' => 'bg-blue-600 text-white hover:bg-blue-700',
+        'indigo' => 'bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800',
         'warning' => 'bg-amber-500 text-white hover:bg-amber-600',
         'neutral' => 'bg-slate-600 text-white hover:bg-slate-700',
         'ghost' => 'bg-transparent text-slate-700 hover:bg-slate-100',

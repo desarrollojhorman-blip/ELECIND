@@ -7,7 +7,7 @@
                     {{ ucfirst($parte->estado) }}
                     @if ($parte->tieneAlbaran())
                         · <a href="{{ route('albaranes.ver', $parte->albaran_id) }}" wire:navigate class="text-blue-600 underline">
-                            Albarán generado
+                            {{ $parte->albaran?->numero ?? 'Albarán generado' }}
                         </a>
                     @endif
                 </div>
@@ -89,7 +89,7 @@
                 <x-ui.input :value="trim(($parte->creador_apellidos_snapshot ?? '').' '.($parte->creador_nombre_snapshot ?? '')) ?: '—'" readonly />
             </x-ui.field>
             <x-ui.field label="Tipo de jornada">
-                <x-ui.input :value="$parte->tipo_hora ?? '—'" readonly />
+                <x-ui.input :value="$parte->tipo_hora?->etiqueta() ?? '—'" readonly />
             </x-ui.field>
             <x-ui.field label="Fecha">
                 <x-ui.input :value="$parte->fecha?->format('d/m/Y') ?? '—'" readonly />

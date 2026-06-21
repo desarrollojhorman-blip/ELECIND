@@ -12,7 +12,7 @@
             href="{{ route('mobile.albaranes.index') }}"
             variant="outline"
             icon="heroicon-o-document-text">
-            Gestión de Albaranes
+            Gestión de Partes
         </x-mobile.menu-action>
 
         <x-mobile.menu-action

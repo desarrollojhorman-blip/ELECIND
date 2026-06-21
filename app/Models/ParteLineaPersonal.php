@@ -26,6 +26,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $trabajador_tasa_hora_snapshot
  * @property string|null $trabajador_tasa_extra_snapshot
  * @property string|null $trabajador_tasa_festivo_snapshot
+ * @property string|null $tarifa_hora_snapshot
+ * @property string|null $tarifa_extra_snapshot
+ * @property string|null $tarifa_plus_retencion_snapshot
+ * @property string|null $trabajador_tasa_plus_retencion_snapshot
+ * @property string|null $facturacion_snapshot
+ * @property string|null $coste_snapshot
  */
 class ParteLineaPersonal extends Model
 {
@@ -42,6 +48,12 @@ class ParteLineaPersonal extends Model
         'trabajador_tasa_hora_snapshot',
         'trabajador_tasa_extra_snapshot',
         'trabajador_tasa_festivo_snapshot',
+        'tarifa_hora_snapshot',
+        'tarifa_extra_snapshot',
+        'tarifa_plus_retencion_snapshot',
+        'trabajador_tasa_plus_retencion_snapshot',
+        'facturacion_snapshot',
+        'coste_snapshot',
     ];
 
     protected function casts(): array
@@ -52,6 +64,12 @@ class ParteLineaPersonal extends Model
             'trabajador_tasa_hora_snapshot' => 'decimal:3',
             'trabajador_tasa_extra_snapshot' => 'decimal:3',
             'trabajador_tasa_festivo_snapshot' => 'decimal:3',
+            'tarifa_hora_snapshot' => 'decimal:4',
+            'tarifa_extra_snapshot' => 'decimal:4',
+            'tarifa_plus_retencion_snapshot' => 'decimal:4',
+            'trabajador_tasa_plus_retencion_snapshot' => 'decimal:3',
+            'facturacion_snapshot' => 'decimal:2',
+            'coste_snapshot' => 'decimal:2',
         ];
     }
 
