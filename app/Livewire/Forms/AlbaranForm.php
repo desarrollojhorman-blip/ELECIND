@@ -207,7 +207,7 @@ class AlbaranForm extends Form
         $this->concepto_id = $albaran->concepto_id;
         $this->responsable_id = $albaran->responsable_id;
         $this->fecha                  = Carbon::parse($albaran->fecha)->format('Y-m-d');
-        $this->tipo_hora              = $albaran->tipo_hora->value;
+        $this->tipo_hora              = $albaran->tipo_hora?->value ?? 'laboral';
         $this->tienesPlusRetencion    = (bool) $albaran->tiene_plus_retencion;
         $this->estado                 = $albaran->estado->value;
         $this->observaciones = $albaran->observaciones;

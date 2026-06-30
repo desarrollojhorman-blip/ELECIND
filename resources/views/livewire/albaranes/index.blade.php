@@ -42,7 +42,6 @@
                         @foreach ($estados as $estado)
                             <option value="{{ $estado->value }}">{{ $estado->etiqueta() }}</option>
                         @endforeach
-                        <option value="papelera">En papelera</option>
                     </x-ui.select>
                 </x-ui.field>
 
@@ -79,10 +78,9 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs text-slate-500">Filtros aplicados:</span>
                         @if ($filtroEstado !== '')
-                            @php $estadoEnum = $filtroEstado === 'papelera' ? null : \App\Enums\EstadoAlbaran::from($filtroEstado); @endphp
                             <x-ui.filter-chip
                                 label="Estado"
-                                :value="$estadoEnum ? $estadoEnum->etiqueta() : 'En papelera'"
+                                :value="\App\Enums\EstadoAlbaran::from($filtroEstado)->etiqueta()"
                                 remove-action="quitarFiltroEstado" />
                         @endif
                         @if ($filtroCliente !== null)
@@ -198,52 +196,33 @@
                         <x-ui.badge :tone="$tipoTone">{{ $albaran->tipo_hora->etiqueta() }}</x-ui.badge>
                     </td>
                     <td class="px-4 py-3">
-                        @if ($albaran->trashed())
-                            <x-ui.badge tone="danger" dot>Eliminado</x-ui.badge>
-                        @else
-                            <x-ui.badge :tone="$albaran->estado->tono()" dot>{{ $albaran->estado->etiqueta() }}</x-ui.badge>
-                        @endif
+                        <x-ui.badge :tone="$albaran->estado->tono()" dot>{{ $albaran->estado->etiqueta() }}</x-ui.badge>
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-end gap-1">
-                            @if ($albaran->trashed())
-                                <x-ui.icon-button
-                                    wire:click="restaurar({{ $albaran->id }})"
-                                    wire:loading.attr="disabled"
-                                    wire:target="restaurar({{ $albaran->id }})"
-                                    variant="success"
-                                    tooltip="Restaurar">
-                                    <span wire:loading.remove wire:target="restaurar({{ $albaran->id }})">
-                                        <x-heroicon-o-arrow-uturn-left class="size-4" />
-                                    </span>
-                                    <svg wire:loading wire:target="restaurar({{ $albaran->id }})" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                </x-ui.icon-button>
-                            @else
+                            <x-ui.icon-button
+                                as="a"
+                                href="{{ route('albaranes.ver', $albaran) }}"
+                                wire:navigate
+                                icon="heroicon-o-eye"
+                                variant="neutral"
+                                tooltip="Ver detalle" />
+                            @can('update', $albaran)
                                 <x-ui.icon-button
                                     as="a"
-                                    href="{{ route('albaranes.ver', $albaran) }}"
-                                    wire:navigate
-                                    icon="heroicon-o-eye"
-                                    variant="neutral"
-                                    tooltip="Ver detalle" />
-                                @can('update', $albaran)
-                                    <x-ui.icon-button
-                                        as="a"
-                                        href="{{ route('albaranes.editar', $albaran) }}"
-                                        wire:navigate.fresh
-                                        icon="heroicon-o-pencil-square"
-                                        variant="info"
-                                        tooltip="Editar" />
-                                @endcan
+                                    href="{{ route('albaranes.editar', $albaran) }}"
+                                    wire:navigate.fresh
+                                    icon="heroicon-o-pencil-square"
+                                    variant="info"
+                                    tooltip="Editar" />
+                            @endcan
+                            @can('delete', $albaran)
                                 <x-ui.icon-button
                                     wire:click="confirmarEliminar({{ $albaran->id }})"
                                     icon="heroicon-o-trash"
                                     variant="danger"
                                     tooltip="Eliminar" />
-                            @endif
+                            @endcan
                         </div>
                     </td>
                 </tr>
@@ -264,10 +243,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará el albarán a la <strong>papelera</strong>.
+                    Esta acción <strong>eliminará definitivamente</strong> el albarán. No hay papelera.
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Podrás restaurarlo desde el filtro <em>«En papelera»</em>.
+                    Su parte de origen volverá a quedar <strong>abierto</strong> y editable.
                 </p>
             </div>
         </div>

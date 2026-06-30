@@ -1184,10 +1184,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará el albarán <strong>{{ $albaran?->numero }}</strong> a la <strong>papelera</strong>.
+                    Esta acción <strong>eliminará definitivamente</strong> el albarán <strong>{{ $albaran?->numero }}</strong>. No hay papelera.
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Podrás restaurarlo desde el filtro <em>«En papelera»</em>.
+                    Su parte de origen volverá a quedar <strong>abierto</strong> y editable.
                 </p>
             </div>
         </div>

@@ -658,9 +658,9 @@ public function guardar(): void
 
         Gate::authorize('delete', $this->albaran);
         $numero = $this->albaran->numero;
-        $this->albaran->delete();
+        $this->albaran->forceDelete();
 
-        session()->flash('status', "Albarán «{$numero}» enviado a papelera.");
+        session()->flash('status', "Albarán «{$numero}» eliminado definitivamente.");
         $this->redirectRoute('albaranes.index', navigate: false);
     }
 

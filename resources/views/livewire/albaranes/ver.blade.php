@@ -57,6 +57,7 @@
                 \App\Support\Modulos::materialesAvanzado() ? ['key' => 'materiales', 'label' => 'Materiales', 'count' => $albaran->lineasMaterial->count()] : false,
                 ['key' => 'firmas',       'label' => 'Firmas',       'count' => $albaran->firmas->count()],
                 ['key' => 'archivos',     'label' => 'Archivos',     'count' => $albaran->archivos->count()],
+                ['key' => 'costes',       'label' => 'Costes/Gastos', 'count' => null],
             ])) as $t)
                 <button type="button"
                         @click="tab = '{{ $t['key'] }}'"
@@ -294,6 +295,11 @@
                 </div>
             @endif
         </div>
+
+        {{-- ═══ Tab: Costes/Gastos (solo lectura) ═══ --}}
+        <div x-show="tab === 'costes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+            <x-costes-resumen :doc="$albaran" />
+        </div>
     </div>
 
     {{-- Modal confirmar eliminación --}}
@@ -309,10 +315,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará el albarán <strong>{{ $albaran->numero }}</strong> a la <strong>papelera</strong>.
+                    Esta acción <strong>eliminará definitivamente</strong> el albarán <strong>{{ $albaran->numero }}</strong>. No hay papelera.
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    Podrás restaurarlo desde el filtro <em>«En papelera»</em>.
+                    Su parte de origen volverá a quedar <strong>abierto</strong> y editable.
                 </p>
             </div>
         </div>

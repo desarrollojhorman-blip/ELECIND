@@ -130,21 +130,10 @@ class Index extends Component
         $albaran = Albaran::findOrFail($id);
         Gate::authorize('delete', $albaran);
 
-        $albaran->delete();
+        $albaran->forceDelete();
         $this->confirmarEliminarId = null;
 
-        session()->flash('status', "Albarán «{$albaran->numero}» enviado a papelera.");
-    }
-
-    public function restaurar(int $id): void
-    {
-        /** @var Albaran $albaran */
-        $albaran = Albaran::withTrashed()->findOrFail($id);
-        Gate::authorize('restore', $albaran);
-
-        $albaran->restore();
-
-        session()->flash('status', "Albarán «{$albaran->numero}» restaurado.");
+        session()->flash('status', "Albarán «{$albaran->numero}» eliminado definitivamente.");
     }
 
     #[Computed]
@@ -188,9 +177,7 @@ class Index extends Component
             $query->whereIn('cliente_id', $clientesScope);
         }
 
-        if ($this->filtroEstado === 'papelera') {
-            $query->onlyTrashed();
-        } elseif ($this->filtroEstado !== '') {
+        if ($this->filtroEstado !== '') {
             $query->where('estado', $this->filtroEstado);
         }
 

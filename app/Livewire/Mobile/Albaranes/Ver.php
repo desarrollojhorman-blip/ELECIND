@@ -45,11 +45,10 @@ class Ver extends Component
 
         $numero = $this->albaran->numero;
 
-        // Eliminar líneas material una a una para que el Observer devuelva el stock.
-        $this->albaran->lineasMaterial()->each(fn ($linea) => $linea->delete());
-        $this->albaran->delete();
+        // AlbaranObserver::deleting() devuelve el stock y reabre el parte de origen.
+        $this->albaran->forceDelete();
 
-        session()->flash('status', "Parte «{$numero}» eliminado.");
+        session()->flash('status', "Albarán «{$numero}» eliminado definitivamente.");
 
         $this->redirectRoute('mobile.albaranes.index', navigate: false);
     }

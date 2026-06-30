@@ -144,10 +144,10 @@
             </div>
             <div>
                 <p class="text-sm text-slate-700">
-                    Esta acción enviará el parte <strong class="font-mono">{{ $albaran->numero }}</strong> a la papelera.
+                    Esta acción <strong>eliminará definitivamente</strong> el albarán <strong class="font-mono">{{ $albaran->numero }}</strong>. No hay papelera.
                 </p>
                 <p class="mt-1 text-sm text-slate-500">
-                    El stock de los materiales será devuelto a sus lotes.
+                    El stock de los materiales se devolverá y su parte de origen volverá a quedar abierto.
                 </p>
             </div>
         </div>

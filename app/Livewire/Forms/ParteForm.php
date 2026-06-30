@@ -127,7 +127,7 @@ class ParteForm extends Form
         $this->concepto_id    = $parte->concepto_id;
         $this->responsable_id = $parte->responsable_id;
         $this->fecha                  = Carbon::parse($parte->fecha)->format('Y-m-d');
-        $this->tipo_hora              = $parte->tipo_hora;
+        $this->tipo_hora              = $parte->tipo_hora?->value ?? 'laboral';
         $this->tienesPlusRetencion    = (bool) $parte->tiene_plus_retencion;
         $this->estado                 = $parte->estado;
         $this->observaciones  = $parte->observaciones;

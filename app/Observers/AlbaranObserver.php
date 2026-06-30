@@ -3,8 +3,10 @@
 namespace App\Observers;
 
 use App\Models\Albaran;
+use App\Models\AlbaranLineaMaterial;
 use App\Models\Cliente;
 use App\Models\Concepto;
+use App\Models\Parte;
 use App\Models\Proyecto;
 use App\Models\User;
 
@@ -24,6 +26,28 @@ use App\Models\User;
  */
 class AlbaranObserver
 {
+    /**
+     * Al borrar DEFINITIVAMENTE un albarán:
+     *  - Reabre su parte de origen (el parte es la base y vuelve a ser editable).
+     *  - Devuelve el stock de los materiales borrando las líneas vía Eloquent
+     *    (el cascade de BD no dispara `AlbaranLineaMaterialObserver`).
+     *
+     * Solo se ejecuta en `forceDelete()` — el albarán no tiene papelera.
+     */
+    public function deleting(Albaran $albaran): void
+    {
+        if (! $albaran->isForceDeleting()) {
+            return;
+        }
+
+        Parte::where('albaran_id', $albaran->id)->update([
+            'albaran_id' => null,
+            'estado'     => Parte::ESTADO_ABIERTO,
+        ]);
+
+        $albaran->lineasMaterial()->each(fn (AlbaranLineaMaterial $linea) => $linea->delete());
+    }
+
     public function saving(Albaran $albaran): void
     {
         if ($albaran->isDirty('cliente_id')) {

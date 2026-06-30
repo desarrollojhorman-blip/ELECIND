@@ -51,6 +51,7 @@
             ['key' => 'parte',        'label' => 'Parte',        'count' => null],
             ['key' => 'trabajadores', 'label' => 'Trabajadores', 'count' => $parte->lineasPersonal->count()],
             ['key' => 'materiales',   'label' => 'Materiales',   'count' => $parte->lineasMaterial->count()],
+            ['key' => 'costes',       'label' => 'Costes/Gastos', 'count' => null],
         ] as $t)
             <button type="button" @click="tab = '{{ $t['key'] }}'"
                     :class="tab === '{{ $t['key'] }}'
@@ -157,6 +158,11 @@
                 </tbody>
             </table>
         @endif
+    </div>
+
+    {{-- ═══ Tab: Costes/Gastos (solo lectura) ═══ --}}
+    <div x-show="tab === 'costes'" class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-sm">
+        <x-costes-resumen :doc="$parte" />
     </div>
     </div>
 

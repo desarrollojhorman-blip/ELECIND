@@ -106,7 +106,7 @@ class Crear extends Component
                     'creado_por'          => $parte->creado_por ?? (int) Auth::id(),
                     'responsable_id'      => $parte->responsable_id,
                     'estado'              => EstadoAlbaran::PENDIENTE_FIRMA,
-                    'tipo_hora'           => TipoHora::from($parte->tipo_hora),
+                    'tipo_hora'           => $parte->tipo_hora,
                     'tiene_plus_retencion' => (bool) $parte->tiene_plus_retencion,
                     'observaciones'       => $parte->observaciones,
                     'es_personalizado'    => $parte->es_personalizado,

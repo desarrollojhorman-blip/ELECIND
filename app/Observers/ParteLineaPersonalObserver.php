@@ -86,7 +86,9 @@ class ParteLineaPersonalObserver
             return;
         }
 
-        $tipoHora = $parte->tipo_hora ?? 'laboral';
+        $tipoHora = $parte->tipo_hora instanceof \App\Enums\TipoHora
+            ? $parte->tipo_hora->value
+            : ($parte->tipo_hora ?? 'laboral');
 
         $mapa = [
             'laboral'       => [AtributoHora::COD_LABOR,     AtributoHora::COD_EX_LAB],
