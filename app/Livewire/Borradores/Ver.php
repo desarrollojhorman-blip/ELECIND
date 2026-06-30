@@ -7,6 +7,7 @@ use App\Enums\TipoHora;
 use App\Models\Albaran;
 use App\Models\Borrador;
 use App\Models\Parte;
+use App\Services\GeneradorAlbaran;
 use App\Services\NumeracionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
@@ -99,85 +100,55 @@ class Ver extends Component
             $fecha    = Carbon::parse($this->borrador->fecha);
             $plusReten = (bool) $this->borrador->tiene_plus_retencion;
 
+            $tipoHora = $this->borrador->tipo_hora;
+
+            // ── Regla: SIEMPRE se crea el parte primero (la base) ──────────
+            $parte = new Parte;
+            $parte->creado_por           = $this->borrador->creado_por ?? (int) Auth::id();
+            $parte->estado               = Parte::ESTADO_ABIERTO;
+            $parte->fecha                = $this->borrador->fecha;
+            $parte->cliente_id           = $this->borrador->cliente_id;
+            $parte->proyecto_id          = $this->borrador->proyecto_id;
+            $parte->concepto_id          = $this->borrador->concepto_id;
+            $parte->responsable_id       = $this->borrador->responsable_id;
+            $parte->tipo_hora            = $tipoHora instanceof TipoHora ? $tipoHora->value : (string) $tipoHora;
+            $parte->tiene_plus_retencion = $plusReten;
+            $parte->observaciones        = $this->borrador->observaciones;
+            $parte->save();
+
+            foreach ($this->borrador->lineasPersonal as $linea) {
+                if ($linea->trabajador_id !== null) {
+                    $parte->lineasPersonal()->create([
+                        'trabajador_id' => $linea->trabajador_id,
+                        'horas'         => $linea->horas,
+                        'horas_extra'   => $linea->horas_extra,
+                    ]);
+                }
+            }
+            foreach ($this->borrador->lineasMaterial as $linea) {
+                if ($linea->material_id !== null) {
+                    $parte->lineasMaterial()->create([
+                        'material_id' => $linea->material_id,
+                        'cantidad'    => $linea->cantidad,
+                    ]);
+                }
+            }
+
+            $datosBorrador = [
+                'estado'                => 'convertido',
+                'convertido_a_parte_id' => $parte->id,
+            ];
+
             if ($this->borrador->crear_albaran) {
-                $albaran = new Albaran;
-                $albaran->numero                   = app(NumeracionService::class)->siguienteNumeroAlbaran($fecha);
-                $albaran->creado_por               = (int) Auth::id();
-                $albaran->estado                   = EstadoAlbaran::PENDIENTE_FIRMA;
-                $albaran->fecha                    = $this->borrador->fecha;
-                $albaran->cliente_id               = $this->borrador->cliente_id;
-                $albaran->proyecto_id              = $this->borrador->proyecto_id;
-                $albaran->concepto_id              = $this->borrador->concepto_id;
-                $albaran->responsable_id           = $this->borrador->responsable_id;
-                $albaran->firma_trabajador_user_id = $this->borrador->creado_por;
-                $albaran->tipo_hora                = $this->borrador->tipo_hora;
-                $albaran->tiene_plus_retencion     = $plusReten;
-                $albaran->observaciones            = $this->borrador->observaciones;
-                $albaran->save();
+                // ── …y de él nace el albarán, enlazados (servicio único) ───
+                $albaran = app(GeneradorAlbaran::class)->desdeParte($parte);
+                $datosBorrador['convertido_a_albaran_id'] = $albaran->id;
+                $this->borrador->update($datosBorrador);
 
-                foreach ($this->borrador->lineasPersonal as $linea) {
-                    if ($linea->trabajador_id !== null) {
-                        $albaran->lineasPersonal()->create([
-                            'trabajador_id' => $linea->trabajador_id,
-                            'horas'         => $linea->horas,
-                            'horas_extra'   => $linea->horas_extra,
-                        ]);
-                    }
-                }
-                foreach ($this->borrador->lineasMaterial as $linea) {
-                    if ($linea->material_id !== null) {
-                        $albaran->lineasMaterial()->create([
-                            'material_id' => $linea->material_id,
-                            'cantidad'    => $linea->cantidad,
-                        ]);
-                    }
-                }
-
-                $this->borrador->update([
-                    'estado'                  => 'convertido',
-                    'convertido_a_albaran_id' => $albaran->id,
-                ]);
-
-                session()->flash('status', "Borrador convertido. Albarán «{$albaran->numero}» creado correctamente.");
+                session()->flash('status', "Borrador convertido. Parte «{$parte->numero}» y albarán «{$albaran->numero}» creados.");
                 $this->redirectRoute('albaranes.editar', ['albaran' => $albaran->getKey()], navigate: true);
             } else {
-                $tipoHora = $this->borrador->tipo_hora;
-
-                $parte = new Parte;
-                $parte->creado_por           = $this->borrador->creado_por ?? (int) Auth::id();
-                $parte->estado               = Parte::ESTADO_ABIERTO;
-                $parte->fecha                = $this->borrador->fecha;
-                $parte->cliente_id           = $this->borrador->cliente_id;
-                $parte->proyecto_id          = $this->borrador->proyecto_id;
-                $parte->concepto_id          = $this->borrador->concepto_id;
-                $parte->responsable_id       = $this->borrador->responsable_id;
-                $parte->tipo_hora            = $tipoHora instanceof TipoHora ? $tipoHora->value : (string) $tipoHora;
-                $parte->tiene_plus_retencion = $plusReten;
-                $parte->observaciones        = $this->borrador->observaciones;
-                $parte->save();
-
-                foreach ($this->borrador->lineasPersonal as $linea) {
-                    if ($linea->trabajador_id !== null) {
-                        $parte->lineasPersonal()->create([
-                            'trabajador_id' => $linea->trabajador_id,
-                            'horas'         => $linea->horas,
-                            'horas_extra'   => $linea->horas_extra,
-                        ]);
-                    }
-                }
-                foreach ($this->borrador->lineasMaterial as $linea) {
-                    if ($linea->material_id !== null) {
-                        $parte->lineasMaterial()->create([
-                            'material_id' => $linea->material_id,
-                            'cantidad'    => $linea->cantidad,
-                        ]);
-                    }
-                }
-
-                $this->borrador->update([
-                    'estado'                => 'convertido',
-                    'convertido_a_parte_id' => $parte->id,
-                ]);
+                $this->borrador->update($datosBorrador);
 
                 session()->flash('status', "Borrador convertido. Parte «{$parte->numero}» creado correctamente.");
                 $this->redirectRoute('partes.editar', ['parte' => $parte->getKey()], navigate: true);
