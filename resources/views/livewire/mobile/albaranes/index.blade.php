@@ -53,6 +53,9 @@
                                 · {{ $item['proyecto'] }}
                             @endif
                         </p>
+                        @if (! empty($item['origen']))
+                            <p class="mt-0.5 truncate text-[11px] text-slate-400">{{ $item['origen'] }}</p>
+                        @endif
                     </div>
                     <div class="shrink-0 text-right">
                         <x-ui.badge :tone="$item['estadoTone']" dot>{{ $item['estadoLabel'] }}</x-ui.badge>

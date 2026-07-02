@@ -60,6 +60,7 @@ class Firmar extends Component
             'lineasPersonal.trabajador',
             'lineasMaterial.material',
             'firmas',
+            'parte:id,numero,albaran_id',
         ]);
 
         $uid = Auth::id();

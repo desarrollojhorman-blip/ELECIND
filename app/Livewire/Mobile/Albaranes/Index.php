@@ -67,7 +67,7 @@ class Index extends Component
 
         if ($incluirAlbaranes) {
             $albaranes = Albaran::query()
-                ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
+                ->with(['cliente:id,nombre', 'proyecto:id,nombre', 'parte:id,numero,albaran_id'])
                 ->when(! $puedeVerTodosAlb, fn (Builder $q) => $q->where(function (Builder $qq) use ($userId): void {
                     $qq->where('creado_por', $userId)
                         ->orWhereHas('lineasPersonal', fn (Builder $qp) => $qp->where('trabajador_id', $userId));
@@ -85,6 +85,7 @@ class Index extends Component
                     'estadoLabel' => $a->estado->etiqueta(),
                     'estadoTone'  => $a->estado->tono(),
                     'fecha'       => $a->fecha,
+                    'origen'      => $a->parte?->numero ? 'Origen: '.$a->parte->numero : null,
                     'url'         => route('mobile.albaranes.firmar', ['albaran' => $a->id]),
                 ]);
 
@@ -111,6 +112,7 @@ class Index extends Component
                         'estadoLabel' => $convertido ? 'Convertido' : 'Borrador',
                         'estadoTone'  => $convertido ? 'success' : 'neutral',
                         'fecha'       => $b->fecha,
+                        'origen'      => null,
                         'url'         => route('mobile.borradores.ver', ['borrador' => $b->id]),
                     ];
                 });
@@ -120,7 +122,7 @@ class Index extends Component
 
         if ($incluirPartes) {
             $partes = Parte::query()
-                ->with(['cliente:id,nombre', 'proyecto:id,nombre'])
+                ->with(['cliente:id,nombre', 'proyecto:id,nombre', 'borradorOrigen:id,numero_borrador,convertido_a_parte_id'])
                 ->whereNull('albaran_id')
                 ->where(function (Builder $q) use ($userId): void {
                     $q->where('creado_por', $userId)
@@ -135,6 +137,7 @@ class Index extends Component
                     'estadoLabel' => $p->estado === Parte::ESTADO_CERRADO ? 'Cerrado' : 'Abierto',
                     'estadoTone'  => $p->estado === Parte::ESTADO_CERRADO ? 'neutral' : 'info',
                     'fecha'       => $p->fecha,
+                    'origen'      => $p->borradorOrigen?->numero_borrador ? 'Origen: '.$p->borradorOrigen->numero_borrador : null,
                     'url'         => route('mobile.partes.ver', ['parte' => $p->id]),
                 ]);
 
@@ -147,7 +150,8 @@ class Index extends Component
                 str_contains(mb_strtolower((string) $i['numero']), $termino)
                 || str_contains(mb_strtolower((string) ($i['cliente'] ?? '')), $termino)
                 || str_contains(mb_strtolower((string) ($i['proyecto'] ?? '')), $termino)
-                || str_contains(mb_strtolower((string) ($i['estadoLabel'] ?? '')), $termino));
+                || str_contains(mb_strtolower((string) ($i['estadoLabel'] ?? '')), $termino)
+                || str_contains(mb_strtolower((string) ($i['origen'] ?? '')), $termino));
         }
 
         $ordenados = $items
@@ -170,7 +174,7 @@ class Index extends Component
     {
         return view('livewire.mobile.albaranes.index')
             ->layout('components.layouts.mobile', [
-                'title'     => 'Mis partes',
+                'title'     => 'Gestión de partes',
                 'showBack'  => true,
                 'backRoute' => route('mobile.dashboard'),
             ]);

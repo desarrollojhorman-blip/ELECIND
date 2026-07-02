@@ -26,6 +26,9 @@
 
     {{-- Resumen del parte --}}
     <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        @if ($albaran->parte)
+            <p class="mb-1.5 text-[11px] text-slate-400">Origen: {{ $albaran->parte->numero }}</p>
+        @endif
         <div class="mb-3 flex items-center justify-between gap-2">
             <p class="font-mono text-sm font-semibold text-slate-900">{{ $albaran->numero }}</p>
             <x-ui.badge :tone="$albaran->estado->tono()" dot>{{ $albaran->estado->etiqueta() }}</x-ui.badge>

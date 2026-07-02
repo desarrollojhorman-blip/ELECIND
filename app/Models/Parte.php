@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\LogOptions;
@@ -140,6 +141,12 @@ class Parte extends Model
     public function albaran(): BelongsTo
     {
         return $this->belongsTo(Albaran::class);
+    }
+
+    /** Borrador del que nació este parte (si vino de uno). */
+    public function borradorOrigen(): HasOne
+    {
+        return $this->hasOne(Borrador::class, 'convertido_a_parte_id');
     }
 
     public function lineasPersonal(): HasMany

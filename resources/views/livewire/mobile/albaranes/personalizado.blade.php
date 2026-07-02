@@ -29,8 +29,16 @@
         <div class="space-y-3">
 
             {{-- Cliente --}}
-            @if (! $form->clienteOtro)
-                <x-mobile.field label="Cliente" required :error="$errors->first('form.cliente_id')">
+            <x-mobile.field label="Cliente" required
+                :error="$form->clienteOtro ? $errors->first('form.clienteTexto') : $errors->first('form.cliente_id')">
+                <x-slot:action>
+                    <button type="button" wire:click="toggleClienteOtro"
+                            class="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-800">
+                        <x-heroicon-o-arrow-path class="size-3.5" />
+                        {{ $form->clienteOtro ? 'Seleccionar del sistema' : 'Nuevo' }}
+                    </button>
+                </x-slot:action>
+                @if (! $form->clienteOtro)
                     <div wire:key="cli-fixed">
                         <x-ui.searchable-select
                             wire-model="form.cliente_id"
@@ -39,28 +47,24 @@
                             placeholder="— Selecciona cliente —"
                         />
                     </div>
-                </x-mobile.field>
-            @else
-                <x-mobile.field label="Cliente (texto libre)" required :error="$errors->first('form.clienteTexto')">
+                @else
                     <x-ui.input wire:model="form.clienteTexto" placeholder="Nombre del cliente" />
-                </x-mobile.field>
-            @endif
-
-            <button type="button"
-                    wire:click="toggleClienteOtro"
-                    class="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
-                <x-heroicon-o-arrow-path class="size-3.5" />
-                {{ $form->clienteOtro ? '← Seleccionar cliente del sistema' : '¿No está en el sistema? Escribirlo →' }}
-            </button>
+                @endif
+            </x-mobile.field>
 
             {{-- Proyecto --}}
-            @if ($form->clienteOtro)
-                {{-- Cliente libre → proyecto siempre libre --}}
-                <x-mobile.field label="Proyecto (texto libre)" required :error="$errors->first('form.proyectoTexto')">
-                    <x-ui.input wire:model="form.proyectoTexto" placeholder="Nombre del proyecto / obra" />
-                </x-mobile.field>
-            @elseif (! $form->proyectoOtro)
-                <x-mobile.field label="Proyecto" required :error="$errors->first('form.proyecto_id')">
+            <x-mobile.field label="Proyecto" required
+                :error="(! $form->clienteOtro && ! $form->proyectoOtro) ? $errors->first('form.proyecto_id') : $errors->first('form.proyectoTexto')">
+                <x-slot:action>
+                    @if (! $form->clienteOtro)
+                        <button type="button" wire:click="toggleProyectoOtro"
+                                class="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-800">
+                            <x-heroicon-o-arrow-path class="size-3.5" />
+                            {{ $form->proyectoOtro ? 'Seleccionar del sistema' : 'Nuevo' }}
+                        </button>
+                    @endif
+                </x-slot:action>
+                @if (! $form->clienteOtro && ! $form->proyectoOtro)
                     <div wire:key="proj-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.proyecto_id"
@@ -69,25 +73,22 @@
                             placeholder="{{ $form->cliente_id ? '— Selecciona proyecto —' : '— Selecciona cliente primero —' }}"
                         />
                     </div>
-                </x-mobile.field>
-            @else
-                <x-mobile.field label="Proyecto (texto libre)" required :error="$errors->first('form.proyectoTexto')">
+                @else
                     <x-ui.input wire:model="form.proyectoTexto" placeholder="Nombre del proyecto / obra" />
-                </x-mobile.field>
-            @endif
-
-            @if (! $form->clienteOtro)
-                <button type="button"
-                        wire:click="toggleProyectoOtro"
-                        class="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
-                    <x-heroicon-o-arrow-path class="size-3.5" />
-                    {{ $form->proyectoOtro ? '← Seleccionar proyecto del sistema' : '¿No está en el sistema? Escribirlo →' }}
-                </button>
-            @endif
+                @endif
+            </x-mobile.field>
 
             {{-- Concepto --}}
-            @if (! $form->conceptoOtro)
-                <x-mobile.field label="Concepto" :error="$errors->first('form.concepto_id')">
+            <x-mobile.field label="Concepto" :required="$form->conceptoOtro"
+                :error="$form->conceptoOtro ? $errors->first('form.conceptoTexto') : $errors->first('form.concepto_id')">
+                <x-slot:action>
+                    <button type="button" wire:click="toggleConceptoOtro"
+                            class="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-800">
+                        <x-heroicon-o-arrow-path class="size-3.5" />
+                        {{ $form->conceptoOtro ? 'Seleccionar del sistema' : 'Nuevo' }}
+                    </button>
+                </x-slot:action>
+                @if (! $form->conceptoOtro)
                     <div wire:key="conc-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.concepto_id"
@@ -96,23 +97,22 @@
                             placeholder="— Sin concepto —"
                         />
                     </div>
-                </x-mobile.field>
-            @else
-                <x-mobile.field label="Tipo de trabajo (texto libre)" required :error="$errors->first('form.conceptoTexto')">
+                @else
                     <x-ui.input wire:model="form.conceptoTexto" placeholder="Ej: Instalación eléctrica, Mantenimiento…" />
-                </x-mobile.field>
-            @endif
-
-            <button type="button"
-                    wire:click="toggleConceptoOtro"
-                    class="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
-                <x-heroicon-o-arrow-path class="size-3.5" />
-                {{ $form->conceptoOtro ? '← Seleccionar concepto del sistema' : '¿No está en el sistema? Escribirlo →' }}
-            </button>
+                @endif
+            </x-mobile.field>
 
             {{-- Responsable --}}
-            @if (! $form->responsableOtro)
-                <x-mobile.field label="Responsable" :error="$errors->first('form.responsable_id')">
+            <x-mobile.field label="Responsable" :required="$form->responsableOtro"
+                :error="$form->responsableOtro ? $errors->first('form.responsableTexto') : $errors->first('form.responsable_id')">
+                <x-slot:action>
+                    <button type="button" wire:click="toggleResponsableOtro"
+                            class="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-800">
+                        <x-heroicon-o-arrow-path class="size-3.5" />
+                        {{ $form->responsableOtro ? 'Seleccionar del sistema' : 'Nuevo' }}
+                    </button>
+                </x-slot:action>
+                @if (! $form->responsableOtro)
                     <div wire:key="resp-{{ $selectKey }}">
                         <x-ui.searchable-select
                             wire-model="form.responsable_id"
@@ -121,19 +121,10 @@
                             placeholder="— Sin asignar —"
                         />
                     </div>
-                </x-mobile.field>
-            @else
-                <x-mobile.field label="Responsable (texto libre)" required :error="$errors->first('form.responsableTexto')">
+                @else
                     <x-ui.input wire:model="form.responsableTexto" placeholder="Nombre y apellidos del responsable" />
-                </x-mobile.field>
-            @endif
-
-            <button type="button"
-                    wire:click="toggleResponsableOtro"
-                    class="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
-                <x-heroicon-o-arrow-path class="size-3.5" />
-                {{ $form->responsableOtro ? '← Seleccionar responsable del sistema' : '¿No está en el sistema? Escribirlo →' }}
-            </button>
+                @endif
+            </x-mobile.field>
 
             {{-- Fecha y tipo hora --}}
             <div class="grid grid-cols-2 gap-3">
