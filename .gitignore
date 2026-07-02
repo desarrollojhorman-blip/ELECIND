@@ -28,7 +28,7 @@ Homestead.yaml
 Thumbs.db
 
 # Documentación personal interna (no se publica ni se despliega)
-#/docs
+/docs
 
 # Scripts temporales de análisis/desarrollo (usar y tirar)
 #_*.php
